@@ -1,2 +1,2 @@
-# cs612
+# CS 612
 Code repository for CS612 Independent Study, Summer 2024
