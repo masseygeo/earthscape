@@ -8,6 +8,8 @@ import geopandas as gpd
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
 import json
 
 
@@ -133,41 +135,3 @@ def geotiff_linear_units(src):
     return units
 
 
-
-
-
-def plot_raster(input_raster_path, cmap='gist_earth'):
-    """
-    Function to display GeoTIFF image and mask regions of 'no data'.
-
-    Parameters:
-    raster_path (str):
-
-    Returns:
-    None
-    """
-    # open the raster
-    with rasterio.open(input_raster_path) as src:
-
-        # read the raster data for first band
-        data = src.read(1)
-        
-        # mask no-data values
-        no_data_value = src.nodata
-
-        if no_data_value is not None:
-            data = np.ma.masked_equal(data, no_data_value)
-
-        # plot raster...
-        plt.figure(figsize=(10, 10))
-        plt.imshow(data, cmap=cmap)
-        plt.axis('off')
-        plt.colorbar(shrink=0.5)
-        plt.show()
-
-
-
-
-
-
-            
