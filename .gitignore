@@ -1,3 +1,12 @@
-gan_tutorial/celeba/img_align_celeba/*.jpg
+data/*.gdb
+data/*.geojson
+
+data/warren/geo_warren*
+data/warren/*.tif
+data/warren/dem_tiles/*
+data/warren/aerial_tiles/*
+
 data/hardin/*hardin*
-data/warren/*warren*
+
+gan_tutorial/celeba/img_align_celeba/*.jpg
+
