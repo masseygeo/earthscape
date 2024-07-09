@@ -4,7 +4,8 @@ from math import ceil
 
 # import matplotlib.pyplot as plt
 
-
+import glob
+import shutil
 import fiona
 import geopandas as gpd
 import os
@@ -16,26 +17,57 @@ import zipfile
 
 
 
+def get_tile_index(output_zip_path):
+    url = r'https://ky.app.box.com/index.php?rm=box_download_shared_file&vanity_name=kymartian-kyaped-5k-tile-grids&file_id=f_1173114014568'
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        if response.status_code == 200:
+            # download zip file
+            with open(output_zip_path, 'wb') as zip:
+                zip.write(response.content)
+            # extract zip file contents
+            with zipfile.ZipFile(output_zip_path, 'r') as zip:
+                extract_dir = os.path.dirname(output_zip_path)
+                zip.extractall(extract_dir)
+            # extract geodatabase layers as geojsons
+            gdb_path = glob.glob(f"{extract_dir}/*Tile*.gdb")[0]
+            # gdb_path = output_zip_path.replace('.zip', '')
+            gdb_layers = fiona.listlayers(gdb_path)
+            for layer in gdb_layers:
+                gdf = gpd.read_file(gdb_path, layer=layer)
+                output_filename = f"{layer}.geojson"
+                output_dir = os.path.dirname(gdb_path)
+                output_path = os.path.join(output_dir, output_filename)
+                gdf.to_file(output_path, driver='GeoJSON')
+            # delete zip file
+            os.remove(output_zip_path)
+            # delete geodatabase (directory)
+            shutil.rmtree(gdb_path)
+    except:
+        print('Something went wrong...')
 
 
-def get_tile_index_geojson(gdb_path, output_dir):
-    gdb_layers = fiona.listlayers(gdb_path)
-    for layer in gdb_layers:
-        gdf = gpd.read_file(gdb_path, layer=layer)
-        output_filename = f"{layer}.geojson"
-        output_path = os.path.join(output_dir, output_filename)
-        gdf.to_file(output_path, driver='GeoJSON')
+
+# def get_tile_index_geojson(gdb_path, output_dir):
+#     gdb_layers = fiona.listlayers(gdb_path)
+#     for layer in gdb_layers:
+#         gdf = gpd.read_file(gdb_path, layer=layer)
+#         output_filename = f"{layer}.geojson"
+#         output_path = os.path.join(output_dir, output_filename)
+#         gdf.to_file(output_path, driver='GeoJSON')
 
 
 
-def get_intersecting_index_tiles(geojson_path, shapefile_path, output_geojson_path):
-    gdf_shapefile = gpd.read_file(shapefile_path)
-    gdf_shapefile['geometry'] = gdf_shapefile['geometry'].buffer(0)
-    gdf_shapefile_union = gpd.GeoDataFrame(geometry=[gdf_shapefile.unary_union], crs=gdf_shapefile.crs)
+def get_intersecting_index_tiles(geojson_path, gdb_path, gdb_layername, output_geojson_path):
+    # gdf_shapefile = gpd.read_file(shapefile_path)
+    # gdf_shapefile['geometry'] = gdf_shapefile['geometry'].buffer(0)
+    # gdf_shapefile_union = gpd.GeoDataFrame(geometry=[gdf_shapefile.unary_union], crs=gdf_shapefile.crs)
+    gdf_boundary = gpd.read_file(gdb_path, layer=gdb_layername)
     gdf_geojson = gpd.read_file(geojson_path)
-    if gdf_shapefile_union.crs != gdf_geojson.crs:
-        gdf_geojson = gdf_geojson.to_crs(gdf_shapefile_union.crs)
-    gdf_intersect = gpd.sjoin(left_df=gdf_geojson, right_df=gdf_shapefile_union, how='inner')
+    if gdf_boundary.crs != gdf_geojson.crs:
+        gdf_geojson = gdf_geojson.to_crs(gdf_boundary.crs)
+    gdf_intersect = gpd.sjoin(left_df=gdf_geojson, right_df=gdf_boundary, how='inner')
     gdf_intersect.to_file(output_geojson_path, driver='GeoJSON')
 
 
@@ -104,58 +136,96 @@ def download_data_tiles(index_path, id_field, url_field, output_dir):
 
 
 
-def mosaic_image_tiles(tile_dir, output_path, file_type='.tif'):
-    query = f"{tile_dir}/**/*{file_type}"
-    tile_paths_list = glob.glob(query, recursive=True)
-    image_tiles = []
-    for tile_path in tile_paths_list:
-        src = rasterio.open(tile_path)
-        image_tiles.append(src)
-    mosaic, mosaic_transform = merge(image_tiles)
-    mosaic_meta = src.meta.copy()
+# def mosaic_image_tiles(tile_dir, output_path, file_type='.tif'):
+#     query = f"{tile_dir}/**/*{file_type}"
+#     tile_paths_list = glob.glob(query, recursive=True)
+#     image_tiles = []
+#     for tile_path in tile_paths_list:
+#         src = rasterio.open(tile_path)
+#         image_tiles.append(src)
+#     mosaic, mosaic_transform = merge(image_tiles)
+#     mosaic_meta = src.meta.copy()
+#     mosaic_meta.update({'driver':'GTiff', 
+#                         'height':mosaic.shape[1], 
+#                         'width':mosaic.shape[2], 
+#                         'transform':mosaic_transform, 
+#                         'crs': src.crs})
+#     with rasterio.open(output_path, 'w', **mosaic_meta) as output:
+#         output.write(mosaic)
+#     for src in image_tiles:
+#         src.close()
+
+def mosaic_image_tiles(tile_paths_list, output_path):
+    images = [rasterio.open(tile_path) for tile_path in tile_paths_list]
+    mosaic, mosaic_transform = merge(images)
+    mosaic_meta = images[0].meta.copy()
     mosaic_meta.update({'driver':'GTiff', 
                         'height':mosaic.shape[1], 
                         'width':mosaic.shape[2], 
                         'transform':mosaic_transform, 
-                        'crs': src.crs})
+                        'crs': images[0].crs})
     with rasterio.open(output_path, 'w', **mosaic_meta) as output:
-        output.write(mosaic)
-    for src in image_tiles:
+        for i in range(images[0].shape[0]):
+            output.write(mosaic[i, :, :], i+1)
+    for src in images:
         src.close()
+
+
+
+
+def get_contained_and_edge_tile_paths(gdb_path, gdb_layername, geojson_path, data_dir):
+    gdf_boundary = gpd.read_file(gdb_path, layer=gdb_layername)
+    gdf_geojson = gpd.read_file(geojson_path)
+
+    if gdf_boundary.crs != gdf_geojson.crs:
+        gdf_geojson = gdf_geojson.to_crs(gdf_boundary.crs)
     
+    boundary = gdf_boundary.iloc[0].geometry
+    within_polygons = gdf_geojson[gdf_geojson.geometry.within(boundary)]
+    edge_polygons = gdf_geojson[~gdf_geojson.index.isin(within_polygons.index)]
+
+    within_poly_paths = []
+    for _, row in within_polygons.iterrows():
+        tile = row['TileName']
+        path = glob.glob(f"{data_dir}/*{tile}*.tif")[0]
+        within_poly_paths.append(path)
+
+    edge_poly_paths = []
+    for _, row in edge_polygons.iterrows():
+        tile = row['TileName']
+        path = glob.glob(f"{data_dir}/*{tile}*.tif")[0]
+        edge_poly_paths.append(path)
+
+    return within_poly_paths, edge_poly_paths
+
+
 
 
 
 from rasterio.mask import mask
-from shapely.geometry import Polygon
 
-def clip_image_to_boundary(input_path, boundary_path, output_path):
+def clip_image_to_boundary(input_tif_path, gdb_path, gdb_layername, output_tif_path=None):
 
-    gdf = gpd.read_file(boundary_path)
-    gdf['geometry'] = gdf['geometry'].buffer(0)
-    gdf_boundary = gpd.GeoDataFrame(geometry=[gdf.unary_union], crs=gdf.crs)
-    
-    # # Process each polygon to keep only the exterior as a new polygon
-    # exteriors = [Polygon(geom.exterior.coords) for geom in gdf.geometry if geom.is_valid]
-    
-    # # Create a single unified polygon from all exterior-only polygons
-    # unified_geometry = gpd.GeoSeries(exteriors).unary_union
+    gdf = gpd.read_file(gdb_path, layer=gdb_layername)
 
-    # # Create a new GeoDataFrame using the unified polygon (without any holes)
-    # gdf_boundary = gpd.GeoDataFrame(geometry=[unified_geometry], crs=gdf.crs)
+    with rasterio.Env(CHECK_DISK_FREE_SPACE='FALSE'):
+        with rasterio.open(input_tif_path) as src:
+            out_image, out_transform = mask(src, shapes=gdf.geometry, crop=True)
+            out_meta = src.meta.copy()
+            out_meta.update({'driver':'GTiff', 
+                            'height':out_image.shape[1], 
+                            'width':out_image.shape[2], 
+                            'transform':out_transform, 
+                            'crs': src.crs})
+            if output_tif_path == None:
+                new_file_dir = os.path.dirname(input_tif_path)
+                new_filename = os.path.splitext(os.path.basename(input_tif_path))[0] + '_clip.tif'
+                output_tif_path = os.path.join(new_file_dir, new_filename)
 
-
-    with rasterio.open(input_path) as src:
-        out_image, out_transform = mask(src, shapes=gdf_boundary['geometry'], crop=True)
-        out_meta = src.meta.copy()
-        out_meta.update({'driver':'GTiff', 
-                        'height':out_image.shape[1], 
-                        'width':out_image.shape[2], 
-                        'transform':out_transform, 
-                        'crs': src.crs})
-        
-        with rasterio.open(output_path, 'w', **out_meta) as output:
-            output.write(out_image)
+            with rasterio.open(output_tif_path, 'w', **out_meta) as output:
+                for i in range(out_image.shape[0]):
+                    output.write(out_image[i, :, :], i+1)
+        src.close()
 
 
 
