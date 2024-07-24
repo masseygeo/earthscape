@@ -2,6 +2,7 @@ data/*.gdb
 data/*.geojson
 
 data/warren/*.tif
+data/warren/*.geojson
 data/warren/dem_features/*
 data/warren/dem_tiles/*
 data/warren/aerial_tiles/*
