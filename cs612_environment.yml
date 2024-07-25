@@ -1,14 +1,15 @@
 name: cs612
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
 dependencies:
   - geopandas
+  - ipykernel
+  - jupyterlab
   - matplotlib
   - numpy
   - python
-  - rasterio
-  - ipykernel
-  - jupyterlab
   - pytorch
+  - rasterio
   - torchvision
+  - whitebox
