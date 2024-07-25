@@ -1,3 +1,5 @@
+.vscode
+
 data/*.gdb
 data/*.geojson
 
@@ -8,4 +10,3 @@ data/warren/dem_tiles/*
 data/warren/aerial_tiles/*
 
 data/hardin/*hardin*
-

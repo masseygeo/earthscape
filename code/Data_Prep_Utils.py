@@ -2,24 +2,38 @@
 # import matplotlib.pyplot as plt
 from shapely.geometry import box
 from math import ceil 
-import glob
-import shutil
-import fiona
-import geopandas as gpd
-import os
-import requests
-import glob
 import rasterio
 from rasterio.merge import merge
-import zipfile
 from rasterio.mask import mask
 from rasterio.enums import Resampling
 import numpy as np
 
 
 
+import requests
+import zipfile
+import glob
+import fiona
+import geopandas as gpd
+import os
+import shutil
+
+
 def get_tile_index(output_zip_path):
+    """
+    Function to fetch KyFromAbove data tile index geodatabase and save layers (DEM, Aerial, and Lidar Point Cloud) as individual geojson files.
+    
+    Parameters
+    ----------
+    output_zip_path : string
+        Path for output zip file.
+    
+    Returns
+    -------
+    None
+    """
     url = r'https://ky.app.box.com/index.php?rm=box_download_shared_file&vanity_name=kymartian-kyaped-5k-tile-grids&file_id=f_1173114014568'
+
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -51,6 +65,22 @@ def get_tile_index(output_zip_path):
 
 
 def get_intersecting_index_tiles(geojson_path, boundary_path, output_geojson_path):
+    """
+    Function to extract polygons from an input geojson file intersecting an area (specified by another geojson or shapefile), and then saving as an output geojson file.
+    
+    Parameters
+    ----------
+    geojson_path : string
+        Path to input geojson.
+    boundary_path : string
+        Path to area of interest geojson or shapefile.
+    output_geojson_path : string
+        Path for output geojson.
+    
+    Returns
+    -------
+    None
+    """
     gdf_geojson = gpd.read_file(geojson_path)
     gdf_boundary = gpd.read_file(boundary_path)
     if gdf_boundary.crs != gdf_geojson.crs:
@@ -60,7 +90,21 @@ def get_intersecting_index_tiles(geojson_path, boundary_path, output_geojson_pat
 
 
 
-def _download_tif(url, output_path):
+def download_tif(url, output_path):
+    """
+    Function to download TIFF or GeoTIFF file from a specified URL.
+
+    Parameters
+    ----------
+    url : string
+        URL for direct download of TIFF or GeoTIFF.
+    output_path : string
+        Path to save image file.
+
+    Returns
+    -------
+    None
+    """
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -74,7 +118,21 @@ def _download_tif(url, output_path):
 
 
 
-def _download_zip(url, zip_path):
+def download_zip(url, zip_path):
+    """
+    Function to download .zip file and extract contents from a specified URL.
+
+    Parameters
+    ----------
+    url : string
+        URL for direct download of TIFF or GeoTIFF.
+    zip_path : string
+        Path to save .zip file; contents will be extracted to this directory.
+
+    Returns
+    -------
+    None
+    """
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -93,20 +151,45 @@ def _download_zip(url, zip_path):
 
 
 def download_data_tiles(index_path, id_field, url_field, output_dir):
+    """
+    Function to read geojson or shapefile, download .zip or .tif from a given URL field, and save in a specified directory using another ID field.
+
+    Parameters
+    ----------
+    index_path : string
+        Path to geojson or shapefile.
+    id_field : string
+        Attribute of geojson or shapefile with unique ID.
+    url_field : string
+        Attribute of geojson or shapefile with download URL.
+    output_dir : string
+        Directory where file(s) will be downloaded.
+
+    Returns
+    -------
+    None
+    """
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+    
     gdf = gpd.read_file(index_path)
+    
     for _, tile in gdf.iterrows():
         tile_id = tile[id_field]
+        url = tile[url_field]
+        content_type = url[-3:]
+
         if len(glob.glob(f"{output_dir}/*{tile_id}*")) > 0:
             continue
-        url = tile[url_field]
-        # content_type = _check_download_type(url)
-        content_type = url[-3:]
+
         if content_type == 'tif':
-            output_path = os.path.join(output_dir, f"{tile_id}.tif")
-            _download_tif(url, output_path)
+            output_path = f"{output_dir}/{tile_id}.tif"
+            download_tif(url, output_path)
+
         elif content_type == 'zip':
             zip_path = os.path.join(output_dir, f"{tile_id}.zip")
-            _download_zip(url, zip_path)
+            download_zip(url, zip_path)
+
         else:
             print('Download is not .tif or .zip...')
 
