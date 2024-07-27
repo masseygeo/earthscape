@@ -195,6 +195,40 @@ def download_data_tiles(index_path, id_field, url_field, output_dir):
 
 
 
+def clip_spatial_to_boundary(input_gdb, layer, boundary, output_path):
+    """
+    Function to clip GIS spatial data from a geodatabase to the extent of a polygon boundary feature and save as a new GeoJSON file.
+
+    Parameters
+    ----------
+    input_gdb : string
+        Path to geodatabase containing the feature to be clipped.
+    layer : string
+        Name of feature layer in geodatabase to be clipped.
+    boundary : string
+        Path to GeoJSON or Shapefile of boundary mask.
+    output_path : string
+        Path for output GeoJSON file.
+
+    Returns
+    -------
+    None
+    """
+    gdf_input = gpd.read_file(input_gdb, layer=layer)
+    gdf_input = gdf_input.explode()
+
+    gdf_boundary = gpd.read_file(boundary)
+
+    if gdf_input.crs != gdf_boundary.crs:
+        gdf_input = gdf_input.to_crs(gdf_boundary.crs)
+
+    gdf_output = gpd.clip(gdf_input, mask=gdf_boundary)
+    gdf_output.to_file(output_path, driver='GeoJSON')
+
+
+
+
+
 def convert_image_dtype(input_tif_path, dtype):
     
     if '_f32.tif' in input_tif_path:
@@ -247,7 +281,6 @@ def get_contained_and_edge_tile_paths(index_path, boundary_path, data_dir, file_
         edge_poly_paths.append(path)
 
     return within_poly_paths, edge_poly_paths
-
 
 
 def clip_image_to_boundary(input_tif_path, boundary_path, output_tif_path=None):
