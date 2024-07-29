@@ -215,7 +215,7 @@ def clip_spatial_to_boundary(input_gdb, layer, boundary, output_path):
     None
     """
     gdf_input = gpd.read_file(input_gdb, layer=layer)
-    gdf_input = gdf_input.explode()
+    gdf_input = gdf_input.explode(ignore_index=True, index_parts=False)
 
     gdf_boundary = gpd.read_file(boundary)
 
@@ -416,53 +416,4 @@ def create_patch_polygons(gdf, max_width, max_height, pixel_width=5, pixel_heigh
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-def download_imageservice(gdf_grid, output_dir, pixel_width=5, pixel_height=5, type='dem'):
-
-    for idx, patch in gdf_grid.iterrows():
-
-        minx, miny, maxx, maxy = patch.geometry.bounds
-
-        res_x = (maxx - minx) / pixel_width
-        res_y = (maxy - miny) / pixel_height
-
-        # Define the parameters for the download
-        bbox = f"{minx}, {miny}, {maxx}, {maxy}"
-        bboxSR = '3089'
-        size = f"{res_x},{res_y}"
-        # format_type = 'tif'
-
-        # Construct the URL
-        # url = f'https://kyraster.ky.gov/arcgis/rest/services/ElevationServices/Ky_DEM_KYAPED_5FT/ImageServer/exportImage?bbox={bbox}&bboxSR={bboxSR}&size={size}&format={format_type}&f=image'
-
-        url = f"https://kyraster.ky.gov/arcgis/rest/services/ElevationServices/Ky_DEM_KYAPED_5FT/ImageServer/exportImage?bbox=&bboxSR={bboxSR}&bandIds=1&size={size}&format=image/tiff&f=image"
-
-    # Send the request
-    response = requests.get(url)
-
-    filename = f"{type}_patchid_{patch['id']}.tif"
-
-    output_path = os.path.join(output_dir, filename)
-
-    # Check if the request was successful
-    if response.status_code == 200:
-        # Save the image to disk
-        with open(output_path, 'wb') as file:
-            file.write(response.content)
-        print("Image downloaded successfully.")
-
-    else:
-        print("Failed to download the image. Status code:", response.status_code)
-    
-    return output_path
 
