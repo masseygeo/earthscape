@@ -5,8 +5,11 @@ data/*.geojson
 
 data/warren/*.tif
 data/warren/*.geojson
+data/warren/aerial_tiles/*
 data/warren/dem_features/*
 data/warren/dem_tiles/*
-data/warren/aerial_tiles/*
+data/nhdplushr/*.geojson
+data/osm/*.geojson
 
-data/hardin/*hardin*
+data/hardin/*
+data/ky_osm/*
