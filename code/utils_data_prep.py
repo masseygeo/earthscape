@@ -290,20 +290,33 @@ def convert_spatial_to_reference_image(input_spatial, reference_image, output_pa
 
 
 
-def convert_image_dtype(input_tif_path, dtype):
+def convert_image_dtype(input_tif_path):
+    """
+    Function to convert image to float32 dtype.
+    
+    Parameters
+    ----------
+    input_tif_path : string
+        Path to GeoTIFF image to be converted.
+    
+    Returns
+    -------
+    None
+    """
     
     if '_f32.tif' in input_tif_path:
+        print(f"File - {input_tif_path} - already exists")
         return
     
     with rasterio.open(input_tif_path) as src:
         nodata_value = src.nodata
         data = src.read()
-        out_data = data.astype(dtype)
+        out_data = data.astype(rasterio.float32)
         if nodata_value is None:
             nodata_value = np.nan
             out_data[data == src.meta['nodata']] = nodata_value
         out_meta = src.meta.copy()
-        out_meta.update({'dtype': dtype, 'nodata': nodata_value})
+        out_meta.update({'dtype': rasterio.float32, 'nodata': nodata_value})
     output_path = input_tif_path[:-4] + '_f32.tif'
     
     with rasterio.open(output_path, 'w', **out_meta) as output:
