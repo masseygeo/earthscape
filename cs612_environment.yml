@@ -1,7 +1,7 @@
 name: cs612
 channels:
-  - defaults
   - conda-forge
+  - defaults
 dependencies:
   - fiona
   - geopandas
@@ -12,5 +12,6 @@ dependencies:
   - python
   - pytorch
   - rasterio
+  - rasterstats
   - torchvision
   - whitebox
