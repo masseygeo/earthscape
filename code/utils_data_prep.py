@@ -234,7 +234,7 @@ def clip_spatial_to_boundary(input_spatial, boundary, output_path, gdb_layer=Non
 
 def convert_spatial_to_reference_image(input_spatial, reference_image, output_path, attribute=None):
     """
-    Function to convert geospatial vector files (shapefile or GeoJSON) to images with spatial, resolution, and transform properties of a reference image (GeoTIFF).
+    Function to convert geospatial vector file (shapefile or GeoJSON) to image with spatial coordinate reference system, resolution, and transform properties that match a reference image (GeoTIFF).
 
     Parameter
     ---------
