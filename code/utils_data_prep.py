@@ -308,6 +308,11 @@ def convert_image_dtype(input_tif_path):
         print(f"File - {input_tif_path} - already exists")
         return
     
+    output_path = input_tif_path[:-4] + '_f32.tif'
+    if os.path.isfile(output_path):
+        print(f"File - {input_tif_path} - already exists")
+        return
+    
     with rasterio.open(input_tif_path) as src:
         nodata_value = src.nodata
         data = src.read()
@@ -317,7 +322,7 @@ def convert_image_dtype(input_tif_path):
             out_data[data == src.meta['nodata']] = nodata_value
         out_meta = src.meta.copy()
         out_meta.update({'dtype': rasterio.float32, 'nodata': nodata_value})
-    output_path = input_tif_path[:-4] + '_f32.tif'
+    # output_path = input_tif_path[:-4] + '_f32.tif'
     
     with rasterio.open(output_path, 'w', **out_meta) as output:
         for i in range(out_data.shape[0]):
@@ -358,7 +363,7 @@ def get_contained_and_edge_tile_paths(index_path, boundary_path, data_dir, file_
 
 
 def clip_image_to_boundary(input_tif_path, boundary_path, output_tif_path=None):
-    gdf = gpd.read_file(boundary_path)
+    boundary = gpd.read_file(boundary_path)
 
     with rasterio.Env(CHECK_DISK_FREE_SPACE='FALSE'):
         with rasterio.open(input_tif_path) as src:
@@ -370,7 +375,7 @@ def clip_image_to_boundary(input_tif_path, boundary_path, output_tif_path=None):
             else:
                 nodata_value = src.nodata
 
-            out_image, out_transform = mask(src, shapes=gdf.geometry, crop=True, nodata=nodata_value)
+            out_image, out_transform = mask(src, shapes=boundary.geometry, crop=True, nodata=nodata_value)
             out_meta = src.meta.copy()
             out_meta.update({'driver':'GTiff', 
                             'height':out_image.shape[1], 
