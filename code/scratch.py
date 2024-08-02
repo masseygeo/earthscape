@@ -1,42 +1,46 @@
+import geopandas as gpd
 import glob
-import os
-from utils_datadownloads import *
 
 
-#############################################
-# Mosaic DEM tiles into single DEM GeoTIFF
-#############################################
-os.chdir(r'/Users/matthew/GitHub/cs612/code')
 
-# path to geodatabase
-gdb_path = r'../data/geology.gdb'
+# identify main tile (use polygon patch centroid)
+# get surrounding eight neighbor tiles
 
-# layer name of boundary feature class in geodatabase used to clip dem 
-boundary_layer = r'warren_geo_boundary'
+def get_main_tile_for_patch(patch_path, index_path):
+    patches = gpd.read_file(patch_path)
+    index = gpd.read_file(index_path)
 
-# path to geojson containing tile polygons
-geojson_path = r'../data/warren/warren_KYAPED_Aerial_Tile_Index.geojson'
+    tiles = []
+    for _, row in patches.iterrows():
 
-# directory containing dem tiles
-aerial_tile_dir = r'../data/warren/aerial_tiles'
+        patch_centroid = row.geometry.centroid
+        tile = index[index.geometry.contains(patch_centroid)]
+        tile_names = list(tile['TileName'].values)
 
-# path for output dem
-output_aerial_path = r'../data/warren/aerial.tif'
+        neighbors = index[index.geometry.touches(tile.geometry.iloc[0], align=False)]
+        neighbor_names = list(neighbors['TileName'])
 
-# get lists of paths of edge tiles & contained tiles
-within_tile_paths, edge_tile_paths = get_contained_and_edge_tile_paths(gdb_path, boundary_layer, geojson_path, aerial_tile_dir)
-print('got paths...')
-# iterate through edge tiles and clip to dataset boundary
-for tile_path in edge_tile_paths:
-    clip_image_to_boundary(tile_path, gdb_path, boundary_layer, output_tif_path=None)
-print('clipped tiles...')
-# get list of clipped edge tile paths & combine with contained tile paths
-clipped_edge_tile_paths = glob.glob(f"{aerial_tile_dir}/*clip.tif")
-tile_paths_list = within_tile_paths + clipped_edge_tile_paths
+        tile_names = tile_names + neighbor_names
+        tiles.append(tile_names)
+    patches['main_tile'] = tiles
 
-# mosaic clipped edge and contained tiles into single dem and save
-mosaic_image_tiles(tile_paths_list, output_aerial_path)
+    return patches
 
-# clean up clipped tiles (keep original full tiles)
-for path in clipped_edge_tile_paths:
-    os.remove(path)
+
+
+# get paths to 9 tiles
+
+# merge tiles
+
+# resample tiles
+
+# extract patch image
+
+################################################################
+patch_path = glob.glob(r'../data/warren/patches*.geojson')[0]
+index_path = glob.glob(r'../data/warren/*Aerial*.geojson')[0]
+
+patches = get_main_tile_for_patch(patch_path, index_path)
+patches.head()
+
+# gpd.read_file(index_path).loc[0,'TileName'].values()
