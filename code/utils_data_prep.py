@@ -305,13 +305,9 @@ def convert_image_dtype(input_tif_path):
     """
     
     if '_f32.tif' in input_tif_path:
-        print(f"File - {input_tif_path} - already exists")
         return
     
     output_path = input_tif_path[:-4] + '_f32.tif'
-    if os.path.isfile(output_path):
-        print(f"File - {input_tif_path} - already exists")
-        return
     
     with rasterio.open(input_tif_path) as src:
         nodata_value = src.nodata
