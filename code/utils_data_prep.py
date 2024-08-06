@@ -1,12 +1,9 @@
 
 # import matplotlib.pyplot as plt
-from shapely.geometry import box
 from math import ceil 
 from rasterio.merge import merge
 from rasterio.mask import mask
-from rasterio.enums import Resampling
 import numpy as np
-
 
 
 import requests
@@ -18,6 +15,9 @@ import os
 import shutil
 import rasterio
 from rasterio.features import rasterize
+from rasterio.warp import reproject, Resampling
+from shapely.geometry import box
+
 
 
 def get_tile_index(output_zip_path):
@@ -419,74 +419,149 @@ def mosaic_image_tiles(tile_paths_list, output_path, band_number=None, resample=
 
 
 
+def reproject_image_to_reference(image_path, reference_path):
+
+    with rasterio.open(image_path) as src:
+        src_profile = src.profile
+        src_data = src.read(1)
+    
+    with rasterio.open(reference_path) as ref:
+        ref_profile = ref.profile
+        ref_data = ref.read(1)
+    
+    dst_data = np.empty_like(ref_data)
+
+    reproject(source=src_data, 
+              destination=dst_data, 
+              src_transform=src_profile['transform'], 
+              src_crs=src_profile['crs'], 
+              dst_transform=ref_profile['transform'], 
+              dst_crs=ref_profile['crs'], 
+              dst_res=ref_profile['transform'][0], 
+              resampling=Resampling.bilinear)
+
+    dst_meta = ref.meta.copy()
+
+    with rasterio.open(image_path, 'w', **dst_meta) as dst:
+        dst.write(dst_data, 1)
 
 
 
 
+def create_patches(boundary_path, patch_size, overlap, image_resolution, output_path):
+    """
+    Function to create a grid of square patches of specified size covering an area. Patches are square and assume that output will be used to mask/clip images for downstream tasks.
 
+    Parameters
+    ----------
+    boundary_path : string
+        Path to area vector file (.shp or .geojson).
+    patch_size : int
+        Size of patches in pixels. Final patch is square (patch_size x patch_size).
+    overlap : float
+        Proportion of overlap of neighboring patches.
+    image_resolution : int or float
+        Spatial resolution of pixels.
+    output_path : string
+        Path for output GeoJSON of patches.
 
-
-
-
-
-
-
-
-
-
-def create_patch_polygons(gdf, max_width, max_height, pixel_width=5, pixel_height=5):
-
-    # get coordinates of bounding box of area of intrest
+    Returns
+    -------
+    None
+    """
+    gdf = gpd.read_file(boundary_path)
+    gdf['geometry'] = gdf['geometry'].buffer(0)
     minx, miny, maxx, maxy = gdf.total_bounds
 
+    patch_size_spatial_units = patch_size * image_resolution
+    overlap_patch_start = patch_size_spatial_units * (1-overlap)
 
-    # initialize list to hold individual grid cell polygons
-    grid_cells = []
+    patches = []
+    x = minx
+    while x < maxx:
+        y = miny
+        while y < maxy:
+            patch = box(x, y, x+patch_size_spatial_units, y+patch_size_spatial_units)
+            if patch.intersects(gdf.unary_union):
+                patches.append(patch)
+            y += overlap_patch_start
+        x += overlap_patch_start
+    
+    gdf_patches = gpd.GeoDataFrame(crs=gdf.crs, geometry=patches)
+    gdf_patches['patch_id'] = [f"{patch_size}_{i}" for i in range(1, len(gdf_patches)+1)]
+    gdf_final = gpd.sjoin(gdf_patches, gdf, how='inner', predicate='intersects')
+    gdf_final.drop(columns=['index_right', 'Shape_Length', 'Shape_Area'], inplace=True)
+    gdf_final.to_file(output_path, driver='GeoJSON')
 
-    # initialize current x position with minx
-    current_x = minx
+    return gdf_final
 
-    # create grid cells by column starting at lower left corner and increasing y, then increasing x to next column...
-    while current_x < maxx:
 
-        # test if grid cell width is less than maximum allowable download width...
-        if (maxx - current_x) < max_width:
 
-            # ensure current_width is divisible by 5 AND exceeds boundary edges
-            current_width = ceil((maxx - current_x) / pixel_width) * pixel_width
 
-        else:
-            current_width = max_width
 
-        # initialize current_y as miny for each new column...
-        current_y = miny
 
-        # iterate over all grid cells within column...
-        while current_y < maxy:
 
-            # test if grid cell height is less than maximum allowable download height...
-            if (maxy - current_y) < max_height:
-                current_height = ceil((maxy - current_y) / pixel_height) * pixel_height
 
-            else:
-                current_height = max_height
 
-            # create box using grid cell coordinates and sizes, then append to grid_cells list
-            grid_cells.append(box(current_x, current_y, current_x + current_width, current_y + current_height))
 
-            # increment current_y to next higher grid cell in column
-            current_y += current_height
+
+
+
+
+
+# def create_patch_polygons(gdf, max_width, max_height, pixel_width=5, pixel_height=5):
+
+#     # get coordinates of bounding box of area of intrest
+#     minx, miny, maxx, maxy = gdf.total_bounds
+
+
+#     # initialize list to hold individual grid cell polygons
+#     grid_cells = []
+
+#     # initialize current x position with minx
+#     current_x = minx
+
+#     # create grid cells by column starting at lower left corner and increasing y, then increasing x to next column...
+#     while current_x < maxx:
+
+#         # test if grid cell width is less than maximum allowable download width...
+#         if (maxx - current_x) < max_width:
+
+#             # ensure current_width is divisible by 5 AND exceeds boundary edges
+#             current_width = ceil((maxx - current_x) / pixel_width) * pixel_width
+
+#         else:
+#             current_width = max_width
+
+#         # initialize current_y as miny for each new column...
+#         current_y = miny
+
+#         # iterate over all grid cells within column...
+#         while current_y < maxy:
+
+#             # test if grid cell height is less than maximum allowable download height...
+#             if (maxy - current_y) < max_height:
+#                 current_height = ceil((maxy - current_y) / pixel_height) * pixel_height
+
+#             else:
+#                 current_height = max_height
+
+#             # create box using grid cell coordinates and sizes, then append to grid_cells list
+#             grid_cells.append(box(current_x, current_y, current_x + current_width, current_y + current_height))
+
+#             # increment current_y to next higher grid cell in column
+#             current_y += current_height
         
-        # increment current_x to next column after finishing all grid cells in one column
-        current_x += current_width
+#         # increment current_x to next column after finishing all grid cells in one column
+#         current_x += current_width
 
-    # create geodataframe of grid cell polygons
-    gdf_grid = gpd.GeoDataFrame({'geometry':grid_cells}, crs=gdf.crs)
+#     # create geodataframe of grid cell polygons
+#     gdf_grid = gpd.GeoDataFrame({'geometry':grid_cells}, crs=gdf.crs)
 
-    # add unique id for each grid cell
-    gdf_grid['id'] = range(len(gdf_grid))
+#     # add unique id for each grid cell
+#     gdf_grid['id'] = range(len(gdf_grid))
 
-    return gdf_grid
+#     return gdf_grid
 
 
 
