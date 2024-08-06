@@ -303,26 +303,25 @@ def convert_image_dtype(input_tif_path):
     -------
     None
     """
-    
     if '_f32.tif' in input_tif_path:
         return
     
     output_path = input_tif_path[:-4] + '_f32.tif'
     
-    with rasterio.open(input_tif_path) as src:
-        nodata_value = src.nodata
-        data = src.read()
-        out_data = data.astype(rasterio.float32)
-        if nodata_value is None:
-            nodata_value = np.nan
-            out_data[data == src.meta['nodata']] = nodata_value
-        out_meta = src.meta.copy()
-        out_meta.update({'dtype': rasterio.float32, 'nodata': nodata_value})
-    # output_path = input_tif_path[:-4] + '_f32.tif'
-    
-    with rasterio.open(output_path, 'w', **out_meta) as output:
-        for i in range(out_data.shape[0]):
-            output.write(out_data[i, :, :], i+1)
+    with rasterio.Env(CHECK_DISK_FREE_SPACE='FALSE'):
+        with rasterio.open(input_tif_path) as src:
+            nodata_value = src.nodata
+            data = src.read()
+            out_data = data.astype(rasterio.float32)
+            if nodata_value is None:
+                nodata_value = np.nan
+                out_data[data == src.meta['nodata']] = nodata_value
+            out_meta = src.meta.copy()
+            out_meta.update({'dtype': rasterio.float32, 'nodata': nodata_value})
+        
+        with rasterio.open(output_path, 'w', **out_meta) as output:
+            for i in range(out_data.shape[0]):
+                output.write(out_data[i, :, :], i+1)
 
 
 
