@@ -11,6 +11,7 @@ data/warren/aerial_tiles/*
 data/warren/dem_features/*
 data/warren/dem_tiles/*
 data/warren/osm_warren/*
+data/warren/patches/*
 
 data/hardin/*
 

@@ -493,7 +493,7 @@ def create_patches(boundary_path, patch_size, overlap, image_resolution, output_
     gdf_final.drop(columns=['index_right', 'Shape_Length', 'Shape_Area'], inplace=True)
     gdf_final.to_file(output_path, driver='GeoJSON')
 
-    return gdf_final
+    # return gdf_final
 
 
 
