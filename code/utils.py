@@ -46,14 +46,16 @@ def shapefile_to_tif_conversion(input_shapefile_path, shapefile_field, reference
     """
     Convert a GIS shapefile of categorical polygons to a GeoTIFF using the same geospatial metadata as a reference GeoTIFF. The shapefile value field to use for the output GeoTIFF will be encoded as integers, either as a new set of integers for each unique value (default) or for a subset of values using a provided mapping dictionary.
     
-    Parameters:
+    Parameters
+    ----------
     shapefile_path (str): Path to the input shapefile.
     shapefile_field (str): Field name containing value of interest.
     reference_tif_path (str): Path to the reference GeoTIFF.
     output_tif_path (str): Path to the output GeoTIFF.
     geo_dict (dict): Dictionary of field names and encoded integers to use as values in output GeoTIFF.
     
-    Returns:
+    Returns
+    -------
     None    
     """
     # handle existing output file...

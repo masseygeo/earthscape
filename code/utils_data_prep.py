@@ -1,22 +1,61 @@
 
+import requests
+import os
+import zipfile
+
+
+
+
 # import matplotlib.pyplot as plt
 from math import ceil 
 from rasterio.merge import merge
 from rasterio.mask import mask
 import numpy as np
 
-
-import requests
-import zipfile
 import glob
 import fiona
 import geopandas as gpd
-import os
 import shutil
 import rasterio
 from rasterio.features import rasterize
 from rasterio.warp import reproject, Resampling
 from shapely.geometry import box
+
+
+
+
+def download_zip(url, output_dir):
+    """
+    Function to download .zip file and extract contents to the specified directory.
+
+    Parameters
+    ----------
+    url : string
+        URL for zip file download.
+    output_dir : string
+        Path to directory where zip file will be extracted.
+
+    Returns
+    -------
+    None
+    """
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        zip_path = os.path.join(output_dir, 'download.zip')
+        if response.status_code == 200:
+            with open(zip_path, 'wb') as zip:
+                zip.write(response.content)
+            with zipfile.ZipFile(zip_path, 'r') as zip:
+                zip.extractall(output_dir)
+            os.remove(zip_path)
+        else:
+            print('Reponse code not 200 for downloading .zip...')
+    except:
+        print('Error downloading .zip...')
+
+
+
 
 
 
@@ -119,35 +158,7 @@ def download_tif(url, output_path):
 
 
 
-def download_zip(url, zip_path):
-    """
-    Function to download .zip file and extract contents from a specified URL.
 
-    Parameters
-    ----------
-    url : string
-        URL for direct download of TIFF or GeoTIFF.
-    zip_path : string
-        Path to save .zip file; contents will be extracted to this directory.
-
-    Returns
-    -------
-    None
-    """
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        if response.status_code == 200:
-            with open(zip_path, 'wb') as zip:
-                zip.write(response.content)
-            with zipfile.ZipFile(zip_path, 'r') as zip:
-                extract_dir = os.path.dirname(zip_path)
-                zip.extractall(extract_dir)
-            os.remove(zip_path)
-        else:
-            print('Reponse code not 200 for downloading .zip...')
-    except:
-        print('Error downloading .zip...')
 
 
 
