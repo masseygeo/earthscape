@@ -26,7 +26,7 @@ from shapely.geometry import box
 
 def download_zip(url, output_dir):
     """
-    Function to download .zip file and extract contents to the specified directory.
+    Function to download .zip file and extract contents in the specified directory.
 
     Parameters
     ----------
@@ -53,6 +53,13 @@ def download_zip(url, output_dir):
             print('Reponse code not 200 for downloading .zip...')
     except:
         print('Error downloading .zip...')
+
+
+
+
+
+
+
 
 
 
