@@ -3,6 +3,13 @@ import requests
 import os
 import zipfile
 
+from math import ceil
+from rasterio.transform import from_origin
+from rasterio.features import rasterize
+import json
+
+
+
 
 
 
@@ -54,6 +61,65 @@ def download_zip(url, output_dir):
     except:
         print('Error downloading .zip...')
 
+
+def gis_to_image(input_path, output_path, output_resolution, attribute=None):
+    """
+    Function to convert GeoJSON to GeoTIFF of a given resolution. The image will be binary (default) unless the attribute argument is given.
+
+    Parameters
+    ----------
+    input_path : string
+    output_path : string
+    output_resolution : int
+    attribute : string (optional)
+
+    Returns
+    -------
+    None
+    """
+
+    gdf = gpd.read_file(input_path)
+    gdf['geometry'] = gdf['geometry'].buffer(0)
+    
+    minx, miny, maxx, maxy = gdf.total_bounds
+    width = ceil((maxx - minx) / output_resolution)
+    height = ceil((maxy - miny) / output_resolution)
+
+    transform = from_origin(west=minx, north=maxy, xsize=output_resolution, ysize=output_resolution)
+
+    if not attribute:
+        shapes = [(geom, 1) for geom in gdf.geometry]
+    
+    else:
+        categories = gdf[attribute].unique()
+        new_categories = f"{attribute}_int"
+        mapper = {key:value for value, key in enumerate(categories)}
+        gdf[new_categories] = gdf[attribute].apply(lambda x: mapper.get(x, np.nan))
+
+        shapes = [(geom, value) for geom, value in zip(gdf.geometry, gdf[new_categories])]
+
+        output_meta_path = output_path.replace('.tif', '.json')
+        with open(output_meta_path, 'w') as file:
+            json.dump(mapper, file, indent=4)
+
+    output_image = rasterize(shapes = shapes, 
+                             out_shape = (height, width), 
+                             transform = transform, 
+                             all_touched = True, 
+                             fill = np.nan, 
+                             dtype = rasterio.float32)
+    
+    output_meta = {'driver': 'GTiff', 
+                   'height': height, 
+                   'width': width, 
+                   'transform': transform, 
+                   'count': 1, 
+                   'dtype': output_image.dtype, 
+                   'nodata': np.nan, 
+                   'crs': gdf.crs.to_string()}
+    
+    with rasterio.open(output_path, 'w', **output_meta) as dst:
+        dst.write(output_image, 1)
 
 
 
