@@ -8,21 +8,20 @@ from rasterio.transform import from_origin
 from rasterio.features import rasterize
 import json
 
+import shutil
 
 
 
 
 
-# import matplotlib.pyplot as plt
+from shapely.geometry import box
 from math import ceil 
 from rasterio.merge import merge
 from rasterio.mask import mask
 import numpy as np
-
 import glob
 import fiona
 import geopandas as gpd
-import shutil
 import rasterio
 from rasterio.features import rasterize
 from rasterio.warp import reproject, Resampling
@@ -37,9 +36,9 @@ def download_zip(url, output_dir):
 
     Parameters
     ----------
-    url : string
+    url : str
         URL for zip file download.
-    output_dir : string
+    output_dir : str
         Path to directory where zip file will be extracted.
 
     Returns
@@ -62,24 +61,30 @@ def download_zip(url, output_dir):
         print('Error downloading .zip...')
 
 
+
 def gis_to_image(input_path, output_path, output_resolution, attribute=None):
     """
-    Function to convert GeoJSON to GeoTIFF of a given resolution. The image will be binary (default) unless the attribute argument is given.
+    Function to convert vector GIS (GeoJSON or Shapefile) to GeoTIFF image with a given resolution. The image will be binary (default) unless the attribute argument is given. Output GeoTIFF file is of float32 dtype with NaN representing no data values.
 
     Parameters
     ----------
-    input_path : string
-    output_path : string
+    input_path : str
+        Path to input GeoJSON or Shapefile.
+    output_path : str
+        Path for output GeoTIFF.
     output_resolution : int
-    attribute : string (optional)
+        Resolution of GeoTIFF in native spatial units of input GIS file.
+    attribute : str (optional)
+        Name of attribute in GIS file for assigning pixel values. If not provided, image will be binary.
 
     Returns
     -------
     None
     """
-
     gdf = gpd.read_file(input_path)
-    gdf['geometry'] = gdf['geometry'].buffer(0)
+
+    if gdf.geom_type.isin(['Polygon', 'MultiPolygon']).any():
+        gdf['geometry'] = gdf['geometry'].buffer(0)
     
     minx, miny, maxx, maxy = gdf.total_bounds
     width = ceil((maxx - minx) / output_resolution)
@@ -87,21 +92,11 @@ def gis_to_image(input_path, output_path, output_resolution, attribute=None):
 
     transform = from_origin(west=minx, north=maxy, xsize=output_resolution, ysize=output_resolution)
 
-    if not attribute:
-        shapes = [(geom, 1) for geom in gdf.geometry]
+    values = gdf[attribute].unique()
+    mapper = {key:value for value, key in enumerate(values)}
+    gdf[f"{attribute}_int"] = gdf[attribute].apply(lambda x: mapper.get(x, np.nan))
+    shapes = [(geom, value) for geom, value in zip(gdf.geometry, gdf[f"{attribute}_int"])]
     
-    else:
-        categories = gdf[attribute].unique()
-        new_categories = f"{attribute}_int"
-        mapper = {key:value for value, key in enumerate(categories)}
-        gdf[new_categories] = gdf[attribute].apply(lambda x: mapper.get(x, np.nan))
-
-        shapes = [(geom, value) for geom, value in zip(gdf.geometry, gdf[new_categories])]
-
-        output_meta_path = output_path.replace('.tif', '.json')
-        with open(output_meta_path, 'w') as file:
-            json.dump(mapper, file, indent=4)
-
     output_image = rasterize(shapes = shapes, 
                              out_shape = (height, width), 
                              transform = transform, 
@@ -120,26 +115,21 @@ def gis_to_image(input_path, output_path, output_resolution, attribute=None):
     
     with rasterio.open(output_path, 'w', **output_meta) as dst:
         dst.write(output_image, 1)
+    
+    output_json_path = output_path.replace('.tif', '.json')
+    with open(output_json_path, 'w') as file:
+        json.dump(mapper, file, indent=4)
 
 
 
-
-
-
-
-
-
-
-
-
-def get_tile_index(output_zip_path):
+def get_tile_index(output_dir):
     """
-    Function to fetch KyFromAbove data tile index geodatabase and save layers (DEM, Aerial, and Lidar Point Cloud) as individual geojson files.
+    Function to fetch KyFromAbove data tile index geodatabase and save layers (DEM, Aerial, and Lidar Point Cloud) as GeoJSON files in specified directory.
     
     Parameters
     ----------
-    output_zip_path : string
-        Path for output zip file.
+    output_dir : str
+        Directory path for output files.
     
     Returns
     -------
@@ -150,69 +140,69 @@ def get_tile_index(output_zip_path):
     try:
         response = requests.get(url)
         response.raise_for_status()
+        
         if response.status_code == 200:
-            # download zip file
+
+            output_zip_path = f"{output_dir}/index.gdb.zip"
+            
             with open(output_zip_path, 'wb') as zip:
                 zip.write(response.content)
-            # extract zip file contents
+
             with zipfile.ZipFile(output_zip_path, 'r') as zip:
-                extract_dir = os.path.dirname(output_zip_path)
-                zip.extractall(extract_dir)
-            # extract geodatabase layers as geojsons
-            gdb_path = glob.glob(f"{extract_dir}/*Tile*.gdb")[0]
-            # gdb_path = output_zip_path.replace('.zip', '')
+                zip.extractall(output_dir)
+
+            gdb_path = glob.glob(f"{output_dir}/*.gdb")[0]
             gdb_layers = fiona.listlayers(gdb_path)
+            
             for layer in gdb_layers:
                 gdf = gpd.read_file(gdb_path, layer=layer)
-                output_filename = f"{layer}.geojson"
-                output_dir = os.path.dirname(gdb_path)
-                output_path = os.path.join(output_dir, output_filename)
+                output_path = f"{output_dir}/{layer}.geojson"
                 gdf.to_file(output_path, driver='GeoJSON')
-            # delete zip file
+            
             os.remove(output_zip_path)
-            # delete geodatabase (directory)
             shutil.rmtree(gdb_path)
+    
     except:
-        print('Something went wrong...')
+        print(f"Did not connect with download URL...\n{url}")
 
 
 
-def get_intersecting_index_tiles(geojson_path, boundary_path, output_geojson_path):
+def get_intersecting_index_tiles(input_path, boundary_path, output_path):
     """
-    Function to extract polygons from an input geojson file intersecting an area (specified by another geojson or shapefile), and then saving as an output geojson file.
+    Function to extract tile index polygons from an input GeoJSON intersecting an area specified by another GeoJSON, and then saving the subset tile index polygons as a new GeoJSON.
     
     Parameters
     ----------
-    geojson_path : string
-        Path to input geojson.
-    boundary_path : string
-        Path to area of interest geojson or shapefile.
-    output_geojson_path : string
-        Path for output geojson.
+    geojson_path : str
+        Path to input tile index GeoJSON.
+    boundary_path : str
+        Path to area of interest GeoJSON.
+    output_geojson_path : str
+        Path for output GeoJSON.
     
     Returns
     -------
     None
     """
-    gdf_geojson = gpd.read_file(geojson_path)
+    gdf_geojson = gpd.read_file(input_path)
     gdf_boundary = gpd.read_file(boundary_path)
     if gdf_boundary.crs != gdf_geojson.crs:
         gdf_geojson = gdf_geojson.to_crs(gdf_boundary.crs)
     gdf_intersect = gpd.sjoin(left_df=gdf_geojson, right_df=gdf_boundary, how='inner')
-    gdf_intersect.to_file(output_geojson_path, driver='GeoJSON')
+    gdf_intersect.to_file(output_path, driver='GeoJSON')
 
 
 
 def download_tif(url, output_path):
     """
-    Function to download TIFF or GeoTIFF file from a specified URL.
+    Function to download TIFF file from a specified URL.
 
     Parameters
     ----------
-    url : string
-        URL for direct download of TIFF or GeoTIFF.
-    output_path : string
-        Path to save image file.
+    url : str
+        URL for direct download of GeoTIFF.
+    output_path : str
+        Path to save output GeoTIFF.
 
     Returns
     -------
@@ -225,30 +215,26 @@ def download_tif(url, output_path):
             with open(output_path, 'wb') as tif:
                 tif.write(response.content)
         else:
-            print('Reponse code not 200 for downloading .tif...')
+            print('Reponse code for URL not 200...')
     except:
-        print('Error downloading .tif...')
-
-
-
-
+        print(f"Error connecting to URL...\n{url}")
 
 
 
 def download_data_tiles(index_path, id_field, url_field, output_dir):
     """
-    Function to read geojson or shapefile, download .zip or .tif from a given URL field, and save in a specified directory using another ID field.
+    Function to read GeoJSON of a specific area, download a TIFF using the URL from a specified field, and save the TIFF to the specified output directory.
 
     Parameters
     ----------
     index_path : string
-        Path to geojson or shapefile.
+        Path to GeoJSON.
     id_field : string
-        Attribute of geojson or shapefile with unique ID.
+        Attribute name of GeoJSON containing unique ID for file naming.
     url_field : string
-        Attribute of geojson or shapefile with download URL.
+        Attribute name of GeoJSON containing the download URL.
     output_dir : string
-        Directory where file(s) will be downloaded.
+        Directory where TIFF(s) will be downloaded.
 
     Returns
     -------
@@ -272,41 +258,212 @@ def download_data_tiles(index_path, id_field, url_field, output_dir):
             download_tif(url, output_path)
 
         elif content_type == 'zip':
-            zip_path = os.path.join(output_dir, f"{tile_id}.zip")
-            download_zip(url, zip_path)
+            # zip_path = os.path.join(output_dir, f"{tile_id}.zip")
+            download_zip(url, output_dir)
 
         else:
             print('Download is not .tif or .zip...')
 
 
 
-def clip_spatial_to_boundary(input_spatial, boundary, output_path, gdb_layer=None):
+def get_contained_and_edge_tile_paths(index_path, boundary_path, data_dir):
     """
-    Function to clip GIS spatial data from a geodatabase to the extent of a polygon boundary feature and save as a new GeoJSON file.
+    Function to get lists of aerial imagery tile paths that are completely contained or intersecting the edge of the boundary area.
 
     Parameters
     ----------
-    input_spatial : string
-        Path to spatial file (or geodatabase) to be clipped.
-    boundary : string
-        Path to GeoJSON or Shapefile of boundary mask.
-    output_path : string
-        Path for output GeoJSON file.
-    gdb_layer : strings (optional)
-        Name of feature layer in geodatabae to be clipped. Optional. Default is None.
+    index_path : str
+        Path to GeoJSON of aerial imagery tile index polygons for the area of interest.
+    boundary_path : str
+        Path to GeoJSON of the area of interest polygon.
+    data_dir : str
+        Directory path containing the aerial imagery tile data. Directory must have only GeoTIFF files.
+
+    Returns
+    -------
+    within_poly_paths : list
+        List of paths of tiles completely contained within the area of interest.
+    edge_poly_paths : list
+        List of paths of tiles intersecting the boundary of the area of interest.
+    """
+    gdf_index = gpd.read_file(index_path)
+    gdf_boundary = gpd.read_file(boundary_path)
+
+    if gdf_boundary.crs != gdf_index.crs:
+        gdf_index = gdf_index.to_crs(gdf_boundary.crs)
+    
+    boundary = gdf_boundary.iloc[0].geometry
+    within_polygons = gdf_index[gdf_index.geometry.within(boundary)]
+    edge_polygons = gdf_index[~gdf_index.index.isin(within_polygons.index)]
+
+    within_poly_paths = []
+    for _, row in within_polygons.iterrows():
+        tile = row['TileName']
+        path = glob.glob(f"{data_dir}/*{tile}*.tif")[0]
+        within_poly_paths.append(path)
+
+    edge_poly_paths = []
+    for _, row in edge_polygons.iterrows():
+        tile = row['TileName']
+        path = glob.glob(f"{data_dir}/*{tile}*.tif")[0]
+        edge_poly_paths.append(path)
+
+    return within_poly_paths, edge_poly_paths
+
+
+
+def clip_image_to_boundary(input_path, boundary_path):
+    """
+    Function to to clip an image to an area of interest polygon and save the clipped image as a new GeoTIFF.
+
+    Parameters
+    ----------
+    input_path : str
+        Path to image to be clipped.
+    boundary_path : str
+        Path to boundary polygon GeoJSON.
+
+    Returns
+    -------
+    None
+    """
+    boundary = gpd.read_file(boundary_path)
+
+    with rasterio.Env(CHECK_DISK_FREE_SPACE='FALSE'):
+        with rasterio.open(input_path) as src:
+            
+            if src.nodata is None:
+                nodata_value = np.nan
+                data_type = 'float32'
+            else:
+                nodata_value = src.nodata
+                data_type = src.meta['dtype']
+
+            out_image, out_transform = mask(src, shapes=boundary.geometry, crop=True, nodata=nodata_value)
+            out_meta = src.meta.copy()
+            out_meta.update({'driver':'GTiff', 
+                            'height':out_image.shape[1], 
+                            'width':out_image.shape[2], 
+                            'transform':out_transform, 
+                            'crs': src.crs, 
+                            'nodata': nodata_value, 
+                            'dtype': data_type})
+            
+            new_file_dir = os.path.dirname(input_path)
+            new_filename = os.path.splitext(os.path.basename(input_path))[0] + '_clip.tif'
+            output_tif_path = f"{new_file_dir}/{new_filename}"
+
+            with rasterio.open(output_tif_path, 'w', **out_meta) as output:
+                for i in range(out_image.shape[0]):
+                    output.write(out_image[i, :, :], i+1)
+
+
+
+def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
+    """
+    Function to create a new single GeoTIFF mosaic from multiple smaller image tiles.
+
+    Parameters
+    ----------
+    tile_paths : str
+        List of paths to GeoTIFF tiles.
+    output_path : str
+        Path for new output mosaic GeoTIFF.
+    band_number : int
+        Band (channel) to mosaic.
+    resample : int (optional)
+        Resolution of output image. If not provided, output image will have the same resolution as input image tiles.
+
+    Returns
+    -------
+    None
+    """
+    images = [rasterio.open(tile_path) for tile_path in tile_paths]
+
+    if resample:
+        mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear)
+    else:
+        mosaic, mosaic_transform = merge(images, indexes=[band_number])
+
+
+    mosaic_meta = images[0].meta.copy()
+    mosaic_meta.update({'driver': 'GTiff', 
+                        'height': mosaic.shape[1], 
+                        'width': mosaic.shape[2], 
+                        'transform': mosaic_transform, 
+                        'crs': images[0].crs, 
+                        'count': mosaic.shape[0]})
+    with rasterio.open(output_path, 'w', **mosaic_meta) as output:
+        for i in range(mosaic.shape[0]):
+            output.write(mosaic[i, :, :], i+1)
+    for src in images:
+        src.close()
+
+
+
+def convert_image_dtype(input_path):
+    """
+    Function to convert image to float32 dtype.
+    
+    Parameters
+    ----------
+    input_tif_path : string
+        Path to GeoTIFF image to be converted.
+    
+    Returns
+    -------
+    None
+    """
+    if '_f32.tif' in input_path:
+        return
+    
+    output_path = input_path[:-4] + '_f32.tif'
+    
+    with rasterio.Env(CHECK_DISK_FREE_SPACE='FALSE'):
+        with rasterio.open(input_path) as src:
+            nodata_value = src.nodata
+            data = src.read()
+            out_data = data.astype(rasterio.float32)
+            
+            if nodata_value is None:
+                nodata_value = np.nan
+                out_data[data == src.meta['nodata']] = nodata_value
+
+            out_meta = src.meta.copy()
+            out_meta.update({'dtype': rasterio.float32, 
+                             'nodata': nodata_value})
+        
+        with rasterio.open(output_path, 'w', **out_meta) as output:
+            for i in range(out_data.shape[0]):
+                output.write(out_data[i, :, :], i+1)
+
+
+
+def clip_gis_to_boundary(input_path, boundary_path, output_path, gdb_layer=None):
+    """
+    Function to clip GIS spatial data to the extent of an area of interest polygon and save the clipped feature(s) as a new GeoJSON file.
+
+    Parameters
+    ----------
+    input_path : str
+        Path to GIS spatial input file. If this is a geodatabase (.gdb), then the gdb_layer argument must be specified.
+    boundary_path : str
+        Path to area of interest polygon.
+    output_path : str
+        Path for output GeoJSON.
+    gdb_layer : str (optional)
+        Name of geodatabase layer to be clipped. Default is None.
 
     Returns
     -------
     None
     """
     if not gdb_layer:
-        gdf_input = gpd.read_file(input_spatial, layer=gdb_layer)
+        gdf_input = gpd.read_file(input_path)
     else:
-        gdf_input = gpd.read_file(input_spatial)
-
+        gdf_input = gpd.read_file(input_path, layer=gdb_layer)
     gdf_input = gdf_input.explode(ignore_index=True, index_parts=False)
-
-    gdf_boundary = gpd.read_file(boundary)
+    gdf_boundary = gpd.read_file(boundary_path)
 
     if gdf_input.crs != gdf_boundary.crs:
         gdf_input = gdf_input.to_crs(gdf_boundary.crs)
@@ -316,40 +473,89 @@ def clip_spatial_to_boundary(input_spatial, boundary, output_path, gdb_layer=Non
 
 
 
-def convert_spatial_to_reference_image(input_spatial, reference_image, output_path, attribute=None):
+# def gis_to_reference_image(input_path, reference_path, output_path):
+#     """
+#     Function to convert geospatial vector file to binary image with spatial coordinate reference system, resolution, and transform properties that match a reference image.
+
+#     Parameters
+#     ----------
+#     input_path : str
+#         Path to geospatial data file (GeoJSON or Shapefile).
+#     reference_path : str
+#         Path to reference image (GeoTIFF).
+#     output_path : str
+#         Path for output image GeoTIFF.
+
+#     Returns
+#     -------
+#     None
+#     """
+#     gdf = gpd.read_file(input_path)
+
+#     with rasterio.open(reference_path) as src:
+
+#         if gdf.crs != src.crs:
+#             gdf = gdf.to_crs(src.crs)
+
+#         shapes = [(geom, 1) for geom in gdf.geometry]
+        
+#         output_image = rasterize(shapes=shapes, 
+#                                  out_shape=(src.height, src.width), 
+#                                  transform=src.transform, 
+#                                  fill=0, 
+#                                  all_touched=True, 
+#                                  dtype=rasterio.float32)
+        
+#         mask = src.dataset_mask()
+#         output_image = np.where(mask, output_image, src.nodata)
+
+#         output_meta = src.meta.copy()
+#         output_meta.update({'driver': 'GTiff', 
+#                             'count': 1, 
+#                             'dtype':rasterio.float32})
+        
+#         with rasterio.open(output_path, 'w', **output_meta) as dst:
+#             dst.write(output_image.astype(rasterio.float32), 1)
+
+
+
+def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
     """
-    Function to convert geospatial vector file (shapefile or GeoJSON) to image with spatial coordinate reference system, resolution, and transform properties that match a reference image (GeoTIFF).
+    Function to combine multiple geospatial vector GIS features into a new GeoTIFF image aligned with a reference image. In the case of overlapping features, priority for pixel values in the final image will be given to the last feature. Background space will be given a value of 0 and additional features will be given sequential integers in increments of 1.
 
-    Parameter
-    ---------
-    input_spatial : string
-        Path to geospatial file.
-    reference_image : string
+    Parameters
+    ----------
+    input_paths : list-like
+        List of path(s) to vector GIS features in GeoJSON(s) or Shapefile(s).
+    reference_path : str
         Path to reference GeoTIFF image.
-    output_path : string
-        Path for output image.
-    attribute : string (optional)
-        Name of geospatial attribute to categorize image values. Default is None, which categorizes output image as binary (1 for spatial features, 0 for background),
-
+    output_path : str
+        Path to output GeoTIFF image.
+    
     Returns
     -------
     None
     """
+    with rasterio.open(reference_path) as src:
 
-    gdf = gpd.read_file(input_spatial)
+        shapes_all = []
+        features = ['background']
 
-    with rasterio.open(reference_image) as src:
-
-        if gdf.crs != src.crs:
-            gdf = gdf.to_crs(src.crs)
-        
-
-        if not attribute:
-            shapes = [(geom, 1) for geom in gdf.geometry]
-        else:
-            shapes = [(geom, value) for geom, value in zip(gdf.geometry, gdf[attribute])]
+        for val, path in enumerate(input_paths, start=1):
             
-        output_image = rasterize(shapes=shapes, 
+            feature = os.path.basename(path)
+            feature = os.path.splitext(feature)[0]
+            features.append(feature)
+
+            gdf = gpd.read_file(path)
+
+            if gdf.crs != src.crs:
+                gdf = gdf.to_crs(src.crs)
+            
+            shapes = [(geom, val) for geom in gdf.geometry]
+            shapes_all.extend(shapes)
+
+        output_image = rasterize(shapes=shapes_all, 
                                  out_shape=(src.height, src.width), 
                                  transform=src.transform, 
                                  fill=0, 
@@ -366,152 +572,39 @@ def convert_spatial_to_reference_image(input_spatial, reference_image, output_pa
         
         with rasterio.open(output_path, 'w', **output_meta) as dst:
             dst.write(output_image.astype(rasterio.float32), 1)
+        
+        mapper = {k:v for v,k in enumerate(features)}
+        output_json_path = output_path.replace('.tif', '.json')
+        with open(output_json_path, 'w') as meta:
+            json.dump(mapper, meta, indent=4)
 
 
 
-
-
-
-
-
-def convert_image_dtype(input_tif_path):
+def image_to_reference_image(input_path, reference_path, output_path=None):
     """
-    Function to convert image to float32 dtype.
-    
+    Function to register and align an input image to a reference image then save the new aligned GeoTIFF. If the output path is not provided, the original input image is overwritten.
+
     Parameters
     ----------
-    input_tif_path : string
-        Path to GeoTIFF image to be converted.
-    
+    input_path : str
+        Path to input image to be reprojected and aligned.
+    reference_path : str
+        Path to reference image to match alignment.
+    output_path : str (optional)
+        Path for output GeoTIFF. If not provided, the input image is overwritten.
+
     Returns
     -------
     None
     """
-    if '_f32.tif' in input_tif_path:
-        return
-    
-    output_path = input_tif_path[:-4] + '_f32.tif'
-    
-    with rasterio.Env(CHECK_DISK_FREE_SPACE='FALSE'):
-        with rasterio.open(input_tif_path) as src:
-            nodata_value = src.nodata
-            data = src.read()
-            out_data = data.astype(rasterio.float32)
-            if nodata_value is None:
-                nodata_value = np.nan
-                out_data[data == src.meta['nodata']] = nodata_value
-            out_meta = src.meta.copy()
-            out_meta.update({'dtype': rasterio.float32, 'nodata': nodata_value})
-        
-        with rasterio.open(output_path, 'w', **out_meta) as output:
-            for i in range(out_data.shape[0]):
-                output.write(out_data[i, :, :], i+1)
 
-
-
-def get_contained_and_edge_tile_paths(index_path, boundary_path, data_dir, file_suffix=None):
-    gdf_index = gpd.read_file(index_path)
-    gdf_boundary = gpd.read_file(boundary_path)
-
-    if gdf_boundary.crs != gdf_index.crs:
-        gdf_index = gdf_index.to_crs(gdf_boundary.crs)
-    
-    boundary = gdf_boundary.iloc[0].geometry
-    within_polygons = gdf_index[gdf_index.geometry.within(boundary)]
-    edge_polygons = gdf_index[~gdf_index.index.isin(within_polygons.index)]
-
-    within_poly_paths = []
-    for _, row in within_polygons.iterrows():
-        tile = row['TileName']
-        if file_suffix is None:
-            path = glob.glob(f"{data_dir}/*{tile}*.tif")[0]
-        else:
-            path = glob.glob(f"{data_dir}/*{tile}*{file_suffix}")[0]
-        within_poly_paths.append(path)
-
-    edge_poly_paths = []
-    for _, row in edge_polygons.iterrows():
-        tile = row['TileName']
-        if file_suffix is None:
-            path = glob.glob(f"{data_dir}/*{tile}*.tif")[0]
-        else:
-            path = glob.glob(f"{data_dir}/*{tile}*{file_suffix}")[0]
-        edge_poly_paths.append(path)
-
-    return within_poly_paths, edge_poly_paths
-
-
-def clip_image_to_boundary(input_tif_path, boundary_path, output_tif_path=None):
-    boundary = gpd.read_file(boundary_path)
-
-    with rasterio.Env(CHECK_DISK_FREE_SPACE='FALSE'):
-        with rasterio.open(input_tif_path) as src:
-            
-            data_type = src.meta['dtype']
-            if src.nodata is None:
-                nodata_value = np.nan
-                data_type = 'float32'
-            else:
-                nodata_value = src.nodata
-
-            out_image, out_transform = mask(src, shapes=boundary.geometry, crop=True, nodata=nodata_value)
-            out_meta = src.meta.copy()
-            out_meta.update({'driver':'GTiff', 
-                            'height':out_image.shape[1], 
-                            'width':out_image.shape[2], 
-                            'transform':out_transform, 
-                            'crs': src.crs, 
-                            'nodata': nodata_value, 
-                            'dtype': data_type})
-            
-            if output_tif_path is None:
-                new_file_dir = os.path.dirname(input_tif_path)
-                new_filename = os.path.splitext(os.path.basename(input_tif_path))[0] + '_clip.tif'
-                output_tif_path = os.path.join(new_file_dir, new_filename)
-
-            with rasterio.open(output_tif_path, 'w', **out_meta) as output:
-                for i in range(out_image.shape[0]):
-                    output.write(out_image[i, :, :], i+1)
-        src.close()
-
-
-
-def mosaic_image_tiles(tile_paths_list, output_path, band_number=None, resample=None):
-    images = [rasterio.open(tile_path) for tile_path in tile_paths_list]
-    if band_number:
-        if resample:
-            mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear)
-        else:
-            mosaic, mosaic_transform = merge(images, indexes=[band_number])
-    else:
-        if resample:
-            mosaic, mosaic_transform = merge(images, res=resample, resampling=Resampling.bilinear)
-        else:
-            mosaic, mosaic_transform = merge(images)
-    mosaic_meta = images[0].meta.copy()
-    mosaic_meta.update({'driver': 'GTiff', 
-                        'height': mosaic.shape[1], 
-                        'width': mosaic.shape[2], 
-                        'transform': mosaic_transform, 
-                        'crs': images[0].crs, 
-                        'count': mosaic.shape[0]})
-    with rasterio.open(output_path, 'w', **mosaic_meta) as output:
-        for i in range(mosaic.shape[0]):
-            output.write(mosaic[i, :, :], i+1)
-    for src in images:
-        src.close()
-
-
-
-def reproject_image_to_reference(image_path, reference_path):
-
-    with rasterio.open(image_path) as src:
+    with rasterio.open(input_path) as src:
         src_profile = src.profile
         src_data = src.read(1)
     
     with rasterio.open(reference_path) as ref:
         ref_profile = ref.profile
-        ref_data = ref.read(1)
+        ref_data = ref.read(1, masked=True)
     
     dst_data = np.empty_like(ref_data)
 
@@ -526,8 +619,15 @@ def reproject_image_to_reference(image_path, reference_path):
 
     dst_meta = ref.meta.copy()
 
-    with rasterio.open(image_path, 'w', **dst_meta) as dst:
+    if not output_path:
+        output_path = input_path
+
+    with rasterio.open(output_path, 'w', **dst_meta) as dst:
         dst.write(dst_data, 1)
+
+
+
+
 
 
 

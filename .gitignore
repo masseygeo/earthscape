@@ -2,16 +2,19 @@
 
 data/*.gdb
 data/*.geojson
+data/index_tiles/*.geojson
 data/nhdplushr/*.geojson
 data/osm_ky/*
 
 data/warren/*.tif
 data/warren/*.geojson
+data/warren/*.json
 data/warren/aerial_tiles/*
-data/warren/dem_features/*
 data/warren/dem_tiles/*
-data/warren/osm_warren/*
+data/warren/terrain_features/*
 data/warren/patches/*
 
-data/hardin/*
+data/hardin/*.tif
+data/hardin/*.geojson
+data/hardin/*.json
 
