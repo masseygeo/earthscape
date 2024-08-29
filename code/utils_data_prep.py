@@ -84,7 +84,7 @@ def download_tif(url, output_path):
 
 def kyfromabove_tile_index(output_dir):
     """
-    Function to fetch KyFromAbove data tile index geodatabase and save layers (DEM, Aerial, and Lidar Point Cloud) as GeoJSON files in specified directory.
+    Function to fetch and extract KyFromAbove data tile index geodatabase, and save DEM, Aerial, and Lidar Point Cloud layers as GeoJSON files in specified directory. Same as 
     
     Parameters
     ----------
@@ -128,7 +128,7 @@ def kyfromabove_tile_index(output_dir):
 
 def download_data_tiles(index_path, id_field, url_field, output_dir):
     """
-    Function to read KyFromAbove Tile Index GeoJSON, download the GeoTIFF using the URL from a specified field, and then save the GeoTIFF to the specified output directory.
+    Function to read KyFromAbove Tile Index GeoJSON, download the GeoTIFF using the URL from a specified field, and then save the GeoTIFF to the specified output directory. Similar to download_zip function, but modified for KyFromAbove tile index dataset.
 
     Parameters
     ----------
@@ -322,6 +322,8 @@ def create_image_patches(reference_path, patch_size, patch_overlap, boundary_pat
     gdf = gpd.GeoDataFrame(geometry=patches, crs=crs)
     gdf['patch_id'] = [f"{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
     gdf.to_file(output_path, driver='GeoJSON')
+
+
 
 
 #######################################################################################
