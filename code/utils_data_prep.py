@@ -12,10 +12,15 @@ import fiona
 import rasterio
 from rasterio.transform import from_origin
 from rasterio.features import rasterize
-from shapely.geometry import box
+from rasterio.warp import calculate_default_transform, reproject, Resampling
 from rasterio.merge import merge
 from rasterio.mask import mask
-from rasterio.warp import reproject, Resampling
+from rasterio.windows import from_bounds
+from shapely.geometry import box
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from rasterio.plot import show
+from scipy.ndimage import gaussian_filter
 
 
 
@@ -396,7 +401,7 @@ def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
 
     Parameters
     ----------
-    input_paths : list-like
+    input_paths : list or tuple
         List of path to vector GIS features in GeoJSON(s) and/or Shapefile(s).
     reference_path : str
         Path to reference GeoTIFF image.
@@ -620,106 +625,151 @@ def image_to_reference_image(input_path, reference_path, output_path=None):
         dst.write(dst_data, 1)
 
 
-# def gis_to_reference_image(input_path, reference_path, output_path):
-#     """
-#     Function to convert geospatial vector file to binary image with spatial coordinate reference system, resolution, and transform properties that match a reference image.
+def resample_image(input_path, new_resolution, output_path):
+    """
+    Function to resample a GeoTIFF image to a new resolution and save as a new GeoTIFF.
 
-#     Parameters
-#     ----------
-#     input_path : str
-#         Path to geospatial data file (GeoJSON or Shapefile).
-#     reference_path : str
-#         Path to reference image (GeoTIFF).
-#     output_path : str
-#         Path for output image GeoTIFF.
+    Parameters
+    ----------
+    input_path : str
+        Path to the input GeoTIFF image to be resampled.
+    new_resolution : int or float
+        Resolution for the new, resampled image.
+    output_path : str
+        Path for the new, resampled GeoTIFF image.
 
-#     Returns
-#     -------
-#     None
-#     """
-#     gdf = gpd.read_file(input_path)
+    Returns
+    -------
+    None
+    """
 
-#     with rasterio.open(reference_path) as src:
+    with rasterio.open(input_path) as src:
 
-#         if gdf.crs != src.crs:
-#             gdf = gdf.to_crs(src.crs)
-
-#         shapes = [(geom, 1) for geom in gdf.geometry]
+        # calculate the new transform and dimensions based on the new resolution
+        dst_transform, dst_width, dst_height = calculate_default_transform(src.crs,           # source CRS
+                                                                           src.crs,           # destination CRS
+                                                                           src.width,         # source width
+                                                                           src.height,        # source height
+                                                                           *src.bounds,       # source left, bottom, right, top coordinates 
+                                                                           resolution=new_resolution)     # destination resolution
         
-#         output_image = rasterize(shapes=shapes, 
-#                                  out_shape=(src.height, src.width), 
-#                                  transform=src.transform, 
-#                                  fill=0, 
-#                                  all_touched=True, 
-#                                  dtype=rasterio.float32)
+        # create metadata for new resampled image
+        dst_meta = src.meta.copy()
+        dst_meta.update({'driver': 'GTiff', 
+                         'width': dst_width, 
+                         'height': dst_height, 
+                         'transform': dst_transform})
         
-#         mask = src.dataset_mask()
-#         output_image = np.where(mask, output_image, src.nodata)
-
-#         output_meta = src.meta.copy()
-#         output_meta.update({'driver': 'GTiff', 
-#                             'count': 1, 
-#                             'dtype':rasterio.float32})
-        
-#         with rasterio.open(output_path, 'w', **output_meta) as dst:
-#             dst.write(output_image.astype(rasterio.float32), 1)
-
+        # write new image to file with new transform & metadata & resolution
+        with rasterio.open(output_path, 'w', **dst_meta) as dst:
+            reproject(source=rasterio.band(src, 1), 
+                      destination=rasterio.band(dst, 1), 
+                      src_transform=src.transform, 
+                      src_crs=src.crs, 
+                      dst_transform=dst_transform, 
+                      dst_crs=src.crs, 
+                      resampling=Resampling.cubic)
 
 
-# def create_patch_polygons(gdf, max_width, max_height, pixel_width=5, pixel_height=5):
 
-#     # get coordinates of bounding box of area of intrest
-#     minx, miny, maxx, maxy = gdf.total_bounds
+def filter_image(input_path, sigma):
+    """
+    Function to apply a Gaussian filter to an input image. See scipy.ndimage.gaussin_filter for more information regarding filter.
+    
+    Parameters
+    ----------
+    input_path : str
+        Path to input image.
+    sigma : int, float
+        Standard deviation for Gaussian function.
 
+    Returns
+    -------
+    None
+    """
 
-#     # initialize list to hold individual grid cell polygons
-#     grid_cells = []
+    with rasterio.open(input_path) as src:
+        data = src.read(1, masked=True)
+        dst_data = gaussian_filter(input=data, sigma=sigma)
+        dst_meta = src.meta.copy()
+    
+    output_path = input_path
 
-#     # initialize current x position with minx
-#     current_x = minx
-
-#     # create grid cells by column starting at lower left corner and increasing y, then increasing x to next column...
-#     while current_x < maxx:
-
-#         # test if grid cell width is less than maximum allowable download width...
-#         if (maxx - current_x) < max_width:
-
-#             # ensure current_width is divisible by 5 AND exceeds boundary edges
-#             current_width = ceil((maxx - current_x) / pixel_width) * pixel_width
-
-#         else:
-#             current_width = max_width
-
-#         # initialize current_y as miny for each new column...
-#         current_y = miny
-
-#         # iterate over all grid cells within column...
-#         while current_y < maxy:
-
-#             # test if grid cell height is less than maximum allowable download height...
-#             if (maxy - current_y) < max_height:
-#                 current_height = ceil((maxy - current_y) / pixel_height) * pixel_height
-
-#             else:
-#                 current_height = max_height
-
-#             # create box using grid cell coordinates and sizes, then append to grid_cells list
-#             grid_cells.append(box(current_x, current_y, current_x + current_width, current_y + current_height))
-
-#             # increment current_y to next higher grid cell in column
-#             current_y += current_height
-        
-#         # increment current_x to next column after finishing all grid cells in one column
-#         current_x += current_width
-
-#     # create geodataframe of grid cell polygons
-#     gdf_grid = gpd.GeoDataFrame({'geometry':grid_cells}, crs=gdf.crs)
-
-#     # add unique id for each grid cell
-#     gdf_grid['id'] = range(len(gdf_grid))
-
-#     return gdf_grid
+    with rasterio.open(output_path, 'w', **dst_meta) as dst:
+        dst.write(dst_data, 1)
 
 
+
+
+#######################################################################################
+# PLOTTING 
+#######################################################################################
+
+
+def plot_multi_terrain_features(mdhs_path, terrain_paths, bounds, cmap, title):
+    """
+    Function to plot terrain features at six resolutions within a defined area. Terrain features have 50% transparency overlaying a multi-directional hillshade image.
+
+    Parameters
+    ----------
+    mdhs_path : str
+        Path to multi-directional hillshade GeoTIFF.
+    terrain_paths : iterable
+        List or tuple of paths terrain features at multiple resolutions
+    bounds : iterable
+        List or tuple of bounding coordinates (left, bottom, right, top) of plot area.
+    cmap : str or variable
+        Name of Matplotlib colormap, or variable name of custom colormap.
+    title : str
+        Title of terrain feature plot.
+
+    Returns
+    -------
+    None.
+    """
+
+    # set up plot assuming six scales/terrain features
+    fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(12,8), sharex=True, sharey=True)
+    fig.subplots_adjust(wspace=0.1, hspace=0.1)
+    ax = ax.ravel()
+
+    with rasterio.open(mdhs_path) as mdhs:
+
+        # iterate through each terrain feature (six total)
+        for idx, path in enumerate(terrain_paths):
+            with rasterio.open(path) as src:
+
+                # set up window for feature, get transform, and data
+                window = from_bounds(*bounds, src.transform)
+                transform = src.window_transform(window)
+                data = src.read(1, window=window)
+                min_val = np.min(data)
+                max_val = np.max(data)
+
+                # plot feature; this will be hidden and is only for colorbar
+                hidden = ax[idx].imshow(data, cmap=cmap)
+
+                # plot multi-directional hillshade as base layer (on top of hidden)
+                mdhs_window = from_bounds(*bounds, mdhs.transform)
+                mdhs_data = mdhs.read(1, window=mdhs_window)
+                mdhs_transform = mdhs.window_transform(mdhs_window)
+                show(mdhs_data, ax=ax[idx], cmap='binary_r', transform=mdhs_transform)
+
+                # plot terrain feature with transparency (to overlay on hillshade)
+                show(data, ax=ax[idx], cmap=cmap, transform=transform, alpha=0.5)
+
+                # plot custom color bar
+                cax = inset_axes(ax[idx], width='5%', height='40%', loc='lower right')
+                fig.colorbar(hidden, cax=cax, ticks=[min_val, max_val])
+                cax.yaxis.set_ticks_position('left')
+
+                # customize plot elements
+                ax[idx].tick_params(axis='both', which='major', labelsize=8)
+                ax[idx].tick_params(axis='x', labelrotation=60)
+                ax[idx].ticklabel_format(style='plain')
+                ax[idx].set_title(os.path.basename(path), style='italic', fontsize=10)
+
+    plt.suptitle(f"{title}\n5, 10, 20, 50, 100, & 250 feet per pixel resolutions", y=0.96)
+    plt.show()
 
 
