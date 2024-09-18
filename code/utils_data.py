@@ -187,11 +187,12 @@ def check_image_alignment(input_paths, target='geology'):
     
     # initialize new dataframe with names and paths and columns associated with alignment
     df = pd.DataFrame({'image':image_names, 'path':input_paths})
-    df[['aligned', 'resolution_x', 'resolution_y', 'width', 'height', 'left', 'bottom', 'right', 'top']] = pd.NA
+    df[['dtype', 'aligned', 'resolution_x', 'resolution_y', 'width', 'height', 'left', 'bottom', 'right', 'top']] = pd.NA
 
     # iterate through image paths and get values
     for image, path in zip(image_names, input_paths):
         with rasterio.open(path) as src:
+            df.loc[df['image'] == image, 'dtype'] = src.meta['dtype']
             df.loc[df['image'] == image, 'resolution_x'] = src.res[0]
             df.loc[df['image'] == image, 'resolution_y'] = src.res[1]
             df.loc[df['image'] == image, 'width'] = src.width

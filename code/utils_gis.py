@@ -58,10 +58,11 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
     values = gdf[attribute].unique()
 
     # assign each category to integer
-    mapper = {key:value for value, key in enumerate(values)}
+    mapper = {key:value for value, key in enumerate(values, start=1)}
 
     # create new geodataframe attribute of categorical integer assignments
     gdf[f"{attribute}_int"] = gdf[attribute].apply(lambda x: mapper.get(x, np.nan))
+
 
     # get list of geometries and associated values
     shapes = [(geom, value) for geom, value in zip(gdf.geometry, gdf[f"{attribute}_int"])]
@@ -92,6 +93,72 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
     output_json_path = output_path.replace('.tif', '.json')
     with open(output_json_path, 'w') as file:
         json.dump(mapper, file, indent=4)
+
+
+
+
+def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
+    """
+    Function to combine multiple geospatial vector GIS features into a new GeoTIFF image aligned with a reference image. In the case of overlapping features, priority for pixel values in the final image will be given to the last feature. Background space will be given a value of 0 and additional features will be given sequential integers in increments of 1.
+
+    Parameters
+    ----------
+    input_paths : list or tuple
+        List of path to vector GIS features in GeoJSON(s) and/or Shapefile(s).
+    reference_path : str
+        Path to reference GeoTIFF image.
+    output_path : str
+        Path to output GeoTIFF image.
+    
+    Returns
+    -------
+    None
+    """
+    with rasterio.open(reference_path) as src:
+
+        shapes_all = []
+        features = ['background']
+
+        for val, path in enumerate(input_paths, start=1):
+            
+            feature = os.path.basename(path)
+            feature = os.path.splitext(feature)[0]
+            features.append(feature)
+
+            gdf = gpd.read_file(path)
+
+            if gdf.crs != src.crs:
+                gdf = gdf.to_crs(src.crs)
+            
+            shapes = [(geom, val) for geom in gdf.geometry]
+            shapes_all.extend(shapes)
+
+        output_image = rasterize(shapes=shapes_all, 
+                                 out_shape=(src.height, src.width), 
+                                 transform=src.transform, 
+                                 fill=0, 
+                                 all_touched=True, 
+                                 dtype=rasterio.float32)
+        
+        mask = src.dataset_mask()
+        output_image = np.where(mask, output_image, src.nodata)
+
+        output_meta = src.meta.copy()
+        output_meta.update({'driver': 'GTiff', 
+                            'count': 1, 
+                            'dtype':rasterio.float32})
+        
+        with rasterio.open(output_path, 'w', **output_meta) as dst:
+            dst.write(output_image.astype(rasterio.float32), 1)
+        
+        mapper = {k:v for v,k in enumerate(features)}
+        output_json_path = output_path.replace('.tif', '.json')
+        with open(output_json_path, 'w') as meta:
+            json.dump(mapper, meta, indent=4)
+
+
+
+
 
 
 
@@ -255,61 +322,3 @@ def create_image_patches(reference_path, patch_size, patch_overlap, boundary_pat
 
 
 
-def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
-    """
-    Function to combine multiple geospatial vector GIS features into a new GeoTIFF image aligned with a reference image. In the case of overlapping features, priority for pixel values in the final image will be given to the last feature. Background space will be given a value of 0 and additional features will be given sequential integers in increments of 1.
-
-    Parameters
-    ----------
-    input_paths : list or tuple
-        List of path to vector GIS features in GeoJSON(s) and/or Shapefile(s).
-    reference_path : str
-        Path to reference GeoTIFF image.
-    output_path : str
-        Path to output GeoTIFF image.
-    
-    Returns
-    -------
-    None
-    """
-    with rasterio.open(reference_path) as src:
-
-        shapes_all = []
-        features = ['background']
-
-        for val, path in enumerate(input_paths, start=1):
-            
-            feature = os.path.basename(path)
-            feature = os.path.splitext(feature)[0]
-            features.append(feature)
-
-            gdf = gpd.read_file(path)
-
-            if gdf.crs != src.crs:
-                gdf = gdf.to_crs(src.crs)
-            
-            shapes = [(geom, val) for geom in gdf.geometry]
-            shapes_all.extend(shapes)
-
-        output_image = rasterize(shapes=shapes_all, 
-                                 out_shape=(src.height, src.width), 
-                                 transform=src.transform, 
-                                 fill=0, 
-                                 all_touched=True, 
-                                 dtype=rasterio.float32)
-        
-        mask = src.dataset_mask()
-        output_image = np.where(mask, output_image, src.nodata)
-
-        output_meta = src.meta.copy()
-        output_meta.update({'driver': 'GTiff', 
-                            'count': 1, 
-                            'dtype':rasterio.float32})
-        
-        with rasterio.open(output_path, 'w', **output_meta) as dst:
-            dst.write(output_image.astype(rasterio.float32), 1)
-        
-        mapper = {k:v for v,k in enumerate(features)}
-        output_json_path = output_path.replace('.tif', '.json')
-        with open(output_json_path, 'w') as meta:
-            json.dump(mapper, meta, indent=4)
