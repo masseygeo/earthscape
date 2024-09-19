@@ -13,6 +13,7 @@ data/warren/aerial_tiles/*
 data/warren/dem_tiles/*
 data/warren/terrain_features/*
 data/warren/patches/*
+data/warren/test_patches/*
 
 data/hardin/*.tif
 data/hardin/*.geojson

@@ -312,3 +312,44 @@ def filter_image(input_path, sigma):
 
     with rasterio.open(output_path, 'w', **dst_meta) as dst:
         dst.write(dst_data, 1)
+
+
+
+def extract_patch(image_path, patches_gdf, output_dir):
+    """
+    Function to use extract image patches from a geodataframe of patch polygyons.
+
+    Parameters
+    ----------
+    image_path : str
+        Path to image to extract patch.
+    patches_gdf : geodataframe
+        Geodataframe of patch polygons.
+    output_dir : str
+        Path for output image patch. Unique patch id from geodataframe will be used for prefix filename.
+
+    Returns
+    -------
+    None
+    """
+    image_name = os.path.basename(image_path)
+    image_name = os.path.splitext(image_name)[0]
+
+    with rasterio.open(image_path) as src:
+
+        for _, row in patches_gdf.iterrows():
+
+            geom = row['geometry']
+
+            dst_image, dst_transform = mask(src, shapes=[geom], crop=True, filled=True, nodata=-999999)
+
+            dst_meta = src.meta.copy()
+            dst_meta.update({'driver':'GTiff', 
+                             'height':dst_image.shape[1], 
+                             'width':dst_image.shape[2], 
+                             'transform':dst_transform})
+        
+            output_path = f"{output_dir}/{row['patch_id']}_{image_name}.tif"
+    
+            with rasterio.open(output_path, 'w', **dst_meta) as dst:
+                dst.write(dst_image)
