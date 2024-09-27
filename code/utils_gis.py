@@ -3,12 +3,11 @@
 # VECTOR GIS MANIPULATION FUNCTIONS
 # ------------------
 # Author: Matt Massey
-# Last updated: 9/16/2024
+# Last updated: 9/21/2024
 # Purpose: Custom functions for manipulating vector GIS data (shapefiles or GeoJSONs), specific to surficial geologic map dataset curation.
 #######################################################################################
 
 import os
-import glob
 import json
 import numpy as np
 from math import ceil
@@ -96,6 +95,39 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
 
 
 
+def clip_gis_to_boundary(input_path, boundary_path, output_path, gdb_layer=None):
+    """
+    Function to clip GIS spatial data to the extent of an area of interest polygon and save the clipped feature(s) as a new GeoJSON file.
+
+    Parameters
+    ----------
+    input_path : str
+        Path to GIS spatial input file. If this is a geodatabase (.gdb), then the gdb_layer argument must be specified.
+    boundary_path : str
+        Path to area of interest polygon.
+    output_path : str
+        Path for output GeoJSON.
+    gdb_layer : str (optional)
+        Name of geodatabase layer to be clipped. Default is None.
+
+    Returns
+    -------
+    None
+    """
+    if not gdb_layer:
+        gdf_input = gpd.read_file(input_path)
+    else:
+        gdf_input = gpd.read_file(input_path, layer=gdb_layer)
+    gdf_input = gdf_input.explode(ignore_index=True, index_parts=False)
+    gdf_boundary = gpd.read_file(boundary_path)
+
+    if gdf_input.crs != gdf_boundary.crs:
+        gdf_input = gdf_input.to_crs(gdf_boundary.crs)
+
+    gdf_output = gpd.clip(gdf_input, mask=gdf_boundary)
+    gdf_output.to_file(output_path, driver='GeoJSON')
+
+
 
 def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
     """
@@ -158,118 +190,6 @@ def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
 
 
 
-
-
-
-
-
-
-def get_intersecting_index_tiles(input_path, boundary_path, output_path):
-    """
-    Function to extract tile index polygons from an input GeoJSON intersecting an area specified by another GeoJSON, and then saving the subset tile index polygons as a new GeoJSON.
-    
-    Parameters
-    ----------
-    geojson_path : str
-        Path to input tile index GeoJSON.
-    boundary_path : str
-        Path to area of interest GeoJSON.
-    output_geojson_path : str
-        Path for output GeoJSON.
-    
-    Returns
-    -------
-    None
-    """
-    gdf_geojson = gpd.read_file(input_path)
-    gdf_boundary = gpd.read_file(boundary_path)
-    if gdf_boundary.crs != gdf_geojson.crs:
-        gdf_geojson = gdf_geojson.to_crs(gdf_boundary.crs)
-    gdf_intersect = gpd.sjoin(left_df=gdf_geojson, right_df=gdf_boundary, how='inner')
-    gdf_intersect.to_file(output_path, driver='GeoJSON')
-
-
-
-def get_contained_and_edge_tile_paths(index_path, boundary_path, data_dir):
-    """
-    Function to get lists of aerial imagery tile paths that are completely contained or intersecting the edge of the boundary area.
-
-    Parameters
-    ----------
-    index_path : str
-        Path to GeoJSON of aerial imagery tile index polygons for the area of interest.
-    boundary_path : str
-        Path to GeoJSON of the area of interest polygon.
-    data_dir : str
-        Directory path containing the aerial imagery tile data. Directory must have only GeoTIFF files.
-
-    Returns
-    -------
-    within_poly_paths : list
-        List of paths of tiles completely contained within the area of interest.
-    edge_poly_paths : list
-        List of paths of tiles intersecting the boundary of the area of interest.
-    """
-    gdf_index = gpd.read_file(index_path)
-    gdf_boundary = gpd.read_file(boundary_path)
-
-    if gdf_boundary.crs != gdf_index.crs:
-        gdf_index = gdf_index.to_crs(gdf_boundary.crs)
-    
-    boundary = gdf_boundary.iloc[0].geometry
-    within_polygons = gdf_index[gdf_index.geometry.within(boundary)]
-    edge_polygons = gdf_index[~gdf_index.index.isin(within_polygons.index)]
-
-    within_poly_paths = []
-    for _, row in within_polygons.iterrows():
-        tile = row['TileName']
-        path = glob.glob(f"{data_dir}/*{tile}*.tif")[0]
-        within_poly_paths.append(path)
-
-    edge_poly_paths = []
-    for _, row in edge_polygons.iterrows():
-        tile = row['TileName']
-        path = glob.glob(f"{data_dir}/*{tile}*.tif")[0]
-        edge_poly_paths.append(path)
-
-    return within_poly_paths, edge_poly_paths
-
-
-
-def clip_gis_to_boundary(input_path, boundary_path, output_path, gdb_layer=None):
-    """
-    Function to clip GIS spatial data to the extent of an area of interest polygon and save the clipped feature(s) as a new GeoJSON file.
-
-    Parameters
-    ----------
-    input_path : str
-        Path to GIS spatial input file. If this is a geodatabase (.gdb), then the gdb_layer argument must be specified.
-    boundary_path : str
-        Path to area of interest polygon.
-    output_path : str
-        Path for output GeoJSON.
-    gdb_layer : str (optional)
-        Name of geodatabase layer to be clipped. Default is None.
-
-    Returns
-    -------
-    None
-    """
-    if not gdb_layer:
-        gdf_input = gpd.read_file(input_path)
-    else:
-        gdf_input = gpd.read_file(input_path, layer=gdb_layer)
-    gdf_input = gdf_input.explode(ignore_index=True, index_parts=False)
-    gdf_boundary = gpd.read_file(boundary_path)
-
-    if gdf_input.crs != gdf_boundary.crs:
-        gdf_input = gdf_input.to_crs(gdf_boundary.crs)
-
-    gdf_output = gpd.clip(gdf_input, mask=gdf_boundary)
-    gdf_output.to_file(output_path, driver='GeoJSON')
-
-
-
 def create_image_patches(reference_path, patch_size, patch_overlap, boundary_path, output_path):
     """
     Function to create geospatial polygons that represent square image patch locations saved as a GeoJSON. The size of the image patches (assumed to be square) and the proportion of overlap between adjacent patches is specified. Each patch will have a unique id created from the patch_size, patch_overlap, and a unique number.
@@ -308,7 +228,9 @@ def create_image_patches(reference_path, patch_size, patch_overlap, boundary_pat
         y = bounds.bottom
         while y < bounds.top:
             patch = box(x, y, x+patch_size_units, y+patch_size_units)
-            if patch.intersects(boundary.geometry).any():
+            # if patch.intersects(boundary.geometry).any():
+            #     patches.append(patch)
+            if patch.within(boundary.geometry).any():
                 patches.append(patch)
             y += overlap_start_units
         x += overlap_start_units
@@ -316,9 +238,3 @@ def create_image_patches(reference_path, patch_size, patch_overlap, boundary_pat
     gdf = gpd.GeoDataFrame(geometry=patches, crs=crs)
     gdf['patch_id'] = [f"{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
     gdf.to_file(output_path, driver='GeoJSON')
-
-
-
-
-
-

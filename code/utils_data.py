@@ -3,18 +3,16 @@
 # DATA DOWNLOAD FUNCTIONS
 # ------------------
 # Author: Matt Massey
-# Last updated: 9/16/2024
+# Last updated: 9/21/2024
 # Purpose: Functions for downloading files from URLs, with emphasis on geospatial data sources.
 #######################################################################################
 
 import requests
 import os
 import glob
-import shutil
 import zipfile
 import pandas as pd
 import geopandas as gpd
-import fiona
 import rasterio
 
 
@@ -50,6 +48,7 @@ def download_zip(url, output_dir):
         print('Error downloading .zip...')
 
 
+
 def download_tif(url, output_path):
     """
     Function to download TIFF file from a specified URL.
@@ -76,49 +75,6 @@ def download_tif(url, output_path):
     except:
         print(f"Error connecting to URL...\n{url}")
 
-
-# def kyfromabove_tile_index(output_dir):
-#     """
-#     Function to fetch and extract KyFromAbove data tile index geodatabase, and save DEM, Aerial, and Lidar Point Cloud layers as GeoJSON files in specified directory. Same as 
-    
-#     Parameters
-#     ----------
-#     output_dir : str
-#         Directory path for output files.
-    
-#     Returns
-#     -------
-#     None
-#     """
-#     url = r'https://ky.app.box.com/index.php?rm=box_download_shared_file&vanity_name=kymartian-kyaped-5k-tile-grids&file_id=f_1173114014568'
-
-#     try:
-#         response = requests.get(url)
-#         response.raise_for_status()
-        
-#         if response.status_code == 200:
-
-#             output_zip_path = f"{output_dir}/index.gdb.zip"
-            
-#             with open(output_zip_path, 'wb') as zip:
-#                 zip.write(response.content)
-
-#             with zipfile.ZipFile(output_zip_path, 'r') as zip:
-#                 zip.extractall(output_dir)
-
-#             gdb_path = glob.glob(f"{output_dir}/*.gdb")[0]
-#             gdb_layers = fiona.listlayers(gdb_path)
-            
-#             for layer in gdb_layers:
-#                 gdf = gpd.read_file(gdb_path, layer=layer)
-#                 output_path = f"{output_dir}/{layer}.geojson"
-#                 gdf.to_file(output_path, driver='GeoJSON')
-            
-#             os.remove(output_zip_path)
-#             shutil.rmtree(gdb_path)
-    
-#     except:
-#         print(f"Did not connect with download URL...\n{url}")
 
 
 def download_data_tiles(index_path, id_field, url_field, output_dir):
