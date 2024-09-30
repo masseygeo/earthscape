@@ -78,6 +78,7 @@ class MultiModalDataset(Dataset):
 
 
 class SensorFeatureExtractor(nn.Module):
+  """Feature extractor for single modalities/remote sensing sensors. From Liu et al. (2023)."""
   def __init__(self, input_channels):
     super().__init__()
 
@@ -95,59 +96,72 @@ class SensorFeatureExtractor(nn.Module):
     self.conv4 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1)
     self.bn4 = nn.BatchNorm2d(32)
 
-    self.transconv = nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1)
+    # self.transconv = nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1)
 
-  def forward(self, x):                    # assuming input is [batch, channels, 256, 256]
+  def forward(self, x):                    # input is [batch, channels, 256, 256]
     x = F.relu(self.bn1(self.conv1(x)))    # convolution, batch norm, relu - [batch, 16, 256, 256]
     x = F.relu(self.bn2(self.conv2(x)))    # convolution, batch norm, relu - [batch, 32, 256, 256]
     x = self.maxpool(x)                    # max pooling - [batch, 32, 128, 128]
     x = F.relu(self.bn3(self.conv3(x)))    # convolution, batch norm, relu - [batch, 64, 128, 128]
     x = F.relu(self.bn4(self.conv4(x)))    # convolution, batch norm, relu - [batch, 32, 128, 128]
-    x = self.transconv(x)                  # transposed convolution - [batch, 16, 256, 256]
+    # x = self.transconv(x)                  # transposed convolution - [batch, 16, 256, 256]
     return x
 
-  # after Liu et al. (2023) feature extractor module
+
+
+class SharedFeatureExtractor(nn.Module):
+  """Shared feature extractor (ResNext50) for multiple modalities/remote sensing sensors."""
+  # def __init__(self, input, target_classes):
+  def __init__(self):
+    super().__init__()
+
+    # resnext50 architecture without pretrained weights
+    self.resnet = models.resnext50_32x4d(weights=None)
+
+    # modify first resnet convolutional layer to accept fused channel dimensions
+    self.resnet.conv1 = nn.Conv2d(64, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+
+    # remove last two classification layers (adaptive pooling & fully connected layers)
+    self.resnet = nn.Sequential(*list(self.resnet.children())[:-2])
+
+  def forward(self, x):
+    x = self.resnet(x)
+    return x
 
 
 
 
-# class SharedFeatureExtractor(nn.Module):
-#   def __init__(self, fused_batch, target_classes):
-#     super.__init__()
 
-#     # initialize resnet/resnext model architecture (without pretrained weights)
-#     self.resnet = models.resnext50_32x4d(weights=None)
+class MultiLabelClassification(nn.Module):
+  """Multilabel classification head (same as ResNext50 output layers)."""
+  def __init__(self, num_classes):
+    super().__init__()
 
-#     # modify first resnet convolutional layer to accept fused channel dimensions
-#     self.resnet.conv1 = nn.Conv2d(fused_batch.shape[1], 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+    # same output layers as resnext50 
+    self.avgpool1 = nn.AdaptiveAvgPool2d(output_size=(1,1))
+    self.fc1 = nn.Linear(2048, num_classes, bias=True)
 
-#     # modify finaly fully connected layer for classification
-#     self.resnet.fc = nn.Linear(self.resnet.fc.in_features, target_classes, bias=True)
+  def forward(self, x):
+    x = self.avgpool1(x)      # adaptive average pooling output - [batch, 2048, 1, 1]
+    x = torch.flatten(x, 1)   # flatten to tensor - [batch, 2048]
+    output = self.fc1(x)      # fully connected output - [batch, num_classes]
+    return output
 
-#   def forward(self, x):
-#     outputs = self.resnet(x)
-#     return outputs
+
+
 
 
 
 class FullModel(nn.Module):
-  def __init__(self):
+  def __init__(self, num_classes):
     super().__init__()
 
     # separate feature extractors for sensors - RGB and DEM
     self.rgb_extractor = SensorFeatureExtractor(input_channels=3)   # in [batch, 3, 256, 256], out [batch, 16, 256, 256]
     self.dem_extractor = SensorFeatureExtractor(input_channels=1)   # in [batch, 1, 256, 256], out [batch, 16, 256, 256]
 
-    # shared encoding/feature extraction
-    self.resnet = models.resnext50_32x4d(weights=None)
-
-    # modify initial resnext layer to accept input
-    # fused features from above will have 32 channels with current architecture
-    self.resnet.conv1 = nn.Conv2d(32, 64, kernel_size=7, stride=2, padding=3, bias=False)
-
-    # modify final fully connected layer for classification of 7 classes
-    self.fc_final = nn.Linear(self.resnet.fc.in_features, 7)
-    self.resnet.fc = self.fc_final
+    self.shared_extractor = SharedFeatureExtractor()
+    self.classifier = MultiLabelClassification(num_classes)
 
   def forward(self, rgb, dem):
 
@@ -158,8 +172,11 @@ class FullModel(nn.Module):
     # feature fusion
     fused = torch.cat((rgb, dem), dim=1)
 
-    # shared encoding & classification
-    output = self.resnet(fused)
+    # shared feature extraction
+    features = self.shared_extractor(fused)
+
+    # multilabel classification
+    output = self.classifier(features)
 
     return output
 
@@ -178,10 +195,6 @@ def get_norm_data(image_paths):
     with rasterio.open(path) as src:
       data = src.read(1, masked=True)             # should not be any masked values, but just in case
       data = data.compressed()                    # this will remove any masked nodata values (if any)
-
-      # data_min = data.min()
-      # data_max = data.max()
-      # data = (data - data_min) / (data_max - data_min)
 
       total_sum += np.sum(data)
       total_sum_squares += np.sum(data**2)
@@ -288,7 +301,7 @@ def validate_epoch(model, val_loader, criterion, device):
 
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs):
+def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir):
 
   best_val_accuracy = 0.0
   epoch_train_loss = []
@@ -316,10 +329,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     # save best model based on validation accuracy
     if val_accuracy > best_val_accuracy:
       best_val_accuracy = val_accuracy
-      torch.save(model.state_dict(), '/content/drive/MyDrive/deepsurf/models/best_model.pth')
+      torch.save(model.state_dict(), f"{output_dir}/best_model.pth")
       print(f"New best model saved with accuracy {best_val_accuracy:.2f}%")
       print('\n')
 
-    # stop if validation loss increases for more than 3 epochs
 
   return epoch_train_loss, epoch_train_acc, epoch_val_loss, epoch_val_acc

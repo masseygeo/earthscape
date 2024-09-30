@@ -2,9 +2,6 @@
 
 data/*.gdb
 data/*.geojson
-data/index_tiles/*.geojson
-data/nhdplushr/*.geojson
-data/osm_ky/*
 
 data/warren/*.tif
 data/warren/*.geojson
@@ -12,8 +9,7 @@ data/warren/*.json
 data/warren/aerial_tiles/*
 data/warren/dem_tiles/*
 data/warren/terrain_features/*
-data/warren/patches/*
-data/warren/test_patches/*
+data/warren/patches*/*
 
 data/hardin/*.tif
 data/hardin/*.geojson
