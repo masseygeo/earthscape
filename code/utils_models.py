@@ -100,7 +100,7 @@ class MultiModalDataset(Dataset):
 
 
 class SensorFeatureExtractor(nn.Module):
-  """Feature extractor for single modalities/remote sensing sensors. From Liu et al. (2023)."""
+  """Feature extractor for single modalities/remote sensing sensors. Modified from Liu et al. (2023)."""
   def __init__(self, input_channels):
     super().__init__()
 
@@ -132,7 +132,7 @@ class SensorFeatureExtractor(nn.Module):
 
 
 class SharedFeatureExtractor(nn.Module):
-  """Shared feature extractor (ResNext50) for multiple modalities/remote sensing sensors."""
+  """Shared feature extractor for multiple modalities/remote sensing sensors. ResNext50 model without final adaptive average pooling and fully connected layers."""
   # def __init__(self, input, target_classes):
   def __init__(self):
     super().__init__()
@@ -155,7 +155,7 @@ class SharedFeatureExtractor(nn.Module):
 
 
 class MultiLabelClassification(nn.Module):
-  """Multilabel classification head (same as ResNext50 output layers)."""
+  """Multilabel classification head. Same as final two ResNext50 adaptive average pooling and fully connected layers."""
   def __init__(self, num_classes):
     super().__init__()
 
@@ -165,7 +165,7 @@ class MultiLabelClassification(nn.Module):
 
   def forward(self, x):
     x = self.avgpool1(x)      # adaptive average pooling output - [batch, 2048, 1, 1]
-    x = torch.flatten(x, 1)   # flatten to tensor - [batch, 2048]
+    x = torch.flatten(x, 1)   # flatten to tensor - [batch, 2048] (PyTorch does this automatically in full implementation)
     output = self.fc1(x)      # fully connected output - [batch, num_classes]
     return output
 
@@ -175,6 +175,7 @@ class MultiLabelClassification(nn.Module):
 
 
 class FullModel(nn.Module):
+  "Full model using separate feature extractors for each modality, channel concatenation of all modalities, shared feature extractor for all modalities, and multilable classification."
   def __init__(self, num_classes):
     super().__init__()
 
@@ -231,6 +232,7 @@ def get_norm_data(image_paths):
 
 
 def prep_image_for_plot(batch_image):
+  """Function to prepare image tensor from DataLoader batch for visualization."""
   image = batch_image.clone().detach().numpy()
   min_val = image.min()
   max_val = image.max()
@@ -355,5 +357,92 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
       print(f"New best model saved with accuracy {best_val_accuracy:.2f}%")
       print('\n')
 
-
   return epoch_train_loss, epoch_train_acc, epoch_val_loss, epoch_val_acc
+
+
+
+
+
+def test_model(model, test_loader, device, output_dir):
+  
+  all_predictions = []
+  all_targets = []
+
+  model.eval()
+
+  with torch.no_grad():
+    for batch in test_loader:
+      rgb = batch['rgb'].to(device)
+      dem = batch['dem'].to(device)
+      labels = batch['label'].squeeze(1).to(device)
+
+      all_targets.append(labels.cpu().numpy())
+
+      outputs = model(rgb, dem)
+      outputs = torch.sigmoid(outputs)
+      all_predictions.append(outputs)
+  
+  all_predictions = np.concatenate(all_predictions)
+  all_targets = np.concatenate(all_targets)
+
+  return all_predictions, all_targets
+
+
+
+
+
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
+
+def calculate_label_precision_recall_f1_aucroc(predictions, targets, threshold=0.5):
+  predictions_binary = (predictions >= threshold).astype(int)
+  
+  precision = precision_score(targets, predictions_binary)
+  recall = recall_score(targets, predictions_binary)
+  f1 = f1_score(targets, predictions_binary)
+  auc_roc = roc_auc_score(targets, predictions_binary)
+  
+  return precision, recall, f1, auc_roc
+
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import precision_recall_curve, roc_curve
+
+def plot_label_pr_roc_curves(target_label, predictions, targets):
+  fig, ax = plt.subplots(ncols=2, figsize=(10,5))
+
+  precision_vals, recall_vals, _ = precision_recall_curve(targets, predictions)
+  ax[0].plot(recall_vals, precision_vals, linewidth=2)
+  ax[0].set_xlabel('Recall')
+  ax[0].set_ylabel('Precision')
+  ax[0].set_title(f'Precision-Recall Curve, {target_label}')
+
+  fpr, tpr, _ = roc_curve(targets, predictions)
+  ax[1].plot(fpr, tpr, linewidth=2)
+  ax[1].set_xlabel('False Positive Rate')
+  ax[1].set_ylabel('True Positive Rate')
+  ax[1].set_title(f'Receiver Operating Curve, {target_label}')
+
+  for axes in ax:
+    axes.set_xlim(0,1)
+    axes.set_ylim(0,1)
+
+  return fig
+
+
+
+
+from sklearn.metrics import average_precision_score, hamming_loss, accuracy_score
+
+def calculate_global_metrics(targets, predictions, threshold=0.5):
+
+  predictions_binary = (predictions >= threshold).astype(int)
+  macro_precision = precision_score(targets, predictions_binary)
+  macro_recall = recall_score(targets, predictions_binary)
+  macro_f1 = f1_score(targets, predictions_binary)
+
+  mean_ap = average_precision_score(targets, predictions, average='macro')
+  h_loss = hamming_loss(targets, predictions_binary)
+  subset_acc = accuracy_score(targets, predictions_binary)
+
+  return macro_precision, macro_recall, macro_f1, mean_ap, h_loss, subset_acc
+
