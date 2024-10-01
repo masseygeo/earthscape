@@ -363,6 +363,9 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
 
 
 
+
+
+
 def test_model(model, test_loader, device, output_dir):
   
   all_predictions = []
@@ -389,8 +392,6 @@ def test_model(model, test_loader, device, output_dir):
 
 
 
-
-
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 
 def calculate_label_precision_recall_f1_aucroc(predictions, targets, threshold=0.5):
@@ -402,6 +403,7 @@ def calculate_label_precision_recall_f1_aucroc(predictions, targets, threshold=0
   auc_roc = roc_auc_score(targets, predictions_binary)
   
   return precision, recall, f1, auc_roc
+
 
 
 import matplotlib.pyplot as plt
@@ -430,7 +432,6 @@ def plot_label_pr_roc_curves(target_label, predictions, targets):
 
 
 
-
 from sklearn.metrics import average_precision_score, hamming_loss, accuracy_score
 
 def calculate_global_metrics(targets, predictions, threshold=0.5):
@@ -446,3 +447,37 @@ def calculate_global_metrics(targets, predictions, threshold=0.5):
 
   return macro_precision, macro_recall, macro_f1, mean_ap, h_loss, subset_acc
 
+
+
+
+
+def calculate_optimal_thresholds(model, val_loader, device, output_dir):
+  
+  all_predictions = []
+  all_targets = []
+
+  model.eval()
+
+  with torch.no_grad():
+    for batch in val_loader:
+      rgb = batch['rgb'].to(device)
+      dem = batch['dem'].to(device)
+      labels = batch['label'].squeeze(1).to(device)
+
+      all_targets.append(labels.cpu().numpy())
+
+      outputs = model(rgb, dem)
+      outputs = torch.sigmoid(outputs)
+      all_predictions.append(outputs)
+  
+  all_predictions = np.concatenate(all_predictions)
+  all_targets = np.concatenate(all_targets)
+
+  val_precision, val_recall, val_thresholds = precision_recall_curve(all_targets, all_predictions)
+
+  val_f1 = 2 * (val_precision * val_recall) / (val_precision + val_recall)
+
+  best_f1_idx = np.argmax(val_f1)
+  best_f1_threshold = val_f1[best_f1_idx]
+
+  return best_f1_threshold
