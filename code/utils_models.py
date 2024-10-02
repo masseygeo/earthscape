@@ -437,9 +437,10 @@ from sklearn.metrics import average_precision_score, hamming_loss, accuracy_scor
 def calculate_global_metrics(targets, predictions, threshold=0.5):
 
   predictions_binary = (predictions >= threshold).astype(int)
-  macro_precision = precision_score(targets, predictions_binary)
-  macro_recall = recall_score(targets, predictions_binary)
-  macro_f1 = f1_score(targets, predictions_binary)
+  
+  macro_precision = precision_score(targets, predictions_binary, average='macro')
+  macro_recall = recall_score(targets, predictions_binary, average='macro')
+  macro_f1 = f1_score(targets, predictions_binary, average='macro')
 
   mean_ap = average_precision_score(targets, predictions, average='macro')
   h_loss = hamming_loss(targets, predictions_binary)
