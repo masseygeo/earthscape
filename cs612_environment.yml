@@ -3,15 +3,14 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - fiona
   - geopandas
-  - ipykernel
-  - jupyterlab
   - matplotlib
   - numpy
   - python
-  - pytorch
   - rasterio
-  - rasterstats
+  - ipykernel
+  - jupyterlab
+  - pytorch
   - torchvision
   - whitebox
+  - seaborn
