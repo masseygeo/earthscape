@@ -22,77 +22,7 @@ from torchvision import models
 
 
 
-class MultiModalDataset(Dataset):
-  def __init__(self, ids, data_dir, transform_rgb=None, transform_dem=None, horiz_flip=False, vert_flip=False, rand_rot=False):
-    self.ids = ids                               # list of patch IDs
-    self.data_dir = data_dir                     # directory containing all data
-    self.transform_rgb = transform_rgb           # transform for aerial rgb
-    self.transform_dem = transform_dem           # transform for dem
-    # self.transform_labels = transform_labels     # transform for label
-    self.horiz_flip = horiz_flip
-    self.vert_flip = vert_flip
-    self.rand_rot = rand_rot
 
-
-  def __len__(self):
-    return len(self.ids)
-
-  def __getitem__(self, idx):
-    unique_id = self.ids[idx]
-
-    ##### Label vector
-    label_path = os.path.join(self.data_dir, f"{unique_id}_labels.csv")
-    label = np.loadtxt(label_path)                                    # read label as array
-    label = torch.from_numpy(label).unsqueeze(0)                      # create tensor of size [1, 7]
-    label = label.type(torch.float)
-    
-    ##### Aerial (RGB) image
-    r_path = os.path.join(self.data_dir, f"{unique_id}_aerialr.tif")
-    g_path = os.path.join(self.data_dir, f"{unique_id}_aerialg.tif")
-    b_path = os.path.join(self.data_dir, f"{unique_id}_aerialb.tif")
-    rgb_image = self.stack_images([r_path, g_path, b_path])           # create tensor of size [3, h, w]
-    if self.transform_rgb:
-      rgb_image = self.transform_rgb(rgb_image)                       # apply transform if provided
-
-    ##### DEM image
-    dem_path = os.path.join(self.data_dir, f"{unique_id}_dem.tif")
-    dem_image = self.stack_images([dem_path])                         # create tensor of size [1, h, w]
-    if self.transform_dem:
-      dem_image = self.transform_dem(dem_image)                       # apply transform if provided
-
-    ##### Apply random augmentation(s)
-    if self.horiz_flip:
-      if np.random.uniform(low=0, high=1) > 0.5:
-        rgb_image = v2.functional.horizontal_flip(rgb_image)
-        dem_image = v2.functional.horizontal_flip(dem_image)
-    if self.vert_flip:
-      if np.random.uniform(low=0, high=1) > 0.5:
-        rgb_image = v2.functional.vertical_flip(rgb_image)
-        dem_image = v2.functional.vertical_flip(dem_image)
-    if self.rand_rot:
-        angle = np.random.choice([0, 90, 180, 270])
-        rgb_image = v2.functional.rotate(rgb_image, angle=angle)
-        dem_image = v2.functional.rotate(dem_image, angle=angle)
-
-    return {'rgb': rgb_image, 'dem': dem_image, 'label': label}
-
-  @staticmethod
-  def stack_images(paths_list):
-    """
-    Function to extract image arrays, stack if multiple images provided, and return tensor with shape [Channels, Height, Width].
-    """
-    # initialize list to hold image arrays
-    src_arrays = []
-
-    # iterate through image paths
-    for path in paths_list:
-
-      # open image
-      with rasterio.open(path) as src:
-        data = src.read(1)                       # read channel 1 as array (all input should be 1 channel)
-        src_arrays.append(data)                  # append array to list
-    image_array = np.stack(src_arrays, axis=0)   # stack image arrays along channel dimension
-    return torch.from_numpy(image_array)         # return tensor with shape [channels, h, w]
   
  
   
@@ -242,9 +172,10 @@ def prep_image_for_plot(batch_image):
 
 
 
+from datetime import datetime
 
 def train_epoch(model, train_loader, criterion, optimizer, device):
-
+  t0 = datetime.now()
   # ensure the model can train and update
   model.train()
 
@@ -282,6 +213,8 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
 
   epoch_loss = running_loss / total_batches
   accuracy = correct / total_predictions * 100
+
+  print(round((datetime.now()-t0).seconds / 60, 2), ' minutes')
 
   return epoch_loss, accuracy
 
@@ -482,3 +415,53 @@ def calculate_optimal_thresholds(model, val_loader, device, output_dir):
   best_f1_threshold = val_f1[best_f1_idx]
 
   return best_f1_threshold
+
+
+
+
+
+import pandas as pd
+import seaborn as sns
+
+def plot_class_distributions(patch_id_list, patch_count_path, patch_area_path, title):
+
+    ##### calculate counts of occurrences
+    df_count = pd.read_csv(patch_count_path)
+    df_count = df_count.loc[df_count['patch_id'].isin(patch_id_list)]
+    counts = df_count.iloc[:, 1:].sum(axis=0)
+    counts = pd.DataFrame(counts) 
+
+    ##### calculate areas in patches
+    df_area = pd.read_csv(patch_area_path)
+    df_area = df_area.loc[df_area['patch_id'].isin(patch_id_list)]
+    df_area_long = df_area.iloc[:, 1:].melt(var_name='Geologic Map Unit', value_name='Proportion')
+
+    ##### plot class distributions
+    fig, ax = plt.subplots(ncols=2, figsize=(10,4))
+
+    # counts...
+    sns.barplot(ax=ax[0], data=counts, x=counts.index, y=0)
+    ax[0].set_xlabel('')
+    ax[0].set_ylabel('Counts of Occurrence in Patch')
+    ax[0].set_title('Distributions of Occurrence', style='italic')
+
+    # areas...
+    # sns.violinplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
+    #                split=True, width=2)
+    sns.boxplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
+                showfliers=False, fill=False, color='k', width=0.5, linewidth=1)
+    
+    sns.stripplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
+                  jitter=True, edgecolor='k', linewidth=0.2, alpha=0.03, facecolor='#3A6D8C', zorder=0)
+    
+
+
+    ax[1].set_xlabel('')
+    ax[1].set_ylabel('Proportion of Area in Patch')
+    ax[1].set_title('Distributions of Exposed Area', style='italic')
+
+    plt.ylim(0,1)
+    plt.suptitle(f"{title} (n={len(patch_id_list)})")
+    plt.show()
+
+    return fig
