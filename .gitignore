@@ -1,17 +1,16 @@
 .vscode
 
-data/*.gdb
-data/*.geojson
-
 data/warren/*.tif
 data/warren/*.geojson
-data/warren/*.json
-data/warren/aerial_tiles/*
-data/warren/dem_tiles/*
-data/warren/terrain_features/*
-data/warren/patches*/*
 
-data/hardin/*.tif
-data/hardin/*.geojson
-data/hardin/*.json
+data/patches/*.tif
+data/patches/*.csv
 
+
+data/howevalley/*.tif
+data/howevalley/*.geojson
+
+
+
+data/sonora/*.tif
+data/sonora/*.geojson

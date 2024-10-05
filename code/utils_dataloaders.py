@@ -8,34 +8,42 @@ from torchvision.transforms import v2
 
 
 
-def randomly_select_indpendent_patch_sets(patches_path, test_size=0.15, val_size=0.15, seed=111):
+def randomly_select_indpendent_patch_sets(patches_path, test_size=0.1, val_size=0.1, seed=111):
   
   # get input data...
   gdf = gpd.read_file(patches_path)            # read patches into geodataframe
   test_size = int(test_size * len(gdf))        # get size of test set
   val_size = int(val_size * len(gdf))          # get size of validation set
   rng = np.random.default_rng(seed=seed)       # create random range with seed
-  
+
   # get random test set of patches...
-  random_test_idx = rng.choice(len(gdf), size=test_size, replace=False)
+  random_test_idx = rng.choice(gdf.index, size=test_size, replace=False)
   gdf_test = gdf.loc[random_test_idx].copy()
   gdf_test.reset_index(drop=True, inplace=True)
-  
 
 
-  # spatial overlay to exclude patches intersecting test set
-  gdf.sjoin()           
-  gdf.reset_index(drop=True, inplace=True)   # reset index
+  # spatial join to exclude patches intersecting test set
+  # gdf = gpd.overlay(gdf, gdf_test, how='difference')           
+  intersecting_patches = gpd.sjoin(gdf, gdf_test, how='inner', predicate='intersects')
+  gdf = gdf[~gdf.index.isin(intersecting_patches.index)]
+  gdf.reset_index(drop=True, inplace=True)
 
 
 
-  # get random validation set from remaining independent patches...
-  random_val_idx = rng.choice(len(gdf), size=val_size, replace=False)
-  gdf_val = gdf.loc[random_val_idx].copy()
-  gdf_val.reset_index(drop=True, inplace=True)
+  # # get random validation set of patches...
+  # random_val_idx = rng.choice(gdf.index, size=val_size, replace=False)
+  # gdf_val = gdf.loc[random_val_idx].copy()
+  # gdf_val.reset_index(drop=True, inplace=True)
 
 
-  # spatial overlay to exclude patches intersecting validation set (all remaining will be training set)
+  # intersecting_patches = gpd.sjoin(gdf, gdf_val, how='inner', predicate='intersects')
+  # gdf = gdf[~gdf.index.isin(intersecting_patches.index)]
+  # gdf.reset_index(drop=True, inplace=True)
+
+
+  return gdf, gdf_test
+
+
 
 
   

@@ -38,6 +38,8 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
     -------
     None
     """
+    # dictionary of values and mapped 
+
     # read input GIS file as geodataframe
     gdf = gpd.read_file(input_path)
 
@@ -53,11 +55,17 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
     # calculate transform for output image
     transform = from_origin(west=minx, north=maxy, xsize=output_resolution, ysize=output_resolution)
 
-    # get attribute values for pixel value assignments
-    values = gdf[attribute].unique()
 
-    # assign each category to integer
-    mapper = {key:value for value, key in enumerate(values, start=1)}
+    # # get attribute values for pixel value assignments
+    # values = gdf[attribute].unique()
+
+    # # assign each category to integer
+    # mapper = {key:value for value, key in enumerate(values, start=1)}
+
+    mapper = {'af1': 1, 'Qal': 2, 'Qaf': 3, 'Qat': 4, 'Qc': 5, 'Qca': 6, 'Qr': 7}
+    mapper = {key:val for key, val in mapper.items() if key in gdf['Symbol'].unique()}
+
+
 
     # create new geodataframe attribute of categorical integer assignments
     gdf[f"{attribute}_int"] = gdf[attribute].apply(lambda x: mapper.get(x, np.nan))
@@ -129,7 +137,7 @@ def clip_gis_to_boundary(input_path, boundary_path, output_path, gdb_layer=None)
 
 
 
-def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
+def multiple_gis_to_reference_image(input_paths, reference_path, output_path, binary=True):
     """
     Function to combine multiple geospatial vector GIS features into a new GeoTIFF image aligned with a reference image. In the case of overlapping features, priority for pixel values in the final image will be given to the last feature. Background space will be given a value of 0 and additional features will be given sequential integers in increments of 1.
 
@@ -162,7 +170,16 @@ def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
             if gdf.crs != src.crs:
                 gdf = gdf.to_crs(src.crs)
             
-            shapes = [(geom, val) for geom in gdf.geometry]
+
+
+            if not binary:
+                shapes = [(geom, val) for geom in gdf.geometry]
+            
+            else:
+                shapes = [(geom, 1) for geom in gdf.geometry]
+
+
+
             shapes_all.extend(shapes)
 
         output_image = rasterize(shapes=shapes_all, 
@@ -183,10 +200,11 @@ def multiple_gis_to_reference_image(input_paths, reference_path, output_path):
         with rasterio.open(output_path, 'w', **output_meta) as dst:
             dst.write(output_image.astype(rasterio.float32), 1)
         
-        mapper = {k:v for v,k in enumerate(features)}
-        output_json_path = output_path.replace('.tif', '.json')
-        with open(output_json_path, 'w') as meta:
-            json.dump(mapper, meta, indent=4)
+        if not binary:
+            mapper = {k:v for v,k in enumerate(features)}
+            output_json_path = output_path.replace('.tif', '.json')
+            with open(output_json_path, 'w') as meta:
+                json.dump(mapper, meta, indent=4)
 
 
 
