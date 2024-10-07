@@ -19,26 +19,14 @@ def randomly_select_indpendent_patch_sets(patches_path, test_size=0.1, val_size=
   # get random test set of patches...
   random_test_idx = rng.choice(gdf.index, size=test_size, replace=False)
   gdf_test = gdf.loc[random_test_idx].copy()
-  gdf_test.reset_index(drop=True, inplace=True)
+  # gdf_test.reset_index(drop=True, inplace=True)
 
 
   # spatial join to exclude patches intersecting test set
   # gdf = gpd.overlay(gdf, gdf_test, how='difference')           
-  intersecting_patches = gpd.sjoin(gdf, gdf_test, how='inner', predicate='intersects')
+  intersecting_patches = gpd.sjoin(gdf, gdf_test, how='inner', predicate='overlaps')
   gdf = gdf[~gdf.index.isin(intersecting_patches.index)]
   gdf.reset_index(drop=True, inplace=True)
-
-
-
-  # # get random validation set of patches...
-  # random_val_idx = rng.choice(gdf.index, size=val_size, replace=False)
-  # gdf_val = gdf.loc[random_val_idx].copy()
-  # gdf_val.reset_index(drop=True, inplace=True)
-
-
-  # intersecting_patches = gpd.sjoin(gdf, gdf_val, how='inner', predicate='intersects')
-  # gdf = gdf[~gdf.index.isin(intersecting_patches.index)]
-  # gdf.reset_index(drop=True, inplace=True)
 
 
   return gdf, gdf_test

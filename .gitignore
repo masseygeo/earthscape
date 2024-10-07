@@ -3,14 +3,17 @@
 data/warren/*.tif
 data/warren/*.geojson
 
-data/patches/*.tif
-data/patches/*.csv
-
+data/patches_warren/*.tif
+data/patches_warren/*.csv
 
 data/howevalley/*.tif
 data/howevalley/*.geojson
 
-
+data/patches_howevalley/*.tif
+data/patches_howevalley/*.csv
 
 data/sonora/*.tif
 data/sonora/*.geojson
+
+data/patches_sonora/*.tif
+data/patches_sonora/*.csv

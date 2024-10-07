@@ -45,7 +45,7 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
 
     # if input is polygon or multipolygon, then apply 0 buffer to mitigate potential geometry errors
     if gdf.geom_type.isin(['Polygon', 'MultiPolygon']).any():
-        gdf['geometry'] = gdf['geometry'].buffer(0)
+        gdf['geometry'] = gdf['geometry'].buffer(0.1)
     
     # get bounding coordinates & output width and height (using desired resolution)
     minx, miny, maxx, maxy = gdf.total_bounds
@@ -55,7 +55,6 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
     # calculate transform for output image
     transform = from_origin(west=minx, north=maxy, xsize=output_resolution, ysize=output_resolution)
 
-
     # # get attribute values for pixel value assignments
     # values = gdf[attribute].unique()
 
@@ -63,9 +62,7 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
     # mapper = {key:value for value, key in enumerate(values, start=1)}
 
     mapper = {'af1': 1, 'Qal': 2, 'Qaf': 3, 'Qat': 4, 'Qc': 5, 'Qca': 6, 'Qr': 7}
-    mapper = {key:val for key, val in mapper.items() if key in gdf['Symbol'].unique()}
-
-
+    # mapper = {key:val for key, val in mapper.items() if key in gdf['Symbol'].unique()}
 
     # create new geodataframe attribute of categorical integer assignments
     gdf[f"{attribute}_int"] = gdf[attribute].apply(lambda x: mapper.get(x, np.nan))
@@ -208,7 +205,7 @@ def multiple_gis_to_reference_image(input_paths, reference_path, output_path, bi
 
 
 
-def create_image_patches(reference_path, patch_size, patch_overlap, boundary_path, output_path):
+def create_image_patches(reference_path, patch_size, patch_overlap, boundary_path, output_path, name_prefix=None):
     """
     Function to create geospatial polygons that represent square image patch locations saved as a GeoJSON. The size of the image patches (assumed to be square) and the proportion of overlap between adjacent patches is specified. Each patch will have a unique id created from the patch_size, patch_overlap, and a unique number.
 
@@ -254,5 +251,87 @@ def create_image_patches(reference_path, patch_size, patch_overlap, boundary_pat
         x += overlap_start_units
     
     gdf = gpd.GeoDataFrame(geometry=patches, crs=crs)
-    gdf['patch_id'] = [f"{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
+
+    if not name_prefix:
+        gdf['patch_id'] = [f"{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
+    else:
+        gdf['patch_id'] = [f"{name_prefix}_{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
+        
     gdf.to_file(output_path, driver='GeoJSON')
+
+
+
+
+
+def reassign_mapunit_symbol(input_path, map_units, output_path=None):
+
+    # read geology GeoJSON to geodataframe
+    gdf = gpd.read_file(input_path)
+
+    # apply small buffer to fill any slivers or gaps
+    gdf['geometry'] = gdf['geometry'].buffer(0.1)
+
+    # separate selected map units & remaining units
+    gdf_subset = gdf[gdf['Symbol'].isin(map_units)].copy()
+    gdf_remaining = gdf.loc[~gdf.index.isin(gdf_subset.index)].copy()
+
+    # iterate through selected polygons to find neighbor that shares longest border
+    for idx, subset_row in gdf_subset.iterrows():
+
+        # isolate neighbor polygons
+        neighbors = gdf_remaining[gdf_remaining.touches(subset_row.geometry)]
+
+        # calculate shared borders of all neighbors (if valid geometries or not empty)
+        if neighbors.geometry.is_valid.all():
+            shared_lengths = neighbors.geometry.apply(lambda x: subset_row.geometry.intersection(x).length)
+
+        # calculate index of neighbor with longest border
+        if len(shared_lengths) > 0:
+            max_length_idx = shared_lengths.idxmax()
+
+        # replace selected polygon with adjacent neighbor
+        gdf.loc[idx, 'Symbol'] = gdf.loc[max_length_idx, 'Symbol']
+
+    # save new GeoJSON
+    if not output_path:
+        output_path = input_path
+    gdf.to_file(output_path, driver='GeoJSON')
+
+
+
+import fiona
+
+def get_aoi_index_polygons(input_path, boundary_path, output_dir):
+
+    # read buffered boundary into geodataframe
+    boundary = gpd.read_file(boundary_path)
+
+    # get list of layers in index geodatabase
+    index_layers = fiona.listlayers(input_path)
+
+    # iterate through layers
+    for index in index_layers:
+        
+        # extract dem index
+        if 'dem' in index.lower():
+
+            # read dem index as geodataframe
+            dem_index = gpd.read_file(input_path, layer=index)
+
+            # perform spatial join between buffered boundary & statewide index (only tiles that intersect index)
+            intersect = gpd.sjoin(left_df=dem_index, right_df=boundary, how='inner')
+
+            # define output path for dem index
+            output_path = f"{output_dir}/dem_index.geojson"
+
+            # write selected tiles to GeoJSON
+            if not os.path.isfile(output_path):
+                intersect.to_file(output_path, driver='GeoJSON')
+        
+        # extract aerial imagery index
+        elif 'aerial' in index.lower():
+            aerial_index = gpd.read_file(input_path, layer=index)
+            intersect = gpd.sjoin(left_df=aerial_index, right_df=boundary, how='inner')
+            output_path = f"{output_dir}/aerial_index.geojson"
+            if not os.path.isfile(output_path):
+                intersect.to_file(output_path, driver='GeoJSON')
