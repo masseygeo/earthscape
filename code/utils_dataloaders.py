@@ -5,91 +5,98 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import v2
-
-
-
-def randomly_select_indpendent_patch_sets(patches_path, test_size=0.1, val_size=0.1, seed=111):
-  
-  # get input data...
-  gdf = gpd.read_file(patches_path)            # read patches into geodataframe
-  test_size = int(test_size * len(gdf))        # get size of test set
-  val_size = int(val_size * len(gdf))          # get size of validation set
-  rng = np.random.default_rng(seed=seed)       # create random range with seed
-
-  # get random test set of patches...
-  random_test_idx = rng.choice(gdf.index, size=test_size, replace=False)
-  gdf_test = gdf.loc[random_test_idx].copy()
-  # gdf_test.reset_index(drop=True, inplace=True)
-
-
-  # spatial join to exclude patches intersecting test set
-  # gdf = gpd.overlay(gdf, gdf_test, how='difference')           
-  intersecting_patches = gpd.sjoin(gdf, gdf_test, how='inner', predicate='overlaps')
-  gdf = gdf[~gdf.index.isin(intersecting_patches.index)]
-  gdf.reset_index(drop=True, inplace=True)
-
-
-  return gdf, gdf_test
+from torchvision.transforms.functional import normalize
+import glob
 
 
 
 
-  
+def randomly_select_indpendent_patch_sets(gdf_patches, val_size, seed=111):
+
+  # select random patches...
+  rng = np.random.default_rng(seed=seed)                                          # create random range with seed
+  random_idx = rng.choice(gdf_patches.index, size=val_size, replace=False)        # choose random patches
+  gdf_select = gdf_patches.loc[random_idx].copy()                                 # isolate selected patches
+
+  # remove selected patches & overlapping patches for spatially independent sets of patches...
+  gdf_remaining = gdf_patches[~gdf_patches.index.isin(gdf_select.index)].copy()              # remove selected patches from gdf
+  overlapping_patches = gdf_remaining.sjoin(gdf_select, how='inner', predicate='overlaps')   # identify patches that overlap selected patches
+  gdf_remaining = gdf_remaining[~gdf_remaining.index.isin(overlapping_patches.index)]        # remove overlapping patches from gdf
+
+  # reset index and return two gdf's 
+  gdf_select.reset_index(drop=True, inplace=True)
+  gdf_remaining.reset_index(drop=True, inplace=True)
+
+  return gdf_select, gdf_remaining
+
+
+
+
+def prep_image_for_plot(batch_image):
+  """Function to prepare image tensor from DataLoader batch for visualization."""
+  image = batch_image.clone().detach().numpy()
+  min_val = image.min()
+  max_val = image.max()
+  image = (image - min_val) / (max_val-min_val)
+  image = np.transpose(image, (1, 2, 0))
+  return image
+
 
 
 
 class MultiModalDataset(Dataset):
-  def __init__(self, ids, data_dir, transform_rgb=None, transform_dem=None, horiz_flip=False, vert_flip=False, rand_rot=False):
-    self.ids = ids                               # list of patch IDs
-    self.data_dir = data_dir                     # directory containing all data
-    self.transform_rgb = transform_rgb           # transform for aerial rgb
-    self.transform_dem = transform_dem           # transform for dem
-    self.horiz_flip = horiz_flip
-    self.vert_flip = vert_flip
-    self.rand_rot = rand_rot
-
+  def __init__(self, ids, data_dir, modalities, norm_params=None, augment=False, task='classification'):
+    self.ids = ids                   # list of patch IDs
+    self.data_dir = data_dir         # directory containing all data
+    self.modalities = modalities     # dictionary of modalities (modality name : path extension)
+    self.norm_params = norm_params   # boolean; normalize modalities
+    self.augment = augment           # bool; augment modalities - random horizontal flip, vertical flip, & 90 degree rotations
+    self.task = task                 # type of problem - classification or segmentation
 
   def __len__(self):
     return len(self.ids)
 
   def __getitem__(self, idx):
-    unique_id = self.ids[idx]
 
-    ##### Label vector
-    label_path = os.path.join(self.data_dir, f"{unique_id}_labels.csv")
-    label = np.loadtxt(label_path)                                    # read label as array
-    label = torch.from_numpy(label).unsqueeze(0)                      # create tensor of size [1, 7]
-    label = label.type(torch.float)
+    ##### Patch id
+    patch_id = self.ids[idx]
+
+    ##### Labels
+    if self.task == 'classification':
+      label_path = os.path.join(self.data_dir, f"{patch_id}_labels.csv")
+      label = np.loadtxt(label_path)
+      label = torch.from_numpy(label).unsqueeze(0)
+      label = label.type(torch.float)
     
-    ##### Aerial (RGB) image
-    r_path = os.path.join(self.data_dir, f"{unique_id}_aerialr.tif")
-    g_path = os.path.join(self.data_dir, f"{unique_id}_aerialg.tif")
-    b_path = os.path.join(self.data_dir, f"{unique_id}_aerialb.tif")
-    rgb_image = self.stack_images([r_path, g_path, b_path])           # create tensor of size [3, h, w]
-    if self.transform_rgb:
-      rgb_image = self.transform_rgb(rgb_image)                       # apply transform if provided
+    data = {'label': label}
 
-    ##### DEM image
-    dem_path = os.path.join(self.data_dir, f"{unique_id}_dem.tif")
-    dem_image = self.stack_images([dem_path])                         # create tensor of size [1, h, w]
-    if self.transform_dem:
-      dem_image = self.transform_dem(dem_image)                       # apply transform if provided
+    ##### Modalities
+    for modality, channel_paths in self.modalities.items():
+      paths = [os.path.join(self.data_dir, f"{patch_id}_{file_extension}") for file_extension in channel_paths]
+      image = self.stack_images(paths)
+      
+      if self.norm_params:
+        if modality in self.norm_params.keys():
+          image = normalize(image, self.norm_params[modality][0], self.norm_params[modality][1])
+      
+      data[modality] = image
 
     ##### Apply random augmentation(s)
-    if self.horiz_flip:
-      if np.random.uniform(low=0, high=1) > 0.5:
-        rgb_image = v2.functional.horizontal_flip(rgb_image)
-        dem_image = v2.functional.horizontal_flip(dem_image)
-    if self.vert_flip:
-      if np.random.uniform(low=0, high=1) > 0.5:
-        rgb_image = v2.functional.vertical_flip(rgb_image)
-        dem_image = v2.functional.vertical_flip(dem_image)
-    if self.rand_rot:
+    if self.augment:
+        
+        if np.random.uniform(low=0, high=1) > 0.5:
+          for modality in self.modalities.keys():
+            data[modality] = v2.functional.horizontal_flip(data[modality])
+    
+        if np.random.uniform(low=0, high=1) > 0.5:
+          for modality in self.modalities.keys():
+            data[modality] = v2.functional.vertical_flip(data[modality])
+        
         angle = np.random.choice([0, 90, 180, 270])
-        rgb_image = v2.functional.rotate(rgb_image, angle=angle)
-        dem_image = v2.functional.rotate(dem_image, angle=angle)
+        for modality in self.modalities.keys():
+            data[modality] = v2.functional.rotate(data[modality], angle=angle)
 
-    return {'rgb': rgb_image, 'dem': dem_image, 'label': label}
+    return data
 
   @staticmethod
   def stack_images(paths_list):
@@ -108,3 +115,30 @@ class MultiModalDataset(Dataset):
         src_arrays.append(data)                  # append array to list
     image_array = np.stack(src_arrays, axis=0)   # stack image arrays along channel dimension
     return torch.from_numpy(image_array)         # return tensor with shape [channels, h, w]
+
+
+
+
+
+def get_norm_data(image_paths):
+  """
+  Function to calculate mean and standard deviation of 1-channel images.
+  """
+  total_sum = 0
+  total_sum_squares = 0
+  total_pixels = 0
+
+  for path in image_paths:
+    with rasterio.open(path) as src:
+      data = src.read(1, masked=True)             # should not be any masked values, but just in case
+      data = data.compressed()                    # this will remove any masked nodata values (if any)
+
+      total_sum += np.sum(data)
+      total_sum_squares += np.sum(data**2)
+      total_pixels += data.size
+      
+  mean = total_sum / total_pixels
+  var = (total_sum_squares / total_pixels) - mean**2
+  sd = np.sqrt(var)
+  return mean, sd
+

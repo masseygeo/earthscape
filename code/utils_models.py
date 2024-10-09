@@ -19,14 +19,33 @@ import torch.nn.functional as F
 from torchvision.transforms import v2
 from torchvision import models
 
+from datetime import datetime
 
 
+
+
+
+class FocalLoss(nn.Module):
+  def __init__(self, alpha=1.0, gamma=2.0, reduction='mean'):
+    super().__init__()
+    self.alpha = alpha
+    self.gamma = gamma
+    self.reduction = reduction
+
+  def forward(self, logits_input, binary_target):
+    bce_loss = F.binary_cross_entropy_with_logits(logits_input, binary_target, reduction='none')
+    pt = torch.exp(-bce_loss)
+    focal_loss = self.alpha * (1-pt) ** self.gamma * bce_loss
+
+    if self.reduction == 'mean':
+      return focal_loss.mean()
+    elif self.reduction == 'sum':
+      return focal_loss.sum()
+    else:
+      return focal_loss
 
 
   
- 
-  
-
 
 
 class SensorFeatureExtractor(nn.Module):
@@ -64,14 +83,14 @@ class SensorFeatureExtractor(nn.Module):
 class SharedFeatureExtractor(nn.Module):
   """Shared feature extractor for multiple modalities/remote sensing sensors. ResNext50 model without final adaptive average pooling and fully connected layers."""
   # def __init__(self, input, target_classes):
-  def __init__(self):
+  def __init__(self, input_channels):
     super().__init__()
 
     # resnext50 architecture without pretrained weights
     self.resnet = models.resnext50_32x4d(weights=None)
 
     # modify first resnet convolutional layer to accept fused channel dimensions
-    self.resnet.conv1 = nn.Conv2d(64, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+    self.resnet.conv1 = nn.Conv2d(input_channels, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
 
     # remove last two classification layers (adaptive pooling & fully connected layers)
     self.resnet = nn.Sequential(*list(self.resnet.children())[:-2])
@@ -86,12 +105,12 @@ class SharedFeatureExtractor(nn.Module):
 
 class MultiLabelClassification(nn.Module):
   """Multilabel classification head. Same as final two ResNext50 adaptive average pooling and fully connected layers."""
-  def __init__(self, num_classes):
+  def __init__(self, out_classes):
     super().__init__()
 
     # same output layers as resnext50 
     self.avgpool1 = nn.AdaptiveAvgPool2d(output_size=(1,1))
-    self.fc1 = nn.Linear(2048, num_classes, bias=True)
+    self.fc1 = nn.Linear(2048, out_classes, bias=True)
 
   def forward(self, x):
     x = self.avgpool1(x)      # adaptive average pooling output - [batch, 2048, 1, 1]
@@ -106,76 +125,41 @@ class MultiLabelClassification(nn.Module):
 
 class FullModel(nn.Module):
   "Full model using separate feature extractors for each modality, channel concatenation of all modalities, shared feature extractor for all modalities, and multilable classification."
-  def __init__(self, num_classes):
+  def __init__(self, out_classes, modality_channels):
     super().__init__()
+    self.n_modalities = len(modality_channels.keys())
+    self.feature_extractors = nn.ModuleDict({modality:SensorFeatureExtractor(input_channels) for modality, input_channels in modality_channels.items()})
+    self.shared_extractor = SharedFeatureExtractor(self.n_modalities * 32)
+    self.classifier = MultiLabelClassification(out_classes)
 
-    # separate feature extractors for sensors - RGB and DEM
-    self.rgb_extractor = SensorFeatureExtractor(input_channels=3)   # in [batch, 3, 256, 256], out [batch, 16, 256, 256]
-    self.dem_extractor = SensorFeatureExtractor(input_channels=1)   # in [batch, 1, 256, 256], out [batch, 16, 256, 256]
-
-    self.shared_extractor = SharedFeatureExtractor()
-    self.classifier = MultiLabelClassification(num_classes)
-
-  def forward(self, rgb, dem):
+  def forward(self, modalities):
 
     # separate feature extractors
-    rgb = self.rgb_extractor(rgb)
-    dem = self.dem_extractor(dem)
+    extracted_features = []
+    for name, data in modalities.items():
+      if name in self.feature_extractors:
+        features = self.feature_extractors[name](data)
+        extracted_features.append(features)
 
     # feature fusion
-    fused = torch.cat((rgb, dem), dim=1)
+    fused_features = torch.cat(extracted_features, dim=1)
 
     # shared feature extraction
-    features = self.shared_extractor(fused)
+    shared_features = self.shared_extractor(fused_features)
 
     # multilabel classification
-    output = self.classifier(features)
+    output = self.classifier(shared_features)
 
     return output
 
 
 
 
-def get_norm_data(image_paths):
-  """
-  Function to calculate mean and standard deviation of 1-channel images.
-  """
-  total_sum = 0
-  total_sum_squares = 0
-  total_pixels = 0
-
-  for path in image_paths:
-    with rasterio.open(path) as src:
-      data = src.read(1, masked=True)             # should not be any masked values, but just in case
-      data = data.compressed()                    # this will remove any masked nodata values (if any)
-
-      total_sum += np.sum(data)
-      total_sum_squares += np.sum(data**2)
-      total_pixels += data.size
-      
-  mean = total_sum / total_pixels
-  var = (total_sum_squares / total_pixels) - mean**2
-  sd = np.sqrt(var)
-  return mean, sd
-
-
-
-
-def prep_image_for_plot(batch_image):
-  """Function to prepare image tensor from DataLoader batch for visualization."""
-  image = batch_image.clone().detach().numpy()
-  min_val = image.min()
-  max_val = image.max()
-  image = (image - min_val) / (max_val-min_val)
-  image = np.transpose(image, (1, 2, 0))
-  return image
-
-
-
-from datetime import datetime
 
 def train_epoch(model, train_loader, criterion, optimizer, device):
+
   t0 = datetime.now()
+
   # ensure the model can train and update
   model.train()
 
@@ -188,16 +172,14 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
   # iterate through batches
   for batch in train_loader:
 
-    # attach batch to device
-    rgb_input = batch['rgb'].to(device)
-    dem_input = batch['dem'].to(device)
-    labels = batch['label'].squeeze(1).to(device)  # Assuming labels are of shape [batch_size, 1, 7] (squeeze to [batch_size, 7])
+    labels = batch.pop('label').squeeze(1).to(device)
+    modalities = {modality: data.to(device) for modality, data in batch.items()}
 
     # zero the gradients
     optimizer.zero_grad()
 
     # forward pass & backprop
-    outputs = model(rgb_input, dem_input)
+    outputs = model(modalities)
     loss = criterion(outputs, labels)
     loss.backward()
     optimizer.step()
@@ -234,11 +216,11 @@ def validate_epoch(model, val_loader, criterion, device):
 
   with torch.no_grad():
     for batch in val_loader:
-      rgb_input = batch['rgb'].to(device)
-      dem_input = batch['dem'].to(device)
-      labels = batch['label'].squeeze(1).to(device)
 
-      outputs = model(rgb_input, dem_input)
+      labels = batch.pop('label').squeeze(1).to(device)
+      modalities = {modality: data.to(device) for modality, data in batch.items()}
+
+      outputs = model(modalities)
       loss = criterion(outputs, labels)
 
       # get results
@@ -260,7 +242,8 @@ def validate_epoch(model, val_loader, criterion, device):
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir):
 
-  best_val_accuracy = 0.0
+  # best_val_accuracy = 0.0
+  best_val_loss = float('inf')
   epoch_train_loss = []
   epoch_train_acc = []
   epoch_val_loss = []
@@ -283,16 +266,14 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
 
     print('\n')
 
-    # save best model based on validation accuracy
-    if val_accuracy > best_val_accuracy:
-      best_val_accuracy = val_accuracy
+    # save best model based on loss
+    if val_loss > best_val_loss:
+      best_val_loss = val_loss
       torch.save(model.state_dict(), f"{output_dir}/best_model.pth")
-      print(f"New best model saved with accuracy {best_val_accuracy:.2f}%")
+      print(f"New best model saved with accuracy {val_accuracy:.2f}%")
       print('\n')
 
   return epoch_train_loss, epoch_train_acc, epoch_val_loss, epoch_val_acc
-
-
 
 
 
@@ -325,6 +306,9 @@ def test_model(model, test_loader, device, output_dir):
 
 
 
+
+
+
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 
 def calculate_label_precision_recall_f1_aucroc(predictions, targets, threshold=0.5):
@@ -336,6 +320,8 @@ def calculate_label_precision_recall_f1_aucroc(predictions, targets, threshold=0
   auc_roc = roc_auc_score(targets, predictions_binary)
   
   return precision, recall, f1, auc_roc
+
+
 
 
 
@@ -362,6 +348,8 @@ def plot_label_pr_roc_curves(target_label, predictions, targets):
     axes.set_ylim(0,1)
 
   return fig
+
+
 
 
 
@@ -442,8 +430,8 @@ def plot_class_distributions(patch_id_list, patch_count_path, patch_area_path, t
     # counts...
     sns.barplot(ax=ax[0], data=counts, x=counts.index, y=0)
     ax[0].set_xlabel('')
-    ax[0].set_ylabel('Counts of Occurrence in Patch')
-    ax[0].set_title('Distributions of Occurrence', style='italic')
+    ax[0].set_ylabel('Counts')
+    ax[0].set_title('Class Occurrence', style='italic')
 
     # areas...
     # sns.violinplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
@@ -457,8 +445,8 @@ def plot_class_distributions(patch_id_list, patch_count_path, patch_area_path, t
 
 
     ax[1].set_xlabel('')
-    ax[1].set_ylabel('Proportion of Area in Patch')
-    ax[1].set_title('Distributions of Exposed Area', style='italic')
+    ax[1].set_ylabel('Proportion')
+    ax[1].set_title('Exposed Area', style='italic')
 
     plt.ylim(0,1)
     plt.suptitle(f"{title} (n={len(patch_id_list)})")
