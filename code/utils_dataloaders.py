@@ -1,12 +1,13 @@
+
+
+
 import os
 import rasterio
-import geopandas as gpd
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import v2
 from torchvision.transforms.functional import normalize
-import glob
 
 
 
@@ -28,18 +29,6 @@ def randomly_select_indpendent_patch_sets(gdf_patches, val_size, seed=111):
   gdf_remaining.reset_index(drop=True, inplace=True)
 
   return gdf_select, gdf_remaining
-
-
-
-
-def prep_image_for_plot(batch_image):
-  """Function to prepare image tensor from DataLoader batch for visualization."""
-  image = batch_image.clone().detach().numpy()
-  min_val = image.min()
-  max_val = image.max()
-  image = (image - min_val) / (max_val-min_val)
-  image = np.transpose(image, (1, 2, 0))
-  return image
 
 
 
@@ -115,6 +104,20 @@ class MultiModalDataset(Dataset):
         src_arrays.append(data)                  # append array to list
     image_array = np.stack(src_arrays, axis=0)   # stack image arrays along channel dimension
     return torch.from_numpy(image_array)         # return tensor with shape [channels, h, w]
+
+
+
+
+
+
+def prep_image_for_plot(batch_image):
+  """Function to prepare image tensor from DataLoader batch for visualization."""
+  image = batch_image.clone().detach().numpy()
+  min_val = image.min()
+  max_val = image.max()
+  image = (image - min_val) / (max_val-min_val)
+  image = np.transpose(image, (1, 2, 0))
+  return image
 
 
 
