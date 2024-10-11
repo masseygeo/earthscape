@@ -2,6 +2,8 @@
 
 data/warren/*.tif
 data/warren/*.geojson
+data/warren/aerial_tiles/*
+data/warren/dem_tiles/*
 
 data/patches_warren/*.tif
 data/patches_warren/*.csv
