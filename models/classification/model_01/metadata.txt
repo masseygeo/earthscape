@@ -1,0 +1,12 @@
+Model 01
+directory: GitHub/cs612/models/classification/model_01
+task: multilabel classification (7 classes)
+model: feature extractor, ResNext50 (no pre-trained weights)
+modalities: RGB
+epochs: 50
+batch size: 32
+seed (for patch locations): 1
+optimizer: Adam (default parameters)
+loss: focal loss (alpha=square root of inverse class frequencies, gamma=1)
+
+*Notes: training/validation loss and accuracy plots were lost; PR & ROC curves were lost 
