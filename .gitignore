@@ -20,6 +20,8 @@ data/sonora/*.geojson
 data/patches_sonora/*.tif
 data/patches_sonora/*.csv
 
+data/patches_hardin/*.*
+
 models/classification/*/*.geojson
 models/classification/*/*.pth
 models/classification/*/*.jpg
