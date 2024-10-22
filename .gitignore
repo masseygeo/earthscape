@@ -2,8 +2,6 @@
 
 data/warren/*.tif
 data/warren/*.geojson
-data/warren/aerial_tiles/*
-data/warren/dem_tiles/*
 
 data/patches_warren/*.tif
 data/patches_warren/*.csv
@@ -11,14 +9,19 @@ data/patches_warren/*.csv
 data/howevalley/*.tif
 data/howevalley/*.geojson
 
-data/patches_howevalley/*.tif
-data/patches_howevalley/*.csv
-
 data/sonora/*.tif
 data/sonora/*.geojson
 
+data/patches_howevalley/*.tif
+data/patches_howevalley/*.csv
+
 data/patches_sonora/*.tif
 data/patches_sonora/*.csv
+
+data/patches_hardin/*.tif
+data/patches_hardin/*.csv
+
+
 
 models/classification/*/*.geojson
 models/classification/*/*.pth
