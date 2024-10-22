@@ -141,6 +141,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
 
   best_val_loss = float('inf')
   best_val_accuracy = 0.0
+  best_model = 0
   # best_val_f1 = 0.0
 
   epoch_train_loss = []
@@ -189,6 +190,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
       print(loss_str)
       with open(f"{output_dir}/training_output.txt", 'a') as out_file:
         out_file.write(loss_str + '\n')
+      best_model = epoch + 1
     
     if val_accuracy > best_val_accuracy:
       best_val_accuracy = val_accuracy
@@ -200,7 +202,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
  
     print('\n')
 
-  return epoch_train_loss, epoch_train_acc, epoch_val_loss, epoch_val_acc
+  return epoch_train_loss, epoch_train_acc, epoch_val_loss, epoch_val_acc, best_model
 
 
 
