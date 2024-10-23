@@ -237,18 +237,18 @@ def test_model(model, test_loader, device):
 
 
 
-
+from sklearn.metrics import accuracy_score
 
 def calculate_label_precision_recall_f1_aucroc(predictions, targets, threshold=0.5):
 
   predictions_binary = (predictions >= threshold).astype(int)
-  
+  acc = accuracy_score(targets, predictions_binary)
   precision = precision_score(targets, predictions_binary, zero_division=0.0)
   recall = recall_score(targets, predictions_binary)
   f1 = f1_score(targets, predictions_binary)
   auc_roc = roc_auc_score(targets, predictions)
   
-  return precision, recall, f1, auc_roc
+  return acc, precision, recall, f1, auc_roc
 
 
 
