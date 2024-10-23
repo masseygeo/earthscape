@@ -28,6 +28,9 @@ class ResNextEncoder(nn.Module):
         # encode...
         output = self.encoder(x)
         # shape - [batch_size, 2048, 8, 8]
+
+        device = x.device
+        output = output.to(device)
         
         # transform for attention...
         batch_size, channels, height, width = output.shape
@@ -106,7 +109,7 @@ class SelfAttentionBlock(nn.Module):
         # set up attention based on input embedding dimension...
         if self.self_attention is None:
             embed_dim = x.shape[2]
-            self.self_attention = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=8)
+            self.self_attention = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=8).to(x.device)
 
         # perform self-attention...
         attn_output, _ = self.self_attention(x, x, x)  # Self-attention: q, k, v are the same
@@ -154,7 +157,7 @@ class MultilabelMLP(nn.Module):
             x = x.permute(1, 0, 2)
             x = x.reshape(x.size(0), -1)
             input_dim = x.shape[1]
-            self.fc1 = nn.Linear(input_dim, self.hidden_dim, bias=True)
+            self.fc1 = nn.Linear(input_dim, self.hidden_dim, bias=True).to(x.device)
             # x shape - [batch, flattened input]
         else:
             x = x.permute(1, 0, 2)
@@ -189,12 +192,14 @@ class ClassificationModel(nn.Module):
     
     def forward(self, data):
 
+        device = next(iter(data.values())).device
+        self.to(device)
+
         # step 1. encode each modality
         encoded_features = {}
         for modality_name, encoder in self.encoders.items():
             if modality_name in data:
-                encoded_features[modality_name] = encoder(data[modality_name])
-        
+                encoded_features[modality_name] = encoder(data[modality_name].to(device)).to(device)
         
         # Step 2: apply attention based on attention configuration
         attention_output = None
@@ -203,17 +208,17 @@ class ClassificationModel(nn.Module):
             modalities = self.attention_configs[attn_name]
 
             if len(modalities) == 1:
-                attention_output = attn_block(encoded_features[modalities[0]])
+                attention_output = attn_block(encoded_features[modalities[0]].to(device)).to(device)
             
             elif len(modalities) ==2:
                 q_modality, kv_modality = modalities
-                attention_output = attn_block(encoded_features[q_modality], 
-                                              encoded_features[kv_modality], 
-                                              encoded_features[kv_modality])
+                attention_output = attn_block(encoded_features[q_modality].to(device), 
+                                              encoded_features[kv_modality].to(device), 
+                                              encoded_features[kv_modality].to(device)).to(device)
             else:
                 raise ValueError(f"Invalid configuration for attention block - {attn_name}")
 
 
         # step 3. apply final task head (classification or segmentation)
-        output = self.classify(attention_output)
+        output = self.classify(attention_output.to(device)).to(device)
         return output

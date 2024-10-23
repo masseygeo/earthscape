@@ -290,17 +290,22 @@ def calculate_global_metrics(targets, predictions, thresholds=[0.5]):
       predictions_binary[:, idx] = (predictions_binary[:, idx] >= thresh).astype(int)
 
   else:
-    predictions_binary = (predictions >= thresholds[0]).astype(int)
+    predictions_binary = (predictions >= thresholds).astype(int)
   
   macro_precision = precision_score(targets, predictions_binary, average='macro')
   macro_recall = recall_score(targets, predictions_binary, average='macro')
   macro_f1 = f1_score(targets, predictions_binary, average='macro')
-
-  mean_ap = average_precision_score(targets, predictions, average='macro')
+  macro_mAP = average_precision_score(targets, predictions, average='macro')
+  
+  weighted_precision = precision_score(targets, predictions_binary, average='weighted')
+  weighted_recall = recall_score(targets, predictions_binary, average='weighted')
+  weighted_f1 = f1_score(targets, predictions_binary, average='weighted')
+  weighted_mAP = average_precision_score(targets, predictions, average='weighted')
+  
   h_loss = hamming_loss(targets, predictions_binary)
   subset_acc = accuracy_score(targets, predictions_binary)
 
-  return macro_precision, macro_recall, macro_f1, mean_ap, h_loss, subset_acc
+  return macro_precision, weighted_precision, macro_recall, weighted_recall, macro_f1, weighted_f1, macro_mAP, weighted_mAP, h_loss, subset_acc
 
 
 

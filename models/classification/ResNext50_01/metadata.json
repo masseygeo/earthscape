@@ -1,0 +1,60 @@
+{
+    "name": "ResNext50_01",
+    "path": "../models/classification/ResNext50_01",
+    "training": [
+        "../models/patches/warren_patches_train.geojson",
+        "../data/patches_warren"
+    ],
+    "validation": [
+        "../models/patches/warren_patches_val.geojson",
+        "../data/patches_warren"
+    ],
+    "testing": [
+        "../models/patches/warren_patches_test.geojson",
+        "../data/patches_warren"
+    ],
+    "external testing": [
+        [
+            "../models/patches/hardin_patches_test.geojson",
+            "../data/patches_hardin"
+        ]
+    ],
+    "modalities": {
+        "dem": [
+            "dem.tif"
+        ]
+    },
+    "normalizations": {
+        "dem": [
+            [
+                579.63446
+            ],
+            [
+                74.63225
+            ]
+        ]
+    },
+    "batch size": 32,
+    "epochs": 50,
+    "optimizer": {
+        "name": "Adam",
+        "learning_rate": 0.001,
+        "weight_decay": 0,
+        "momentum": null
+    },
+    "loss": "FocalLoss",
+    "FL alpha": [
+        [
+            1.0
+        ]
+    ],
+    "FL gamma": 1,
+    "encoders": {
+        "dem": "ResNextEncoder"
+    },
+    "attention": {
+        "self_dem": "SelfAttentionBlock"
+    },
+    "model": "ClassificationModel",
+    "output classes": 7
+}
