@@ -222,3 +222,15 @@ class ClassificationModel(nn.Module):
         # step 3. apply final task head (classification or segmentation)
         output = self.classify(attention_output.to(device)).to(device)
         return output
+
+
+
+# class Multilabel2(nn.Module):
+#     def __init__(self, attnentions):
+#         super.__init__()
+#         self.conv1 = self.encoder.conv1 = nn.Conv2d(input_channels, 
+#                                        64, 
+#                                        kernel_size = (7, 7), 
+#                                        stride = (2, 2), 
+#                                        padding = (3, 3), 
+#                                        bias = False)
