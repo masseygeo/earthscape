@@ -1,60 +1,84 @@
 {
-    "name": "test",
-    "path": "../models/classification/test",
-    "training": [
-        "../models/patches/warren_patches_train.geojson",
-        "../data/patches_warren"
-    ],
-    "validation": [
-        "../models/patches/warren_patches_val.geojson",
-        "../data/patches_warren"
-    ],
-    "testing": [
-        "../models/patches/warren_patches_test.geojson",
-        "../data/patches_warren"
-    ],
-    "external testing": [
-        [
-            "../models/patches/hardin_patches_test.geojson",
-            "../data/patches_hardin"
-        ]
-    ],
-    "modalities": {
-        "dem": [
-            "dem.tif"
-        ]
+    "NAME": "test",
+    "DIRECTORY": "../models/classification/test",
+    "PATCHES": {
+        "training patch polygons": "../models/patches/warren_patches_train.geojson",
+        "training patches directory": "../data/patches_warren",
+        "validation patch polygons": "../models/patches/warren_patches_val.geojson",
+        "validation patches directory": "../data/patches_warren",
+        "testing patch polygons": "../models/patches/warren_patches_test.geojson",
+        "testing patches directory": "../data/patches_warren",
+        "external testing patch polygons": "../models/patches/hardin_patches_test.geojson",
+        "external testing patches directory": "../data/patches_hardin"
     },
-    "normalizations": {
-        "dem": [
-            [
-                579.63446
+    "MODALITIES": {
+        "modalities": {
+            "dem": [
+                "dem.tif"
             ],
-            [
-                74.63225
+            "rgb": [
+                "aerialr.tif",
+                "aerialg.tif",
+                "aerialb.tif"
             ]
-        ]
+        },
+        "normalization values": {
+            "dem": [
+                [
+                    579.63446
+                ],
+                [
+                    74.63225
+                ]
+            ],
+            "rgb": [
+                [
+                    81.79252,
+                    81.5891,
+                    73.85352
+                ],
+                [
+                    37.1,
+                    31.321741,
+                    27.294397
+                ]
+            ]
+        }
     },
-    "batch size": 4,
-    "epochs": 2,
-    "optimizer": {
-        "name": "Adam",
-        "learning_rate": 0.001,
-        "weight_decay": 0,
-        "momentum": null
+    "HYPERPARAMETERS": {
+        "batch size": 32,
+        "epochs": 50,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "FocalLoss",
+        "alpha": [
+            [
+                4.356945037841797,
+                3.339364528656006,
+                26.89828109741211,
+                12.570185661315918,
+                3.771543502807617,
+                5.047840118408203,
+                2.7434775829315186
+            ]
+        ],
+        "gamma": 1
     },
-    "loss": "FocalLoss",
-    "FL alpha": [
-        [
-            4.356945037841797,
-            3.339364528656006,
-            26.89828109741211,
-            12.570185661315918,
-            3.771543502807617,
-            5.047840118408203,
-            2.7434775829315186
-        ]
-    ],
-    "FL gamma": 1,
-    "model": "MultilabelClassification",
-    "output classes": 7
+    "MODEL": {
+        "encoder": "ResNextEncoder",
+        "weights": null,
+        "attention": {
+            "ca_dem_rgb": [
+                "dem",
+                "rgb"
+            ],
+            "ca_rgb_dem": [
+                "rgb",
+                "dem"
+            ]
+        },
+        "model": "MultilabelClassification"
+    }
 }

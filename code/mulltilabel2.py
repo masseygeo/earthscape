@@ -2,21 +2,14 @@
 
 import torch
 import torch.nn as nn
-# import torch.nn.functional as F
 from torchvision import models
-import timm
+# import timm
 
 
-        # if self.attention:
-        #     batch_size, channels, height, width = output.shape            # get input shape
-        #     output = output.view(batch_size, channels, height * width)    # flatten spatial dimensions
-        #     output = output.permute(2, 0, 1)                              # change output shape to [sequence_length, batch_size, channels]
-        #     output = self.attention(output)
 
 class ResNextEncoder(nn.Module):
     def __init__(self, weights_config=None):
         super().__init__()
-
         self.encoder = models.resnext50_32x4d(weights=weights_config)
         self.encoder = nn.Sequential(*list(self.encoder.children())[:-2])
     
@@ -30,7 +23,6 @@ class ResNextEncoder(nn.Module):
 class AttentionBlock(nn.Module):
     def __init__(self, embed_dim, num_heads):
         super().__init__()
-
         self.self_attention = nn.MultiheadAttention(embed_dim=embed_dim, num_heads=num_heads)
         self.layer_norm = nn.LayerNorm(embed_dim)
 
@@ -50,7 +42,6 @@ class AttentionBlock(nn.Module):
 class MultilabelClassification(nn.Module):
     def __init__(self, modality_configs, encoder, attention_configs=None):
         super().__init__()
-
         self.modality_convs = nn.ModuleDict()
         for modality, in_channels in modality_configs.items():
             num_channels = len(in_channels)
@@ -69,7 +60,6 @@ class MultilabelClassification(nn.Module):
                                         nn.Linear(512, 7))
     
     def forward(self, x):
-
         encoded_features = {}
         attention_ready = {}
         attention_maps = {}
@@ -118,14 +108,5 @@ class MultilabelClassification(nn.Module):
             concatenated_features = torch.cat(flattened_features, dim=1)
             output = self.classifier(concatenated_features)
             return output
-
-
-
-
-
-# # implementation
-# attention_configs = {'sa_dem': ['dem'], 
-#                      'ca_dem_rgb': ['dem', 'rgb']}
-# model = MultilabelClassification(encoder=ResNextEncoder(weights_config=None), attention={'self_dem': 'dem'})
 
 
