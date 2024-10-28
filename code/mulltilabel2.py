@@ -66,7 +66,7 @@ class MultilabelClassification(nn.Module):
 
         # encode each modality...
         for modality, data in x.items():
-            preprocessed = self.modality_convs[modality](data)
+            preprocessed = self.modality_convs[modality](data)   # convert to 3 channels for encoder
             encoded = self.encoder(preprocessed)
             encoded_features[modality] = encoded
         

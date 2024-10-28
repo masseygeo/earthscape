@@ -1,6 +1,6 @@
 {
-    "NAME": "test",
-    "DIRECTORY": "../models/classification/test",
+    "NAME": "rnx50_01",
+    "DIRECTORY": "../models/classification/rnx50_01",
     "PATCHES": {
         "training patch polygons": "../models/patches/warren_patches_train.geojson",
         "training patches directory": "../data/patches_warren",
@@ -15,11 +15,6 @@
         "modalities": {
             "dem": [
                 "dem.tif"
-            ],
-            "rgb": [
-                "aerialr.tif",
-                "aerialg.tif",
-                "aerialb.tif"
             ]
         },
         "normalization values": {
@@ -29,18 +24,6 @@
                 ],
                 [
                     74.63225
-                ]
-            ],
-            "rgb": [
-                [
-                    81.79252,
-                    81.5891,
-                    73.85352
-                ],
-                [
-                    37.1,
-                    31.321741,
-                    27.294397
                 ]
             ]
         }
@@ -69,16 +52,7 @@
     "MODEL": {
         "encoder": "ResNextEncoder",
         "weights": null,
-        "attention": {
-            "ca_dem_rgb": [
-                "dem",
-                "rgb"
-            ],
-            "ca_rgb_dem": [
-                "rgb",
-                "dem"
-            ]
-        },
+        "attention": null,
         "model": "MultilabelClassification"
     }
 }

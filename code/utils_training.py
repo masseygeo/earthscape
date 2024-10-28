@@ -304,8 +304,10 @@ def calculate_global_metrics(targets, predictions, thresholds=[0.5]):
   
   h_loss = hamming_loss(targets, predictions_binary)
   subset_acc = accuracy_score(targets, predictions_binary)
+  overall_acc = accuracy_score(targets.ravel(), predictions_binary.ravel())
 
-  return macro_precision, weighted_precision, macro_recall, weighted_recall, macro_f1, weighted_f1, macro_mAP, weighted_mAP, h_loss, subset_acc
+
+  return macro_precision, weighted_precision, macro_recall, weighted_recall, macro_f1, weighted_f1, macro_mAP, weighted_mAP, h_loss, subset_acc, overall_acc
 
 
 

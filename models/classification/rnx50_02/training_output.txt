@@ -1,231 +1,217 @@
 
 Epoch 1/50
-TRAINING   -- Loss: 0.2066  |  Accuracy: 81.21%  |  Time: 4.65 mins.
-VALIDATION -- Loss: 0.2200  |  Accuracy: 81.25%  |  Time: 0.57 mins.
-New best model saved with loss 0.2200...
-New best model saved with accuracy 81.25%...
+TRAINING   -- Loss: 1.0263  |  Accuracy: 81.45%  |  Time: 16.93 mins.
+VALIDATION -- Loss: 1.1635  |  Accuracy: 83.54%  |  Time: 1.45 mins.
+New best model saved with loss 1.1635...
+New best model saved with accuracy 83.54%...
 
 Epoch 2/50
-TRAINING   -- Loss: 0.1806  |  Accuracy: 82.76%  |  Time: 4.52 mins.
-VALIDATION -- Loss: 0.1895  |  Accuracy: 81.65%  |  Time: 0.53 mins.
-New best model saved with loss 0.1895...
-New best model saved with accuracy 81.65%...
+TRAINING   -- Loss: 0.8501  |  Accuracy: 84.80%  |  Time: 16.05 mins.
+VALIDATION -- Loss: 0.8955  |  Accuracy: 86.12%  |  Time: 1.02 mins.
+New best model saved with loss 0.8955...
+New best model saved with accuracy 86.12%...
 
 Epoch 3/50
-TRAINING   -- Loss: 0.1761  |  Accuracy: 83.40%  |  Time: 4.55 mins.
-VALIDATION -- Loss: 0.2229  |  Accuracy: 81.25%  |  Time: 0.67 mins.
+TRAINING   -- Loss: 0.7871  |  Accuracy: 86.25%  |  Time: 16.12 mins.
+VALIDATION -- Loss: 0.7720  |  Accuracy: 87.05%  |  Time: 1.3 mins.
+New best model saved with loss 0.7720...
+New best model saved with accuracy 87.05%...
 
 Epoch 4/50
-TRAINING   -- Loss: 0.1733  |  Accuracy: 83.75%  |  Time: 4.63 mins.
-VALIDATION -- Loss: 0.1804  |  Accuracy: 82.87%  |  Time: 0.53 mins.
-New best model saved with loss 0.1804...
-New best model saved with accuracy 82.87%...
+TRAINING   -- Loss: 0.7492  |  Accuracy: 86.77%  |  Time: 16.17 mins.
+VALIDATION -- Loss: 0.7942  |  Accuracy: 86.50%  |  Time: 1.18 mins.
 
 Epoch 5/50
-TRAINING   -- Loss: 0.1711  |  Accuracy: 83.98%  |  Time: 4.62 mins.
-VALIDATION -- Loss: 0.1805  |  Accuracy: 83.41%  |  Time: 0.68 mins.
-New best model saved with accuracy 83.41%...
+TRAINING   -- Loss: 0.7384  |  Accuracy: 87.38%  |  Time: 16.25 mins.
+VALIDATION -- Loss: 0.8149  |  Accuracy: 87.11%  |  Time: 1.37 mins.
+New best model saved with accuracy 87.11%...
 
 Epoch 6/50
-TRAINING   -- Loss: 0.1683  |  Accuracy: 84.29%  |  Time: 4.95 mins.
-VALIDATION -- Loss: 0.1671  |  Accuracy: 83.96%  |  Time: 0.68 mins.
-New best model saved with loss 0.1671...
-New best model saved with accuracy 83.96%...
+TRAINING   -- Loss: 0.7208  |  Accuracy: 87.48%  |  Time: 16.17 mins.
+VALIDATION -- Loss: 0.8057  |  Accuracy: 87.85%  |  Time: 1.22 mins.
+New best model saved with accuracy 87.85%...
 
 Epoch 7/50
-TRAINING   -- Loss: 0.1665  |  Accuracy: 84.49%  |  Time: 5.17 mins.
-VALIDATION -- Loss: 0.1701  |  Accuracy: 83.91%  |  Time: 0.63 mins.
+TRAINING   -- Loss: 0.7015  |  Accuracy: 88.00%  |  Time: 16.27 mins.
+VALIDATION -- Loss: 0.7542  |  Accuracy: 87.74%  |  Time: 1.33 mins.
+New best model saved with loss 0.7542...
 
 Epoch 8/50
-TRAINING   -- Loss: 0.1654  |  Accuracy: 84.43%  |  Time: 4.68 mins.
-VALIDATION -- Loss: 0.1671  |  Accuracy: 83.54%  |  Time: 0.55 mins.
-New best model saved with loss 0.1671...
+TRAINING   -- Loss: 0.6902  |  Accuracy: 88.03%  |  Time: 16.08 mins.
+VALIDATION -- Loss: 0.7081  |  Accuracy: 88.67%  |  Time: 1.3 mins.
+New best model saved with loss 0.7081...
+New best model saved with accuracy 88.67%...
 
 Epoch 9/50
-TRAINING   -- Loss: 0.1645  |  Accuracy: 84.42%  |  Time: 4.72 mins.
-VALIDATION -- Loss: 0.1677  |  Accuracy: 83.69%  |  Time: 0.68 mins.
+TRAINING   -- Loss: 0.6780  |  Accuracy: 88.29%  |  Time: 16.22 mins.
+VALIDATION -- Loss: 0.7084  |  Accuracy: 88.39%  |  Time: 1.03 mins.
 
 Epoch 10/50
-TRAINING   -- Loss: 0.1622  |  Accuracy: 84.91%  |  Time: 4.73 mins.
-VALIDATION -- Loss: 0.1990  |  Accuracy: 82.84%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.6653  |  Accuracy: 88.54%  |  Time: 16.15 mins.
+VALIDATION -- Loss: 0.7376  |  Accuracy: 87.67%  |  Time: 1.27 mins.
 
 Epoch 11/50
-TRAINING   -- Loss: 0.1620  |  Accuracy: 84.72%  |  Time: 4.43 mins.
-VALIDATION -- Loss: 0.1654  |  Accuracy: 83.66%  |  Time: 0.53 mins.
-New best model saved with loss 0.1654...
+TRAINING   -- Loss: 0.6490  |  Accuracy: 88.59%  |  Time: 16.33 mins.
+VALIDATION -- Loss: 0.6983  |  Accuracy: 88.43%  |  Time: 1.4 mins.
+New best model saved with loss 0.6983...
 
 Epoch 12/50
-TRAINING   -- Loss: 0.1592  |  Accuracy: 85.15%  |  Time: 4.68 mins.
-VALIDATION -- Loss: 0.2439  |  Accuracy: 80.19%  |  Time: 0.65 mins.
+TRAINING   -- Loss: 0.6409  |  Accuracy: 88.98%  |  Time: 16.32 mins.
+VALIDATION -- Loss: 0.7718  |  Accuracy: 87.09%  |  Time: 1.17 mins.
 
 Epoch 13/50
-TRAINING   -- Loss: 0.1588  |  Accuracy: 85.12%  |  Time: 4.37 mins.
-VALIDATION -- Loss: 0.1717  |  Accuracy: 83.83%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.6403  |  Accuracy: 88.97%  |  Time: 16.37 mins.
+VALIDATION -- Loss: 0.7438  |  Accuracy: 87.41%  |  Time: 1.32 mins.
 
 Epoch 14/50
-TRAINING   -- Loss: 0.1565  |  Accuracy: 85.31%  |  Time: 4.48 mins.
-VALIDATION -- Loss: 0.1622  |  Accuracy: 84.56%  |  Time: 0.53 mins.
-New best model saved with loss 0.1622...
-New best model saved with accuracy 84.56%...
+TRAINING   -- Loss: 0.6251  |  Accuracy: 89.22%  |  Time: 16.38 mins.
+VALIDATION -- Loss: 0.7097  |  Accuracy: 89.04%  |  Time: 1.4 mins.
+New best model saved with accuracy 89.04%...
 
 Epoch 15/50
-TRAINING   -- Loss: 0.1564  |  Accuracy: 85.53%  |  Time: 4.73 mins.
-VALIDATION -- Loss: 0.1626  |  Accuracy: 84.44%  |  Time: 0.65 mins.
+TRAINING   -- Loss: 0.6228  |  Accuracy: 89.23%  |  Time: 16.42 mins.
+VALIDATION -- Loss: 0.6877  |  Accuracy: 88.26%  |  Time: 1.42 mins.
+New best model saved with loss 0.6877...
 
 Epoch 16/50
-TRAINING   -- Loss: 0.1543  |  Accuracy: 85.77%  |  Time: 4.4 mins.
-VALIDATION -- Loss: 0.1633  |  Accuracy: 84.11%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.5937  |  Accuracy: 89.80%  |  Time: 16.67 mins.
+VALIDATION -- Loss: 0.6906  |  Accuracy: 88.65%  |  Time: 1.43 mins.
 
 Epoch 17/50
-TRAINING   -- Loss: 0.1545  |  Accuracy: 85.62%  |  Time: 4.48 mins.
-VALIDATION -- Loss: 0.1593  |  Accuracy: 84.49%  |  Time: 0.55 mins.
-New best model saved with loss 0.1593...
+TRAINING   -- Loss: 0.5990  |  Accuracy: 89.48%  |  Time: 16.62 mins.
+VALIDATION -- Loss: 0.7360  |  Accuracy: 87.89%  |  Time: 1.45 mins.
 
 Epoch 18/50
-TRAINING   -- Loss: 0.1519  |  Accuracy: 85.99%  |  Time: 4.75 mins.
-VALIDATION -- Loss: 0.1579  |  Accuracy: 84.57%  |  Time: 0.62 mins.
-New best model saved with loss 0.1579...
-New best model saved with accuracy 84.57%...
+TRAINING   -- Loss: 0.5854  |  Accuracy: 89.87%  |  Time: 16.22 mins.
+VALIDATION -- Loss: 0.9114  |  Accuracy: 85.92%  |  Time: 1.1 mins.
 
 Epoch 19/50
-TRAINING   -- Loss: 0.1524  |  Accuracy: 85.83%  |  Time: 4.47 mins.
-VALIDATION -- Loss: 0.1613  |  Accuracy: 84.74%  |  Time: 0.55 mins.
-New best model saved with accuracy 84.74%...
+TRAINING   -- Loss: 0.5672  |  Accuracy: 90.21%  |  Time: 16.63 mins.
+VALIDATION -- Loss: 0.7493  |  Accuracy: 88.30%  |  Time: 1.57 mins.
 
 Epoch 20/50
-TRAINING   -- Loss: 0.1516  |  Accuracy: 86.04%  |  Time: 4.5 mins.
-VALIDATION -- Loss: 0.1822  |  Accuracy: 83.31%  |  Time: 0.57 mins.
+TRAINING   -- Loss: 0.5679  |  Accuracy: 89.93%  |  Time: 16.25 mins.
+VALIDATION -- Loss: 0.7247  |  Accuracy: 88.58%  |  Time: 0.7 mins.
 
 Epoch 21/50
-TRAINING   -- Loss: 0.1557  |  Accuracy: 85.49%  |  Time: 4.87 mins.
-VALIDATION -- Loss: 0.1557  |  Accuracy: 84.77%  |  Time: 0.57 mins.
-New best model saved with loss 0.1557...
-New best model saved with accuracy 84.77%...
+TRAINING   -- Loss: 0.5633  |  Accuracy: 89.99%  |  Time: 15.37 mins.
+VALIDATION -- Loss: 0.7982  |  Accuracy: 88.04%  |  Time: 0.62 mins.
 
 Epoch 22/50
-TRAINING   -- Loss: 0.1553  |  Accuracy: 85.61%  |  Time: 4.47 mins.
-VALIDATION -- Loss: 0.1589  |  Accuracy: 84.25%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.5498  |  Accuracy: 90.43%  |  Time: 15.33 mins.
+VALIDATION -- Loss: 0.6857  |  Accuracy: 88.41%  |  Time: 0.63 mins.
+New best model saved with loss 0.6857...
 
 Epoch 23/50
-TRAINING   -- Loss: 0.1499  |  Accuracy: 85.93%  |  Time: 4.87 mins.
-VALIDATION -- Loss: 0.1588  |  Accuracy: 84.68%  |  Time: 0.7 mins.
+TRAINING   -- Loss: 0.5366  |  Accuracy: 90.32%  |  Time: 15.32 mins.
+VALIDATION -- Loss: 0.6899  |  Accuracy: 89.23%  |  Time: 0.52 mins.
+New best model saved with accuracy 89.23%...
 
 Epoch 24/50
-TRAINING   -- Loss: 0.1482  |  Accuracy: 86.29%  |  Time: 4.78 mins.
-VALIDATION -- Loss: 0.1635  |  Accuracy: 84.84%  |  Time: 0.52 mins.
-New best model saved with accuracy 84.84%...
+TRAINING   -- Loss: 0.5231  |  Accuracy: 90.72%  |  Time: 15.33 mins.
+VALIDATION -- Loss: 0.7849  |  Accuracy: 88.11%  |  Time: 0.48 mins.
 
 Epoch 25/50
-TRAINING   -- Loss: 0.1459  |  Accuracy: 86.72%  |  Time: 4.42 mins.
-VALIDATION -- Loss: 0.1575  |  Accuracy: 85.25%  |  Time: 0.53 mins.
-New best model saved with accuracy 85.25%...
+TRAINING   -- Loss: 0.5131  |  Accuracy: 90.74%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 0.8867  |  Accuracy: 87.50%  |  Time: 0.6 mins.
 
 Epoch 26/50
-TRAINING   -- Loss: 0.1442  |  Accuracy: 86.88%  |  Time: 4.52 mins.
-VALIDATION -- Loss: 0.1577  |  Accuracy: 85.14%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.5051  |  Accuracy: 90.89%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 0.7939  |  Accuracy: 88.80%  |  Time: 0.55 mins.
 
 Epoch 27/50
-TRAINING   -- Loss: 0.1425  |  Accuracy: 87.02%  |  Time: 4.45 mins.
-VALIDATION -- Loss: 0.1493  |  Accuracy: 85.97%  |  Time: 0.55 mins.
-New best model saved with loss 0.1493...
-New best model saved with accuracy 85.97%...
+TRAINING   -- Loss: 0.4952  |  Accuracy: 91.04%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 0.7362  |  Accuracy: 87.95%  |  Time: 0.58 mins.
 
 Epoch 28/50
-TRAINING   -- Loss: 0.1421  |  Accuracy: 86.98%  |  Time: 4.42 mins.
-VALIDATION -- Loss: 0.1588  |  Accuracy: 85.30%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.4847  |  Accuracy: 91.10%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 0.7764  |  Accuracy: 88.67%  |  Time: 0.57 mins.
 
 Epoch 29/50
-TRAINING   -- Loss: 0.1407  |  Accuracy: 87.24%  |  Time: 4.48 mins.
-VALIDATION -- Loss: 0.1530  |  Accuracy: 85.49%  |  Time: 0.55 mins.
+TRAINING   -- Loss: 0.4592  |  Accuracy: 91.58%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.7490  |  Accuracy: 88.91%  |  Time: 0.45 mins.
 
 Epoch 30/50
-TRAINING   -- Loss: 0.1391  |  Accuracy: 87.20%  |  Time: 4.6 mins.
-VALIDATION -- Loss: 0.1496  |  Accuracy: 85.63%  |  Time: 0.55 mins.
+TRAINING   -- Loss: 0.4513  |  Accuracy: 91.67%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.8250  |  Accuracy: 88.21%  |  Time: 0.57 mins.
 
 Epoch 31/50
-TRAINING   -- Loss: 0.1399  |  Accuracy: 87.36%  |  Time: 4.53 mins.
-VALIDATION -- Loss: 0.1516  |  Accuracy: 85.87%  |  Time: 0.55 mins.
+TRAINING   -- Loss: 0.4421  |  Accuracy: 91.86%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.8152  |  Accuracy: 88.02%  |  Time: 0.58 mins.
 
 Epoch 32/50
-TRAINING   -- Loss: 0.1371  |  Accuracy: 87.51%  |  Time: 4.45 mins.
-VALIDATION -- Loss: 0.1466  |  Accuracy: 86.38%  |  Time: 0.55 mins.
-New best model saved with loss 0.1466...
-New best model saved with accuracy 86.38%...
+TRAINING   -- Loss: 0.4291  |  Accuracy: 92.05%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.7904  |  Accuracy: 89.21%  |  Time: 0.6 mins.
 
 Epoch 33/50
-TRAINING   -- Loss: 0.1369  |  Accuracy: 87.46%  |  Time: 4.57 mins.
-VALIDATION -- Loss: 0.1447  |  Accuracy: 85.88%  |  Time: 0.58 mins.
-New best model saved with loss 0.1447...
+TRAINING   -- Loss: 0.4282  |  Accuracy: 91.97%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 0.8775  |  Accuracy: 87.83%  |  Time: 0.58 mins.
 
 Epoch 34/50
-TRAINING   -- Loss: 0.1349  |  Accuracy: 87.84%  |  Time: 4.5 mins.
-VALIDATION -- Loss: 0.1433  |  Accuracy: 86.97%  |  Time: 0.55 mins.
-New best model saved with loss 0.1433...
-New best model saved with accuracy 86.97%...
+TRAINING   -- Loss: 0.4155  |  Accuracy: 92.34%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 0.7877  |  Accuracy: 89.29%  |  Time: 0.6 mins.
+New best model saved with accuracy 89.29%...
 
 Epoch 35/50
-TRAINING   -- Loss: 0.1350  |  Accuracy: 87.77%  |  Time: 4.58 mins.
-VALIDATION -- Loss: 0.1499  |  Accuracy: 86.13%  |  Time: 0.65 mins.
+TRAINING   -- Loss: 0.4011  |  Accuracy: 92.38%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 0.8247  |  Accuracy: 88.32%  |  Time: 0.55 mins.
 
 Epoch 36/50
-TRAINING   -- Loss: 0.1337  |  Accuracy: 87.88%  |  Time: 4.57 mins.
-VALIDATION -- Loss: 0.1498  |  Accuracy: 86.20%  |  Time: 0.55 mins.
+TRAINING   -- Loss: 0.3874  |  Accuracy: 92.74%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.8991  |  Accuracy: 88.39%  |  Time: 0.47 mins.
 
 Epoch 37/50
-TRAINING   -- Loss: 0.1327  |  Accuracy: 87.94%  |  Time: 4.53 mins.
-VALIDATION -- Loss: 0.1446  |  Accuracy: 86.55%  |  Time: 0.55 mins.
+TRAINING   -- Loss: 0.3665  |  Accuracy: 93.01%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.8226  |  Accuracy: 88.95%  |  Time: 0.57 mins.
 
 Epoch 38/50
-TRAINING   -- Loss: 0.1314  |  Accuracy: 88.09%  |  Time: 4.73 mins.
-VALIDATION -- Loss: 0.1465  |  Accuracy: 86.64%  |  Time: 0.7 mins.
+TRAINING   -- Loss: 0.3534  |  Accuracy: 93.30%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.8515  |  Accuracy: 86.89%  |  Time: 0.6 mins.
 
 Epoch 39/50
-TRAINING   -- Loss: 0.1305  |  Accuracy: 88.08%  |  Time: 5.17 mins.
-VALIDATION -- Loss: 0.1406  |  Accuracy: 86.80%  |  Time: 0.67 mins.
-New best model saved with loss 0.1406...
+TRAINING   -- Loss: 0.3479  |  Accuracy: 93.28%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 0.8826  |  Accuracy: 89.12%  |  Time: 0.45 mins.
 
 Epoch 40/50
-TRAINING   -- Loss: 0.1296  |  Accuracy: 88.34%  |  Time: 4.52 mins.
-VALIDATION -- Loss: 0.1424  |  Accuracy: 86.37%  |  Time: 0.55 mins.
+TRAINING   -- Loss: 0.3496  |  Accuracy: 93.42%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.8845  |  Accuracy: 88.08%  |  Time: 0.43 mins.
 
 Epoch 41/50
-TRAINING   -- Loss: 0.1285  |  Accuracy: 88.41%  |  Time: 5.02 mins.
-VALIDATION -- Loss: 0.1413  |  Accuracy: 86.59%  |  Time: 0.72 mins.
+TRAINING   -- Loss: 0.3257  |  Accuracy: 93.79%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.9294  |  Accuracy: 89.25%  |  Time: 0.43 mins.
 
 Epoch 42/50
-TRAINING   -- Loss: 0.1315  |  Accuracy: 87.96%  |  Time: 4.8 mins.
-VALIDATION -- Loss: 0.1412  |  Accuracy: 86.72%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.3010  |  Accuracy: 94.15%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.9520  |  Accuracy: 88.93%  |  Time: 0.57 mins.
 
 Epoch 43/50
-TRAINING   -- Loss: 0.1272  |  Accuracy: 88.47%  |  Time: 4.5 mins.
-VALIDATION -- Loss: 0.1395  |  Accuracy: 87.07%  |  Time: 0.55 mins.
-New best model saved with loss 0.1395...
-New best model saved with accuracy 87.07%...
+TRAINING   -- Loss: 0.2927  |  Accuracy: 94.27%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 1.1289  |  Accuracy: 88.00%  |  Time: 0.55 mins.
 
 Epoch 44/50
-TRAINING   -- Loss: 0.1266  |  Accuracy: 88.75%  |  Time: 4.75 mins.
-VALIDATION -- Loss: 0.1411  |  Accuracy: 86.52%  |  Time: 0.67 mins.
+TRAINING   -- Loss: 0.2924  |  Accuracy: 94.41%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 1.0845  |  Accuracy: 87.37%  |  Time: 0.55 mins.
 
 Epoch 45/50
-TRAINING   -- Loss: 0.1269  |  Accuracy: 88.48%  |  Time: 4.45 mins.
-VALIDATION -- Loss: 0.1468  |  Accuracy: 86.75%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.2975  |  Accuracy: 94.40%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 1.0027  |  Accuracy: 87.91%  |  Time: 0.58 mins.
 
 Epoch 46/50
-TRAINING   -- Loss: 0.1244  |  Accuracy: 88.88%  |  Time: 4.48 mins.
-VALIDATION -- Loss: 0.1468  |  Accuracy: 86.76%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.2907  |  Accuracy: 94.57%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 1.0346  |  Accuracy: 88.00%  |  Time: 0.55 mins.
 
 Epoch 47/50
-TRAINING   -- Loss: 0.1231  |  Accuracy: 88.96%  |  Time: 4.87 mins.
-VALIDATION -- Loss: 0.1421  |  Accuracy: 86.82%  |  Time: 0.58 mins.
+TRAINING   -- Loss: 0.2496  |  Accuracy: 95.22%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 1.0333  |  Accuracy: 87.76%  |  Time: 0.47 mins.
 
 Epoch 48/50
-TRAINING   -- Loss: 0.1221  |  Accuracy: 89.06%  |  Time: 4.48 mins.
-VALIDATION -- Loss: 0.1440  |  Accuracy: 86.93%  |  Time: 0.53 mins.
+TRAINING   -- Loss: 0.2458  |  Accuracy: 95.32%  |  Time: 15.3 mins.
+VALIDATION -- Loss: 1.2240  |  Accuracy: 87.05%  |  Time: 0.55 mins.
 
 Epoch 49/50
-TRAINING   -- Loss: 0.1204  |  Accuracy: 89.12%  |  Time: 4.6 mins.
-VALIDATION -- Loss: 0.1439  |  Accuracy: 86.91%  |  Time: 0.67 mins.
+TRAINING   -- Loss: 0.2639  |  Accuracy: 95.11%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 0.9997  |  Accuracy: 88.41%  |  Time: 0.42 mins.
 
 Epoch 50/50
-TRAINING   -- Loss: 0.1202  |  Accuracy: 89.27%  |  Time: 4.77 mins.
-VALIDATION -- Loss: 0.1434  |  Accuracy: 86.90%  |  Time: 0.57 mins.
+TRAINING   -- Loss: 0.2179  |  Accuracy: 95.75%  |  Time: 15.28 mins.
+VALIDATION -- Loss: 1.1549  |  Accuracy: 87.70%  |  Time: 0.42 mins.
