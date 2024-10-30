@@ -14,3 +14,5 @@ dependencies:
   - torchvision
   - whitebox
   - seaborn
+  - ipywidgets
+  - tqdm
