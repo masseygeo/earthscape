@@ -23,5 +23,5 @@ data/patches_sonora/*.csv
 data/patches_hardin/*.tif
 data/patches_hardin/*.csv
 
-
+models/classification/**/*.pth
 
