@@ -85,11 +85,18 @@ class MultilabelClassification(nn.Module):
             preprocessed = self.modality_convs[modality](data)    # standardize to 3 channels for encoder
             encoded = self.encoder(preprocessed)                  # shared encoder - [batch size, 2048, 8, 8]
             encoded_features[modality] = encoded                  # append modality name & encoded data to dictionary
+        print('encoded')
+        print(len(encoded_features))
+
         # classification WITHOUT attention...
         if not self.attention_configs:
+            print('start')
             flattened_features = [encoded.reshape(encoded.size(0), -1) for encoded in encoded_features.values()]   # flatten encoder output for each modality - [2048 * 8 * 8]
+            print(flattened_features[0].shape)
             concatenated_features = torch.cat(flattened_features, dim=1)                                           # concatenate all modalities to single tensor - [batch size, 2048 * 8 * 8]
-            output = self.classifier(concatenated_features)                                                        # multilabel classification, output shape - [batch size, 7]
+            print(concatenated_features.shape)
+            output = self.classifier(concatenated_features)       
+            print(output.shape)                                                 # multilabel classification, output shape - [batch size, 7]
             return output
 
         # clasification WITH attention...
