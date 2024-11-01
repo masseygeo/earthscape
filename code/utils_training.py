@@ -392,3 +392,7 @@ def plot_class_distributions(patch_id_list, patch_count_path, patch_area_path, t
     plt.show()
 
     return fig
+
+
+
+
