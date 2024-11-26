@@ -1,4 +1,6 @@
 .vscode
+.env
+.openai_api.txt
 
 data/*.zip
 

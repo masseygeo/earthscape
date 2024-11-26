@@ -16,6 +16,7 @@ import rasterio
 from rasterio.transform import from_origin
 from rasterio.features import rasterize
 from shapely.geometry import box
+import fiona
 
 
 
@@ -299,7 +300,6 @@ def reassign_mapunit_symbol(input_path, map_units, output_path=None):
 
 
 
-import fiona
 
 def get_aoi_index_polygons(input_path, boundary_path, output_dir):
 
