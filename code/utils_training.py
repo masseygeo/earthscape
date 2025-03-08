@@ -52,12 +52,17 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
   for batch in train_loader:
 
     labels = batch.pop('label').squeeze(1).to(device)
-    modalities = {modality: data.to(device) for modality, data in batch.items()}
+
+    # modalities = {modality: data.to(device) for modality, data in batch.items()}
+    rgb = batch.pop('rgb').to(device)
+    dem = batch.pop('dem').to(device)
+
     # zero the gradients
     optimizer.zero_grad()
 
     # forward pass & backprop
-    outputs = model(modalities)
+    outputs = model(rgb, dem)
+
     loss = criterion(outputs, labels)
     loss.backward()
     optimizer.step()
@@ -103,9 +108,15 @@ def validate_epoch(model, val_loader, criterion, device):
     for batch in val_loader:
 
       labels = batch.pop('label').squeeze(1).to(device)
-      modalities = {modality: data.to(device) for modality, data in batch.items()}
 
-      outputs = model(modalities)
+      # modalities = {modality: data.to(device) for modality, data in batch.items()}
+      rgb = batch.pop('rgb').to(device)
+      dem = batch.pop('dem').to(device)
+
+      # outputs = model(modalities)
+      outputs = model(rgb, dem)
+
+
       loss = criterion(outputs, labels)
 
       # get results
@@ -220,9 +231,15 @@ def test_model(model, test_loader, device):
     for batch in test_loader:
       
       labels = batch.pop('label').squeeze(1).to(device)
-      modalities = {modality: data.to(device) for modality, data in batch.items()}
 
-      outputs = model(modalities)
+      # modalities = {modality: data.to(device) for modality, data in batch.items()}
+      rgb = batch.pop('rgb').to(device)
+      dem = batch.pop('dem').to(device)
+
+      # outputs = model(modalities)
+      outputs = model(rgb, dem)
+
+
       # loss = criterion(outputs, labels)
       predictions = torch.sigmoid(outputs)
 

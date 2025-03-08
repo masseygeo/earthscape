@@ -1,0 +1,91 @@
+{
+    "NAME": "test",
+    "DIRECTORY": "../models/classification/test",
+    "PATCHES": {
+        "training patch polygons": "../models/patches/warren_patches_train.geojson",
+        "training patches directory": "../data/patches_warren",
+        "validation patch polygons": "../models/patches/warren_patches_val.geojson",
+        "validation patches directory": "../data/patches_warren",
+        "testing patch polygons": "../models/patches/warren_patches_test.geojson",
+        "testing patches directory": "../data/patches_warren",
+        "external testing patch polygons": "../models/patches/hardin_patches_test.geojson",
+        "external testing patches directory": "../data/patches_hardin"
+    },
+    "MODALITIES": {
+        "modalities": {
+            "dem": [
+                "dem.tif"
+            ],
+            "rgb": [
+                "aerialr.tif",
+                "aerialg.tif",
+                "aerialb.tif"
+            ]
+        },
+        "normalization values": {
+            "dem": [
+                [
+                    579.63446
+                ],
+                [
+                    74.63225
+                ]
+            ],
+            "rgb": [
+                [
+                    81.79252,
+                    81.5891,
+                    73.85352
+                ],
+                [
+                    37.1,
+                    31.321741,
+                    27.294397
+                ]
+            ]
+        }
+    },
+    "HYPERPARAMETERS": {
+        "batch size": 32,
+        "epochs": 3,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "FocalLoss",
+        "alpha": [
+            [
+                0.25
+            ]
+        ],
+        "gamma": 2
+    },
+    "MODEL": {
+        "encoder": "resnext",
+        "weights": "IMAGENET1K_V2",
+        "attention": "cross",
+        "model": "FullModel2"
+    },
+    "TRAINING": {
+        "training loss": [
+            0.03891928307712078,
+            0.3234868794679642,
+            0.09843262657523155
+        ],
+        "training accuracy": [
+            64.95535714285714,
+            53.34821428571429,
+            57.8125
+        ],
+        "validation loss": [
+            2.1165366172790527,
+            0.8271541595458984,
+            0.8160401284694672
+        ],
+        "validation accuracy": [
+            23.883928571428573,
+            72.54464285714286,
+            68.97321428571429
+        ]
+    }
+}
