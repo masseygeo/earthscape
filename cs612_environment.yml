@@ -11,6 +11,7 @@ dependencies:
   - ipykernel
   - jupyterlab
   - pytorch
+  - pytorch-cuda=12.4
   - torchvision
   - whitebox
   - seaborn
