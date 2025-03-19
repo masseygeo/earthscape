@@ -1,2 +1,4 @@
-# CS 612
-Code repository for CS612 Independent Study, Summer 2024
+# **EarthScape**
+A multimodadal dataset for surficial geologic mapping and Earth surface analysis.
+
+***More to come!***
