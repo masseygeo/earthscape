@@ -1,4 +1,4 @@
-name: cs612
+name: earthscape
 channels:
   - conda-forge
   - defaults
@@ -10,9 +10,11 @@ dependencies:
   - rasterio
   - ipykernel
   - jupyterlab
-  - pytorch
-  - pytorch-cuda=12.4
-  - torchvision
+  - pip
+  - pip:
+    - torch
+    - torchvision
+    - --extra-index-url https://download.pytorch.org/whl/cu124
   - whitebox
   - seaborn
   - ipywidgets
