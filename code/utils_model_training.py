@@ -273,29 +273,49 @@ def calculate_label_precision_recall_f1_aucroc(predictions, targets, threshold=0
 
 
 
-def plot_label_pr_roc_curves(predictions, targets):
-  fig, ax = plt.subplots(ncols=2, figsize=(10,5))
+def plot_label_pr_roc_curves(true, pred, class_cols):
 
-  precision_vals, recall_vals, _ = precision_recall_curve(targets, predictions)
-  ax[0].plot(recall_vals, precision_vals, linewidth=2)
-  ax[0].set_xlabel('Recall')
-  ax[0].set_ylabel('Precision')
-  ax[0].set_title('Precision-Recall Curve', style='italic')
+    precisions = []
+    recalls = []
+    fprs = []
+    tprs = []
 
-  fpr, tpr, _ = roc_curve(targets, predictions)
-  ax[1].plot(fpr, tpr, linewidth=2)
-  ax[1].plot([0,1], [0,1], color='k', linestyle='--')
-  ax[1].set_xlabel('False Positive Rate')
-  ax[1].set_ylabel('True Positive Rate')
-  ax[1].set_title('Receiver Operating Curve', style='italic')
+    for idx, unit in enumerate(class_cols):
 
-  for axes in ax:
-    axes.set_xlim(0,1)
-    axes.set_ylim(0,1)
+        Y_true = true[:, idx]
+        y_pred = pred[:, idx]
 
-  return fig
+        p, r, _ = precision_recall_curve(Y_true, y_pred)
+        precisions.append(p)
+        recalls.append(r)
+
+        fpr, tpr, _ = roc_curve(Y_true, y_pred)
+        fprs.append(fpr)
+        tprs.append(tpr)
 
 
+    fig, ax = plt.subplots(ncols=2, figsize=(10,5))
+
+    for idx in range(len(class_cols)):
+
+        ax[0].plot(recalls[idx], precisions[idx], linewidth=2, label=class_cols[idx])
+        ax[0].set_xlabel('Recall')
+        ax[0].set_ylabel('Precision')
+        ax[0].set_title('Precision-Recall Curve', style='italic')
+    
+        ax[1].plot(fprs[idx], tprs[idx], linewidth=2, label=class_cols[idx])
+        ax[1].plot([0,1], [0,1], color='k', linestyle='--')
+        ax[1].set_xlabel('False Positive Rate')
+        ax[1].set_ylabel('True Positive Rate')
+        ax[1].set_title('Receiver Operating Curve', style='italic')
+    
+    for axes in ax:
+        axes.set_xlim(0,1)
+        axes.set_ylim(0,1)
+    
+    ax[0].legend(loc='upper center', bbox_to_anchor=(1.15, -0.15), ncols=7, frameon=False, fontsize=8)
+
+    return fig
 
 
 
@@ -324,9 +344,7 @@ def calculate_global_metrics(targets, predictions, thresholds=[0.5]):
   subset_acc = accuracy_score(targets, predictions_binary)
   overall_acc = accuracy_score(targets.ravel(), predictions_binary.ravel())
 
-
   return macro_precision, weighted_precision, macro_recall, weighted_recall, macro_f1, weighted_f1, macro_mAP, weighted_mAP, h_loss, subset_acc, overall_acc
-
 
 
 
@@ -355,13 +373,12 @@ def calculate_optimal_thresholds(model, val_loader, device):
 
   for class_idx in range (all_predictions.shape[1]):
     precision, recall, thresholds = precision_recall_curve(all_targets[:, class_idx], all_predictions[:, class_idx])
-    f1 = 2 * (precision * recall) / (precision + recall)
+    f1 = 2 * (precision * recall) / (precision + recall + 1e-8)
     best_idx = np.argmax(f1)
-    best_threshold = thresholds[best_idx]
+    best_threshold = thresholds[min(best_idx, len(thresholds) - 1)]
     optimal_thresholds.append(best_threshold)
 
   return optimal_thresholds
-
 
 
 
