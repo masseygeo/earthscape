@@ -53,15 +53,16 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
 
     labels = batch.pop('label').squeeze(1).to(device)
 
-    # modalities = {modality: data.to(device) for modality, data in batch.items()}
-    rgb = batch.pop('rgb').to(device)
-    dem = batch.pop('dem').to(device)
+    modalities = {modality: data.to(device) for modality, data in batch.items()}
+    # rgb = batch.pop('rgb').to(device)
+    # dem = batch.pop('dem').to(device)
 
     # zero the gradients
     optimizer.zero_grad()
 
     # forward pass & backprop
-    outputs = model(rgb, dem)
+    outputs = model(modalities)
+    # outputs = model(rgb, dem)
 
     loss = criterion(outputs, labels)
     loss.backward()
@@ -109,12 +110,12 @@ def validate_epoch(model, val_loader, criterion, device):
 
       labels = batch.pop('label').squeeze(1).to(device)
 
-      # modalities = {modality: data.to(device) for modality, data in batch.items()}
-      rgb = batch.pop('rgb').to(device)
-      dem = batch.pop('dem').to(device)
+      modalities = {modality: data.to(device) for modality, data in batch.items()}
+      # rgb = batch.pop('rgb').to(device)
+      # dem = batch.pop('dem').to(device)
 
-      # outputs = model(modalities)
-      outputs = model(rgb, dem)
+      outputs = model(modalities)
+      # outputs = model(rgb, dem)
 
 
       loss = criterion(outputs, labels)
@@ -232,12 +233,12 @@ def test_model(model, test_loader, device):
       
       labels = batch.pop('label').squeeze(1).to(device)
 
-      # modalities = {modality: data.to(device) for modality, data in batch.items()}
-      rgb = batch.pop('rgb').to(device)
-      dem = batch.pop('dem').to(device)
+      modalities = {modality: data.to(device) for modality, data in batch.items()}
+      # rgb = batch.pop('rgb').to(device)
+      # dem = batch.pop('dem').to(device)
 
-      # outputs = model(modalities)
-      outputs = model(rgb, dem)
+      outputs = model(modalities)
+      # outputs = model(rgb, dem)
 
 
       # loss = criterion(outputs, labels)
@@ -261,8 +262,8 @@ def calculate_label_precision_recall_f1_aucroc(predictions, targets, threshold=0
   predictions_binary = (predictions >= threshold).astype(int)
   acc = accuracy_score(targets, predictions_binary)
   precision = precision_score(targets, predictions_binary, zero_division=0.0)
-  recall = recall_score(targets, predictions_binary)
-  f1 = f1_score(targets, predictions_binary)
+  recall = recall_score(targets, predictions_binary, zero_division=0.0)
+  f1 = f1_score(targets, predictions_binary, zero_division=0.0)
   auc_roc = roc_auc_score(targets, predictions)
   
   return acc, precision, recall, f1, auc_roc
@@ -309,14 +310,14 @@ def calculate_global_metrics(targets, predictions, thresholds=[0.5]):
   else:
     predictions_binary = (predictions >= thresholds).astype(int)
   
-  macro_precision = precision_score(targets, predictions_binary, average='macro')
-  macro_recall = recall_score(targets, predictions_binary, average='macro')
-  macro_f1 = f1_score(targets, predictions_binary, average='macro')
+  macro_precision = precision_score(targets, predictions_binary, average='macro', zero_division=0.0)
+  macro_recall = recall_score(targets, predictions_binary, average='macro', zero_division=0.0)
+  macro_f1 = f1_score(targets, predictions_binary, average='macro', zero_division=0.0)
   macro_mAP = average_precision_score(targets, predictions, average='macro')
   
-  weighted_precision = precision_score(targets, predictions_binary, average='weighted')
-  weighted_recall = recall_score(targets, predictions_binary, average='weighted')
-  weighted_f1 = f1_score(targets, predictions_binary, average='weighted')
+  weighted_precision = precision_score(targets, predictions_binary, average='weighted', zero_division=0.0)
+  weighted_recall = recall_score(targets, predictions_binary, average='weighted', zero_division=0.0)
+  weighted_f1 = f1_score(targets, predictions_binary, average='weighted', zero_division=0.0)
   weighted_mAP = average_precision_score(targets, predictions, average='weighted')
   
   h_loss = hamming_loss(targets, predictions_binary)
