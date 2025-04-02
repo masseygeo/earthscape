@@ -26,4 +26,5 @@ data/patches_hardin/*.tif
 data/patches_hardin/*.csv
 
 models/classification/**/*.pth
+models/classification/old
 
