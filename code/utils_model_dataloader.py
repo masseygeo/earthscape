@@ -64,9 +64,13 @@ class MultiModalDataset(Dataset):
       paths = [os.path.join(self.data_dir, f"{patch_id}_{file_extension}") for file_extension in channel_paths]
       image = self.stack_images(paths)
       
+      # check for normalization params dictionary input
       if self.norm_params:
-        if modality in self.norm_params.keys():
-          image = normalize(image, self.norm_params[modality][0], self.norm_params[modality][1])
+        if modality in self.norm_params.keys():      # check if modality is in norm_params (it should be)
+          if not self.norm_params[modality] == None:             # make sure it has normalization mean/sd (otherwise it's binary data)
+            image = normalize(image, self.norm_params[modality][0], self.norm_params[modality][1])     # normalize
+          else:    # if no normalization mean/sd present, then still convert image to correct dtype and return image to dataloader
+            image = image.type(torch.float)
       
       data[modality] = image
 
