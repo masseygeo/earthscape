@@ -1,0 +1,9 @@
+
+Epoch 1/10
+TRAINING   -- Loss: 0.0284  |  Accuracy: 78.84%  |  Time: 4.65 mins.
+VALIDATION -- Loss: 0.0272  |  Accuracy: 79.04%  |  Time: 0.4 mins.
+New best model saved with loss 0.0272...
+New best model saved with accuracy 79.04%...
+
+Epoch 2/10
+TRAINING   -- Loss: 0.0267  |  Accuracy: 80.06%  |  Time: 4.63 mins.
