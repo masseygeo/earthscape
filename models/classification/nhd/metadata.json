@@ -1,0 +1,95 @@
+{
+    "NAME": "nhd",
+    "DIRECTORY": "../models/classification/nhd",
+    "PATCHES": {
+        "train patches": "../models/patches/warren_patches_train.geojson",
+        "train patches directory": "../data/patches_warren",
+        "validation patches": "../models/patches/warren_patches_val.geojson",
+        "validation patches directory": "../data/patches_warren",
+        "in-domain test patches": "../models/patches/warren_patches_test.geojson",
+        "in-domain test patches directory": "../data/patches_warren",
+        "cross-domain test patches": "../models/patches/hardin_patches_test.geojson",
+        "cross-domain test patches directory": "../data/patches_hardin"
+    },
+    "MODALITIES": {
+        "modalities": {
+            "nhd": [
+                "nhd.tif"
+            ]
+        },
+        "normalization values": {
+            "nhd": null
+        }
+    },
+    "HYPERPARAMETERS": {
+        "batch size": 32,
+        "epochs": 10,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "FocalLoss",
+        "alpha": [
+            [
+                0.25
+            ]
+        ],
+        "gamma": 2
+    },
+    "MODEL": {
+        "encoder": "ResNextEncoder",
+        "weights": "IMAGENET1K_V2",
+        "attention": null,
+        "model": "MultilabelClassification"
+    },
+    "TRAINING": {
+        "training loss": [
+            0.02903706415382855,
+            0.027766998092371247,
+            0.027436196740305924,
+            0.027403608247807725,
+            0.027259006480130406,
+            0.02724803329760584,
+            0.02723984884190242,
+            0.027179946782981034,
+            0.027260137459851036,
+            0.02706378884613514
+        ],
+        "training accuracy": [
+            76.13389462248777,
+            77.13878326996198,
+            77.32041010320478,
+            77.32719989136339,
+            77.40867734926671,
+            77.53089353612167,
+            77.64292504073873,
+            77.58860673546985,
+            77.51731395980445,
+            77.53768332428028
+        ],
+        "validation loss": [
+            0.027612336445599794,
+            0.027523190015926957,
+            0.027575257544716198,
+            0.027449416074280936,
+            0.027445669984444976,
+            0.02732373820617795,
+            0.0274666262169679,
+            0.02757700167906781,
+            0.027189881928885978,
+            0.027652406754593056
+        ],
+        "validation accuracy": [
+            76.99032738095238,
+            77.86458333333334,
+            77.69717261904762,
+            77.15773809523809,
+            77.41815476190477,
+            78.19940476190477,
+            76.76711309523809,
+            77.49255952380952,
+            77.99479166666666,
+            77.62276785714286
+        ]
+    }
+}
