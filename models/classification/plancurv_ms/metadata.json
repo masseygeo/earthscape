@@ -1,0 +1,117 @@
+{
+    "NAME": "plancurv_ms",
+    "DIRECTORY": "../models/classification/plancurv_ms",
+    "PATCHES": {
+        "train patches": "../models/patches/warren_patches_train.geojson",
+        "train patches directory": "../data/patches_warren",
+        "validation patches": "../models/patches/warren_patches_val.geojson",
+        "validation patches directory": "../data/patches_warren",
+        "in-domain test patches": "../models/patches/warren_patches_test.geojson",
+        "in-domain test patches directory": "../data/patches_warren",
+        "cross-domain test patches": "../models/patches/hardin_patches_test.geojson",
+        "cross-domain test patches directory": "../data/patches_hardin"
+    },
+    "MODALITIES": {
+        "modalities": {
+            "plancurv": [
+                "plancurv.tif",
+                "plancurv_10.tif",
+                "plancurv_20.tif",
+                "plancurv_50.tif",
+                "plancurv_100.tif",
+                "plancurv_200.tif"
+            ]
+        },
+        "normalization values": {
+            "plancurv": [
+                [
+                    0.07426201,
+                    0.05539756,
+                    0.060592286,
+                    0.078211196,
+                    0.19697443,
+                    0.23613061
+                ],
+                [
+                    1.2450467,
+                    3.629674,
+                    3.5369287,
+                    3.1158779,
+                    4.6182175,
+                    4.0599656
+                ]
+            ]
+        }
+    },
+    "HYPERPARAMETERS": {
+        "batch size": 32,
+        "epochs": 10,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "FocalLoss",
+        "alpha": [
+            [
+                0.25
+            ]
+        ],
+        "gamma": 2
+    },
+    "MODEL": {
+        "encoder": "ResNextEncoder",
+        "weights": "IMAGENET1K_V2",
+        "attention": null,
+        "model": "MultilabelClassification"
+    },
+    "TRAINING": {
+        "training loss": [
+            0.03794777268692568,
+            0.02377830169556712,
+            0.02181288574471673,
+            0.020537280243867476,
+            0.01978022040013125,
+            0.01892267699449008,
+            0.018266514124270855,
+            0.01780376097846054,
+            0.017469926252111283,
+            0.01726745309471064
+        ],
+        "training accuracy": [
+            78.74796306355242,
+            82.35334057577404,
+            84.19167571971754,
+            85.37309885931559,
+            85.95871808799565,
+            86.77858500814774,
+            87.34553231939164,
+            87.5678978815861,
+            87.88362303096143,
+            88.13824008690929
+        ],
+        "validation loss": [
+            0.2577859476053466,
+            0.03386755854201814,
+            0.03680828803529342,
+            0.11102023340451221,
+            0.16183774763097367,
+            0.08983831480145454,
+            0.5239880010485649,
+            0.05537635367363691,
+            0.03506812468792001,
+            0.2834762614220381
+        ],
+        "validation accuracy": [
+            76.89732142857143,
+            77.12053571428571,
+            76.953125,
+            76.93452380952381,
+            76.91592261904762,
+            70.61011904761905,
+            56.324404761904766,
+            66.46205357142857,
+            77.10193452380952,
+            56.324404761904766
+        ]
+    }
+}
