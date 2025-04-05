@@ -1,0 +1,102 @@
+{
+    "NAME": "logstdslope_101x101",
+    "DIRECTORY": "../models/classification/logstdslope_101x101",
+    "PATCHES": {
+        "train patches": "../models/patches/warren_patches_train.geojson",
+        "train patches directory": "../data/patches_warren",
+        "validation patches": "../models/patches/warren_patches_val.geojson",
+        "validation patches directory": "../data/patches_warren",
+        "in-domain test patches": "../models/patches/warren_patches_test.geojson",
+        "in-domain test patches directory": "../data/patches_warren",
+        "cross-domain test patches": "../models/patches/hardin_patches_test.geojson",
+        "cross-domain test patches directory": "../data/patches_hardin"
+    },
+    "MODALITIES": {
+        "modalities": {
+            "logstdslope": [
+                "logstdslope_101x101.tif"
+            ]
+        },
+        "normalization values": {
+            "logstdslope": [
+                [
+                    0.4499744
+                ],
+                [
+                    0.27435088
+                ]
+            ]
+        }
+    },
+    "HYPERPARAMETERS": {
+        "batch size": 32,
+        "epochs": 10,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "FocalLoss",
+        "alpha": [
+            [
+                0.25
+            ]
+        ],
+        "gamma": 2
+    },
+    "MODEL": {
+        "encoder": "ResNextEncoder",
+        "weights": "IMAGENET1K_V2",
+        "attention": null,
+        "model": "MultilabelClassification"
+    },
+    "TRAINING": {
+        "training loss": [
+            0.029017979831579974,
+            0.02280848975445608,
+            0.02151314106844224,
+            0.020703458744225165,
+            0.02049157107709252,
+            0.020042059376495874,
+            0.02007220205656136,
+            0.019674431529080234,
+            0.019314509009085455,
+            0.019045318696407083
+        ],
+        "training accuracy": [
+            80.71700162954916,
+            83.85727865290603,
+            84.85198261814232,
+            85.60225420966866,
+            85.7397474198805,
+            85.98757468766975,
+            86.00454915806627,
+            86.28632536664857,
+            86.54094242259642,
+            86.70050244432373
+        ],
+        "validation loss": [
+            0.02997164971505602,
+            0.0243839827987055,
+            0.02731619488137464,
+            0.02404957210334639,
+            0.021339501719921827,
+            0.03482438996434212,
+            0.02779465486916403,
+            0.021904703074445326,
+            0.020538907187680405,
+            0.019945409925033648
+        ],
+        "validation accuracy": [
+            83.16592261904762,
+            84.52380952380952,
+            83.79836309523809,
+            85.00744047619048,
+            85.62127976190477,
+            85.37946428571429,
+            84.84002976190477,
+            86.17931547619048,
+            85.69568452380952,
+            86.71875
+        ]
+    }
+}

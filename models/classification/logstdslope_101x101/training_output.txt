@@ -1,0 +1,52 @@
+
+Epoch 1/10
+TRAINING   -- Loss: 0.0290  |  Accuracy: 80.72%  |  Time: 5.15 mins.
+VALIDATION -- Loss: 0.0300  |  Accuracy: 83.17%  |  Time: 0.27 mins.
+New best model saved with loss 0.0300...
+New best model saved with accuracy 83.17%...
+
+Epoch 2/10
+TRAINING   -- Loss: 0.0228  |  Accuracy: 83.86%  |  Time: 5.18 mins.
+VALIDATION -- Loss: 0.0244  |  Accuracy: 84.52%  |  Time: 0.32 mins.
+New best model saved with loss 0.0244...
+New best model saved with accuracy 84.52%...
+
+Epoch 3/10
+TRAINING   -- Loss: 0.0215  |  Accuracy: 84.85%  |  Time: 5.2 mins.
+VALIDATION -- Loss: 0.0273  |  Accuracy: 83.80%  |  Time: 0.28 mins.
+
+Epoch 4/10
+TRAINING   -- Loss: 0.0207  |  Accuracy: 85.60%  |  Time: 5.22 mins.
+VALIDATION -- Loss: 0.0240  |  Accuracy: 85.01%  |  Time: 0.28 mins.
+New best model saved with loss 0.0240...
+New best model saved with accuracy 85.01%...
+
+Epoch 5/10
+TRAINING   -- Loss: 0.0205  |  Accuracy: 85.74%  |  Time: 5.22 mins.
+VALIDATION -- Loss: 0.0213  |  Accuracy: 85.62%  |  Time: 0.32 mins.
+New best model saved with loss 0.0213...
+New best model saved with accuracy 85.62%...
+
+Epoch 6/10
+TRAINING   -- Loss: 0.0200  |  Accuracy: 85.99%  |  Time: 5.23 mins.
+VALIDATION -- Loss: 0.0348  |  Accuracy: 85.38%  |  Time: 0.28 mins.
+
+Epoch 7/10
+TRAINING   -- Loss: 0.0201  |  Accuracy: 86.00%  |  Time: 5.23 mins.
+VALIDATION -- Loss: 0.0278  |  Accuracy: 84.84%  |  Time: 0.32 mins.
+
+Epoch 8/10
+TRAINING   -- Loss: 0.0197  |  Accuracy: 86.29%  |  Time: 5.23 mins.
+VALIDATION -- Loss: 0.0219  |  Accuracy: 86.18%  |  Time: 0.32 mins.
+New best model saved with accuracy 86.18%...
+
+Epoch 9/10
+TRAINING   -- Loss: 0.0193  |  Accuracy: 86.54%  |  Time: 5.23 mins.
+VALIDATION -- Loss: 0.0205  |  Accuracy: 85.70%  |  Time: 0.28 mins.
+New best model saved with loss 0.0205...
+
+Epoch 10/10
+TRAINING   -- Loss: 0.0190  |  Accuracy: 86.70%  |  Time: 5.25 mins.
+VALIDATION -- Loss: 0.0199  |  Accuracy: 86.72%  |  Time: 0.32 mins.
+New best model saved with loss 0.0199...
+New best model saved with accuracy 86.72%...
