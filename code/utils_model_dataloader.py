@@ -63,20 +63,16 @@ class MultiModalDataset(Dataset):
     for modality, channel_paths in self.modalities.items():
       paths = [os.path.join(self.data_dir, f"{patch_id}_{file_extension}") for file_extension in channel_paths]
       image = self.stack_images(paths)
-<<<<<<< Updated upstream
       
-      # check for normalization params dictionary input
-=======
-
-
+      
       #######################################################
       ##### ONE TIME TEST - CONVERT LOG SLOPE TO JUST SLOPE AND COMPARE PERFORMANCE
       if modality == 'slope':
           image = torch.exp(image)
       #######################################################
-
-
->>>>>>> Stashed changes
+      
+      
+      # check for normalization params dictionary input
       if self.norm_params:
         if modality in self.norm_params.keys():      # check if modality is in norm_params (it should be)
           if not self.norm_params[modality] == None:             # make sure it has normalization mean/sd (otherwise it's binary data)
