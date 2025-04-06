@@ -1,0 +1,53 @@
+
+Epoch 1/10
+TRAINING   -- Loss: 0.0298  |  Accuracy: 80.30%  |  Time: 4.53 mins.
+VALIDATION -- Loss: 0.0246  |  Accuracy: 81.23%  |  Time: 0.4 mins.
+New best model saved with loss 0.0246...
+New best model saved with accuracy 81.23%...
+
+Epoch 2/10
+TRAINING   -- Loss: 0.0244  |  Accuracy: 81.66%  |  Time: 4.52 mins.
+VALIDATION -- Loss: 0.0235  |  Accuracy: 83.24%  |  Time: 0.37 mins.
+New best model saved with loss 0.0235...
+New best model saved with accuracy 83.24%...
+
+Epoch 3/10
+TRAINING   -- Loss: 0.0230  |  Accuracy: 83.21%  |  Time: 4.53 mins.
+VALIDATION -- Loss: 0.0230  |  Accuracy: 84.32%  |  Time: 0.53 mins.
+New best model saved with loss 0.0230...
+New best model saved with accuracy 84.32%...
+
+Epoch 4/10
+TRAINING   -- Loss: 0.0219  |  Accuracy: 84.36%  |  Time: 4.55 mins.
+VALIDATION -- Loss: 0.0221  |  Accuracy: 84.13%  |  Time: 0.38 mins.
+New best model saved with loss 0.0221...
+
+Epoch 5/10
+TRAINING   -- Loss: 0.0213  |  Accuracy: 84.67%  |  Time: 4.52 mins.
+VALIDATION -- Loss: 0.0213  |  Accuracy: 84.62%  |  Time: 0.37 mins.
+New best model saved with loss 0.0213...
+New best model saved with accuracy 84.62%...
+
+Epoch 6/10
+TRAINING   -- Loss: 0.0210  |  Accuracy: 84.90%  |  Time: 4.52 mins.
+VALIDATION -- Loss: 0.0213  |  Accuracy: 84.23%  |  Time: 0.48 mins.
+New best model saved with loss 0.0213...
+
+Epoch 7/10
+TRAINING   -- Loss: 0.0207  |  Accuracy: 85.19%  |  Time: 4.52 mins.
+VALIDATION -- Loss: 0.0213  |  Accuracy: 84.73%  |  Time: 0.38 mins.
+New best model saved with accuracy 84.73%...
+
+Epoch 8/10
+TRAINING   -- Loss: 0.0205  |  Accuracy: 85.37%  |  Time: 4.52 mins.
+VALIDATION -- Loss: 0.0216  |  Accuracy: 84.75%  |  Time: 0.37 mins.
+New best model saved with accuracy 84.75%...
+
+Epoch 9/10
+TRAINING   -- Loss: 0.0203  |  Accuracy: 85.54%  |  Time: 4.53 mins.
+VALIDATION -- Loss: 0.0219  |  Accuracy: 85.29%  |  Time: 0.48 mins.
+New best model saved with accuracy 85.29%...
+
+Epoch 10/10
+TRAINING   -- Loss: 0.0201  |  Accuracy: 85.69%  |  Time: 4.57 mins.
+VALIDATION -- Loss: 0.0235  |  Accuracy: 85.21%  |  Time: 0.38 mins.
