@@ -1,0 +1,117 @@
+{
+    "NAME": "ep_ms",
+    "DIRECTORY": "../models/classification/ep_ms",
+    "PATCHES": {
+        "train patches": "../models/patches/warren_patches_train.geojson",
+        "train patches directory": "../data/patches_warren",
+        "validation patches": "../models/patches/warren_patches_val.geojson",
+        "validation patches directory": "../data/patches_warren",
+        "in-domain test patches": "../models/patches/warren_patches_test.geojson",
+        "in-domain test patches directory": "../data/patches_warren",
+        "cross-domain test patches": "../models/patches/hardin_patches_test.geojson",
+        "cross-domain test patches directory": "../data/patches_hardin"
+    },
+    "MODALITIES": {
+        "modalities": {
+            "ep": [
+                "ep_5x5.tif",
+                "ep_11x11.tif",
+                "ep_21x21.tif",
+                "ep_51x51.tif",
+                "ep_101x101.tif",
+                "ep_201x201.tif"
+            ]
+        },
+        "normalization values": {
+            "ep": [
+                [
+                    47.128483,
+                    48.9687,
+                    49.44333,
+                    49.73147,
+                    49.86394,
+                    49.94078
+                ],
+                [
+                    9.83114,
+                    11.372207,
+                    12.923358,
+                    16.375425,
+                    19.533527,
+                    21.908968
+                ]
+            ]
+        }
+    },
+    "HYPERPARAMETERS": {
+        "batch size": 32,
+        "epochs": 10,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "FocalLoss",
+        "alpha": [
+            [
+                0.25
+            ]
+        ],
+        "gamma": 2
+    },
+    "MODEL": {
+        "encoder": "ResNextEncoder",
+        "weights": "IMAGENET1K_V2",
+        "attention": null,
+        "model": "MultilabelClassification"
+    },
+    "TRAINING": {
+        "training loss": [
+            0.03310035030311505,
+            0.018292793366675594,
+            0.016387033548928485,
+            0.01577007836049614,
+            0.015108634476964238,
+            0.014290460594310054,
+            0.013895040487750174,
+            0.013573869078388232,
+            0.0131472239922378,
+            0.013329120869872235
+        ],
+        "training accuracy": [
+            83.31579304725693,
+            87.68332428028246,
+            89.24837045084193,
+            89.71347093970668,
+            90.19215100488864,
+            90.84566811515481,
+            91.04596686583378,
+            91.32434818033678,
+            91.57896523628463,
+            91.60103204780012
+        ],
+        "validation loss": [
+            0.019625479316649336,
+            0.018486365326680243,
+            0.017859218642115593,
+            0.017323546926490963,
+            0.019099126957977813,
+            0.018746048910543323,
+            0.017894794310753543,
+            0.01820103331313779,
+            0.019482914785233636,
+            0.018713241054986913
+        ],
+        "validation accuracy": [
+            87.42559523809523,
+            87.63020833333334,
+            88.41145833333334,
+            88.61607142857143,
+            88.03943452380952,
+            87.72321428571429,
+            87.76041666666666,
+            88.22544642857143,
+            88.48586309523809,
+            88.16964285714286
+        ]
+    }
+}
