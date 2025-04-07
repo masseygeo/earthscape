@@ -1,0 +1,49 @@
+
+Epoch 1/10
+TRAINING   -- Loss: 0.0307  |  Accuracy: 83.04%  |  Time: 4.4 mins.
+VALIDATION -- Loss: 0.0339  |  Accuracy: 86.72%  |  Time: 0.4 mins.
+New best model saved with loss 0.0339...
+New best model saved with accuracy 86.72%...
+
+Epoch 2/10
+TRAINING   -- Loss: 0.0186  |  Accuracy: 87.33%  |  Time: 4.37 mins.
+VALIDATION -- Loss: 0.0266  |  Accuracy: 87.57%  |  Time: 0.35 mins.
+New best model saved with loss 0.0266...
+New best model saved with accuracy 87.57%...
+
+Epoch 3/10
+TRAINING   -- Loss: 0.0168  |  Accuracy: 88.97%  |  Time: 4.47 mins.
+VALIDATION -- Loss: 0.0209  |  Accuracy: 87.37%  |  Time: 0.37 mins.
+New best model saved with loss 0.0209...
+
+Epoch 4/10
+TRAINING   -- Loss: 0.0161  |  Accuracy: 89.42%  |  Time: 4.37 mins.
+VALIDATION -- Loss: 0.0246  |  Accuracy: 87.85%  |  Time: 0.37 mins.
+New best model saved with accuracy 87.85%...
+
+Epoch 5/10
+TRAINING   -- Loss: 0.0153  |  Accuracy: 90.04%  |  Time: 4.37 mins.
+VALIDATION -- Loss: 0.0205  |  Accuracy: 87.67%  |  Time: 0.37 mins.
+New best model saved with loss 0.0205...
+
+Epoch 6/10
+TRAINING   -- Loss: 0.0147  |  Accuracy: 90.46%  |  Time: 4.38 mins.
+VALIDATION -- Loss: 0.0199  |  Accuracy: 88.26%  |  Time: 0.45 mins.
+New best model saved with loss 0.0199...
+New best model saved with accuracy 88.26%...
+
+Epoch 7/10
+TRAINING   -- Loss: 0.0142  |  Accuracy: 90.78%  |  Time: 4.37 mins.
+VALIDATION -- Loss: 0.0226  |  Accuracy: 87.80%  |  Time: 0.37 mins.
+
+Epoch 8/10
+TRAINING   -- Loss: 0.0136  |  Accuracy: 91.16%  |  Time: 4.38 mins.
+VALIDATION -- Loss: 0.0365  |  Accuracy: 87.70%  |  Time: 0.38 mins.
+
+Epoch 9/10
+TRAINING   -- Loss: 0.0132  |  Accuracy: 91.53%  |  Time: 4.38 mins.
+VALIDATION -- Loss: 0.0204  |  Accuracy: 88.24%  |  Time: 0.47 mins.
+
+Epoch 10/10
+TRAINING   -- Loss: 0.0130  |  Accuracy: 91.79%  |  Time: 4.38 mins.
+VALIDATION -- Loss: 0.0205  |  Accuracy: 87.98%  |  Time: 0.38 mins.
