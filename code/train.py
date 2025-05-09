@@ -25,7 +25,8 @@ from utils_model_training import (
     plot_label_pr_roc_curves,
     calculate_global_metrics
 )
-from model_sgmap import ResNextEncoder, VAE_encoder, MultilabelClassification, ViT_encoder, SatMaEViTEncoder
+from model_sgmap_munia import ResNextEncoder, VAE_encoder, MultilabelClassification, ViT_encoder
+# SatMaEViTEncoder
 # from model_cross_attn import CrossModalFusionPerMod, MultiLayerFusion
 
 
@@ -36,31 +37,38 @@ def parse_args():
         description="Train and/or test a multimodal classification model.")
     parser.add_argument("--model_name", type=str, default="ep_5x5_res",
                         help="Unique name for the model (used for directory and files)")
-    parser.add_argument("--batch_size", type=int, default=16,
+    parser.add_argument("--batch_size", type=int, default=32,
                         help="Batch size for training/testing")
     parser.add_argument("--num_epochs", type=int, default=15,
                         help="Number of training epochs")
 
     parser.add_argument("--seed", type=int, default=42,
                         help="Seed value")
+    
     parser.add_argument("--weights_config", type=str, default="IMAGENET1K_V2",
                         help="Pretrained encoder weights (e.g., IMAGENET1K_V2 or None)")
+    
     parser.add_argument("--learning_rate", type=float, default=1e-3,                         # larger than 0.0001
                         help="Learning rate for optimizer")
+    
     parser.add_argument("--gamma", type=float, default=2.0,
                         help="Gamma parameter for focal loss")
     parser.add_argument("--alpha", type=float, default=0.25,
                         help="Alpha parameter for focal loss")
+    
     parser.add_argument("--mode", type=str, default="all",
                         choices=["train", "test", "all"],
                         help="Run mode: train, test only, or all (train+test)")
+    
     parser.add_argument("--patch_dir", type=str, default="../data/patches_warren",
                         help="Directory where patch TIFFs are stored")
     parser.add_argument("--hardin_patch_dir", type=str, default="../data/patches_hardin",
                         help="Directory for cross-domain test patches")
+    
     parser.add_argument("--norm_stats_path", type=str,
                         default="../data/warren/image_stats.csv",
                         help="Path to normalization stats CSV file")
+    
     parser.add_argument("--train_patch_path", type=str,
                         default="../models/patches/warren_patches_train.geojson",
                         help="GeoJSON path for training patches")
@@ -94,7 +102,6 @@ def set_seed(seed: int):
 
 
 def main():
-
     
     args = parse_args()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -106,22 +113,21 @@ def main():
     set_seed(args.seed)
     enc = args.model_name.split('_')[-1]
     print('encoder ', enc)
-    modality  = args.model_name.split("_"+enc)[0]
+    modality  = args.model_name.split("_" + enc)[0]
     print('modality: ', modality)
 
+
     # Config
-    modalities = {
-            # 'ep_all' : ['ep_101x101.tif', 'ep_11x11.tif', 'ep_201x201.tif', 'ep_21x21.tif', 'ep_51x51.tif', 'ep_5x5.tif'],
-            modality : [f'{modality}.tif']
-        # 'aerial_rgb': ['aerialr.tif', 'aerialg.tif', 'aerialb.tif'],
-        # 'dem': ['dem.tif'],
-        # 'ep_all' : ['ep_101x101.tif', 'ep_11x11.tif', 'ep_201x201.tif', 'ep_21x21.tif', 'ep_51x51.tif', 'ep_5x5.tif'] 
-    }
+    if modality == 'rgb':
+        modalities = {'aerial_rgb': ['aerialr.tif', 'aerialg.tif', 'aerialb.tif']}
+    else:
+        modalities = {modality : [f'{modality}.tif']}
 
     attention_configs = None
 
+
     # Build model
-    encoder = ResNextEncoder(args.weights_config)
+    # encoder = ResNextEncoder(args.weights_config)
 
     if enc == 'res':
         encoder = ResNextEncoder(args.weights_config)
@@ -129,18 +135,16 @@ def main():
         encoder = VAE_encoder().to(device)
     elif enc == 'vit':
         encoder = ViT_encoder().to(device)
-    elif enc == 'satmae':
-        encoder = SatMaEViTEncoder().to(device)
-
+    # elif enc == 'satmae':
+    #     encoder = SatMaEViTEncoder().to(device)
 
     # model = MultiLayerFusion(modality_configs=modalities, encoder=encoder,  device=device).to(device)
     # model = CrossModalFusionPerMod(modality_configs=modalities, encoder=encoder, device=device).to(device)
     model = MultilabelClassification(modality_configs=modalities, encoder=encoder, attention_configs=attention_configs).to(device)
 
+
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-
     print(f"Total parameters: {total_params}")
     print(f"Trainable parameters: {trainable_params}")
 
@@ -158,11 +162,11 @@ def main():
 
     # Optimizer & loss
     optimizer = optim.Adam(model.parameters(), lr=args.learning_rate)
-
-    positive_counts = np.array([ 8690, 14793,   228,  1044, 11597,  6474, 21917])                  # get class counts
-    alpha = 1 / positive_counts                                                                                  # calculate inverse class frequency
-    alpha = np.sqrt(alpha)                                                                                          # calculate square root ICF
-    alpha = alpha / alpha.mean()                                                                               # normalize by mean
+    alpha = 0.25
+    # positive_counts = np.array([ 8690, 14793,   228,  1044, 11597,  6474, 21917])         # get class counts
+    # alpha = 1 / positive_counts                                                           # calculate inverse class frequency
+    # alpha = np.sqrt(alpha)                                                                # calculate square root ICF
+    # alpha = alpha / alpha.mean()                                                          # normalize by mean
     alpha = torch.tensor(alpha, dtype=torch.float32).view(1, -1).to(device)               # convert to tensor
 
     criterion = FocalLoss(alpha=alpha, gamma=args.gamma, reduction='mean').to(device)   # initialize focal loss
@@ -198,16 +202,13 @@ def main():
             modalities=modalities, norm_params=norm_params,
             augment=augment, task='classification', transform=custom_tf)
         return DataLoader(ds, batch_size=args.batch_size,
-                          shuffle=augment, drop_last=True,
+                          shuffle=True, drop_last=True,
                           num_workers=4, pin_memory=True)
 
     train_loader = make_loader(gdf_train['patch_id'], args.patch_dir, True)
     val_loader   = make_loader(gdf_val['patch_id'], args.patch_dir, False)
     test_loader  = make_loader(gdf_test['patch_id'], args.patch_dir, False)
     hardin_loader= make_loader(gdf_hardin['patch_id'], args.hardin_patch_dir, False)
-
-
-
 
 
     # Metadata
@@ -242,6 +243,35 @@ def main():
             json.dump(metadata, f, indent=4)
 
 
+        fig, ax = plt.subplots(ncols=2, figsize=(10,6))
+
+        epochs = range(1, len(train_loss)+1)
+
+        ax[0].plot(epochs, train_loss, label='Train')
+        ax[0].plot(epochs, val_loss, label='Validation')
+        ax[0].set_title('Focal Loss', style='italic')
+
+        ax[1].plot(epochs, train_acc, label='Train')
+        ax[1].plot(epochs, val_acc, label='Validation')
+        ax[1].set_title('Overall Accuracy', style='italic')
+
+        for axes in ax:
+            axes.axvline(x=best_epoch, linestyle='--', color='k', label='Best model')
+            axes.legend(frameon=False)
+            axes.set_xticks(epochs)
+            axes.set_xticklabels([str(x) if x%5==0 else '' for x in epochs])
+            axes.set_xlabel('Epochs')
+
+        modalities_str = list(modalities.keys())[0]
+        if len(modalities.keys()) > 1:
+            for modality in list(modalities.keys())[1:]:
+                modalities_str = modalities_str + ' + ' + str(modality)
+
+        plt.suptitle(f"Multilabel Classification\n{args.model_name} - {modalities_str}", y=0.99)
+        plt.savefig(f"{model_dir}/training_results.jpg")
+
+
+
     # TEST
     if args.mode in ['test', 'all']:
         # load best weights
@@ -252,9 +282,11 @@ def main():
         # optimal thresholds
         thresholds = calculate_optimal_thresholds(model, val_loader, device)
 
+
         # evaluations
         def evaluate(loader, prefix):
             preds, targs = test_model(model, loader, device)
+
             # per-label
             df_label = pd.DataFrame(columns=[
                 'Class','Targets','Predictions','Accuracy','Precision',
@@ -272,27 +304,30 @@ def main():
                 ]
             df_label.to_csv(os.path.join(model_dir, f'label_metrics_{prefix}.csv'), index=False)
 
+
             # PR/ROC curves
             fig = plot_label_pr_roc_curves(targs, preds, ['af1','Qal','Qaf','Qat','Qc','Qca','Qr'])
             fig.savefig(os.path.join(model_dir, f'pr_roc_curves_{prefix}.png'))
 
+
             # global
-            auc, macro_precision, weighted_precision, macro_recall, weighted_recall, macro_f1, weighted_f1, macro_mAP, weighted_mAP, h_loss, subset_acc, overall_acc = calculate_global_metrics(targs, preds, thresholds)
-            cols = ['AUC','Overall Accuracy','Macro Precision','Macro Recall',
-                    'Macro F1','Weighted Precision','Weighted Recall','Weighted F1',
-                    'Macro mAP','Weighted mAP','Hamming Loss','Subset Accuracy']
-            df_glob = pd.DataFrame({'AUC':auc,
+            macro_precision, weighted_precision, macro_recall, weighted_recall, macro_f1, weighted_f1, macro_mAP, weighted_mAP, h_loss, subset_acc, overall_acc = calculate_global_metrics(targs, preds, thresholds)
+            # cols = ['AUC','Overall Accuracy','Macro Precision','Macro Recall',
+            #         'Macro F1','Weighted Precision','Weighted Recall','Weighted F1',
+            #         'Macro mAP','Weighted mAP','Hamming Loss','Subset Accuracy']
+            df_glob = pd.DataFrame({
+                # 'AUC':auc,
                 'Overall Accuracy': overall_acc, 
-                   'Macro Precision': macro_precision, 
-                    'Macro Recall': macro_recall, 
-                    'Macro F1': macro_f1, 
-                    'Weighted Precision': weighted_precision, 
-                    'Weighted Recall': weighted_recall,
-                    'Weighted F1': weighted_f1, 
-                    'Macro mAP': macro_mAP, 
-                    'Weighted mAP': weighted_mAP, 
-                    'Hamming Loss': h_loss, 
-                    'Subset Accuracy':subset_acc}, index=[0])
+                'Macro Precision': macro_precision, 
+                'Macro Recall': macro_recall, 
+                'Macro F1': macro_f1, 
+                'Weighted Precision': weighted_precision, 
+                'Weighted Recall': weighted_recall,
+                'Weighted F1': weighted_f1, 
+                'Macro mAP': macro_mAP, 
+                'Weighted mAP': weighted_mAP, 
+                'Hamming Loss': h_loss, 
+                'Subset Accuracy':subset_acc}, index=[0])
             
             # df_glob = pd.DataFrame([stats], columns=cols)
             df_glob.to_csv(os.path.join(model_dir, f'global_metrics_{prefix}.csv'), index=False)

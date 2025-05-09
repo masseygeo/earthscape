@@ -1,0 +1,52 @@
+{
+    "NAME": "test1",
+    "DIRECTORY": "../models/classification/test1",
+    "PATCHES": {
+        "train patches": "../models/patches/warren_patches_train.geojson",
+        "train patches directory": "../data/patches_warren",
+        "validation patches": "../models/patches/warren_patches_val.geojson",
+        "validation patches directory": "../data/patches_warren",
+        "in-domain test patches": "../models/patches/warren_patches_test.geojson",
+        "in-domain test patches directory": "../data/patches_warren",
+        "cross-domain test patches": "../models/patches/hardin_patches_test.geojson",
+        "cross-domain test patches directory": "../data/patches_hardin"
+    },
+    "MODALITIES": {
+        "modalities": {
+            "plancurv": [
+                "plancurv.tif"
+            ]
+        },
+        "normalization values": {
+            "plancurv": [
+                [
+                    0.07426201
+                ],
+                [
+                    1.2450467
+                ]
+            ]
+        }
+    },
+    "HYPERPARAMETERS": {
+        "batch size": 32,
+        "epochs": 15,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "FocalLoss",
+        "alpha": [
+            [
+                0.25
+            ]
+        ],
+        "gamma": 2
+    },
+    "MODEL": {
+        "encoder": "ResNextEncoder",
+        "weights": "IMAGENET1K_V2",
+        "attention": null,
+        "model": "MultilabelClassification"
+    }
+}

@@ -8,6 +8,7 @@ import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import v2
 from torchvision.transforms.functional import normalize
+import torch.nn.functional as F
 
 
 
@@ -33,22 +34,112 @@ def randomly_select_indpendent_patch_sets(gdf_patches, val_size, seed=111):
 
 
 
+# class MultiModalDataset(Dataset):
+#   def __init__(self, ids, data_dir, modalities, norm_params=None, augment=False, task='classification'):
+#     self.ids = ids                   # list of patch IDs
+#     self.data_dir = data_dir         # directory containing all data
+#     self.modalities = modalities     # dictionary of modalities (modality name : path extension)
+#     self.norm_params = norm_params   # boolean; normalize modalities
+#     self.augment = augment           # bool; augment modalities - random horizontal flip, vertical flip, & 90 degree rotations
+#     self.task = task                 # type of problem - classification or segmentation
+
+#   def __len__(self):
+#     return len(self.ids)
+
+#   def __getitem__(self, idx):
+
+#     ##### Patch id
+#     patch_id = self.ids[idx]
+
+#     ##### Labels
+#     if self.task == 'classification':
+#       label_path = os.path.join(self.data_dir, f"{patch_id}_labels.csv")
+#       label = np.loadtxt(label_path)
+#       label = torch.from_numpy(label).unsqueeze(0)
+#       label = label.type(torch.float)
+    
+#     data = {'label': label}
+
+#     ##### Modalities
+#     for modality, channel_paths in self.modalities.items():
+#       paths = [os.path.join(self.data_dir, f"{patch_id}_{file_extension}") for file_extension in channel_paths]
+#       image = self.stack_images(paths)
+      
+      
+#       #######################################################
+#       ##### ONE TIME TEST - CONVERT LOG SLOPE TO JUST SLOPE AND COMPARE PERFORMANCE
+#       if modality == 'slope':
+#           image = torch.exp(image)
+#       #######################################################
+      
+      
+#       # check for normalization params dictionary input
+#       if self.norm_params:
+#         if modality in self.norm_params.keys():      # check if modality is in norm_params (it should be)
+#           if not self.norm_params[modality] == None:             # make sure it has normalization mean/sd (otherwise it's binary data)
+#             image = normalize(image, self.norm_params[modality][0], self.norm_params[modality][1])     # normalize
+#           else:    # if no normalization mean/sd present, then still convert image to correct dtype and return image to dataloader
+#             image = image.type(torch.float)
+      
+#       data[modality] = image
+
+#     ##### Apply random augmentation(s)
+#     if self.augment:
+        
+#         if np.random.uniform(low=0, high=1) > 0.5:
+#           for modality in self.modalities.keys():
+#             data[modality] = v2.functional.horizontal_flip(data[modality])
+    
+#         if np.random.uniform(low=0, high=1) > 0.5:
+#           for modality in self.modalities.keys():
+#             data[modality] = v2.functional.vertical_flip(data[modality])
+        
+#         angle = np.random.choice([0, 90, 180, 270])
+#         for modality in self.modalities.keys():
+#             data[modality] = v2.functional.rotate(data[modality], angle=angle)
+
+#     return data
+
+#   @staticmethod
+#   def stack_images(paths_list):
+#     """
+#     Function to extract image arrays, stack if multiple images provided, and return tensor with shape [Channels, Height, Width].
+#     """
+#     # initialize list to hold image arrays
+#     src_arrays = []
+
+#     # iterate through image paths
+#     for path in paths_list:
+
+#       # open image
+#       with rasterio.open(path) as src:
+#         data = src.read(1)                       # read channel 1 as array (all input should be 1 channel)
+#         src_arrays.append(data)                  # append array to list
+#     image_array = np.stack(src_arrays, axis=0)   # stack image arrays along channel dimension
+#     return torch.from_numpy(image_array)         # return tensor with shape [channels, h, w]
+
 class MultiModalDataset(Dataset):
-  def __init__(self, ids, data_dir, modalities, norm_params=None, augment=False, task='classification'):
+  def __init__(self, ids, data_dir, modalities, norm_params=None, augment=False, task='classification', transform=None):
     self.ids = ids                   # list of patch IDs
     self.data_dir = data_dir         # directory containing all data
     self.modalities = modalities     # dictionary of modalities (modality name : path extension)
     self.norm_params = norm_params   # boolean; normalize modalities
     self.augment = augment           # bool; augment modalities - random horizontal flip, vertical flip, & 90 degree rotations
     self.task = task                 # type of problem - classification or segmentation
+    
+    self.transform = transform
+
 
   def __len__(self):
     return len(self.ids)
 
+
   def __getitem__(self, idx):
+
 
     ##### Patch id
     patch_id = self.ids[idx]
+
 
     ##### Labels
     if self.task == 'classification':
@@ -59,28 +150,37 @@ class MultiModalDataset(Dataset):
     
     data = {'label': label}
 
+
     ##### Modalities
     for modality, channel_paths in self.modalities.items():
       paths = [os.path.join(self.data_dir, f"{patch_id}_{file_extension}") for file_extension in channel_paths]
       image = self.stack_images(paths)
+
+      # if self.transform:
+      #   # image = self.transform(image) 
+      #   # img: Tensor of shape [C, H, W] or [B, C, H, W]
+      #   img = image.unsqueeze(0)                                            # add batch dim if needed → [1, C, H, W]
+      #   img_resized = F.interpolate(img, size=(224, 224),
+      #                               mode='bicubic', align_corners=False)
+      #   image = img_resized.squeeze(0)                                      # back to [C, 224, 224]
+
       
-      
-      #######################################################
-      ##### ONE TIME TEST - CONVERT LOG SLOPE TO JUST SLOPE AND COMPARE PERFORMANCE
-      if modality == 'slope':
-          image = torch.exp(image)
-      #######################################################
-      
-      
-      # check for normalization params dictionary input
+
       if self.norm_params:
-        if modality in self.norm_params.keys():      # check if modality is in norm_params (it should be)
-          if not self.norm_params[modality] == None:             # make sure it has normalization mean/sd (otherwise it's binary data)
-            image = normalize(image, self.norm_params[modality][0], self.norm_params[modality][1])     # normalize
-          else:    # if no normalization mean/sd present, then still convert image to correct dtype and return image to dataloader
-            image = image.type(torch.float)
+        if modality in self.norm_params.keys():
+          if self.transform:
+            # image = self.transform(image) 
+            # img: Tensor of shape [C, H, W] or [B, C, H, W]
+            img = image.unsqueeze(0)                                            # add batch dim if needed → [1, C, H, W]
+            img_resized = F.interpolate(img, size=(224, 224),
+                                        mode='bicubic', align_corners=False)
+            image = img_resized.squeeze(0)                                      # back to [C, 224, 224]
+
+          # else:
+          image = normalize(image, self.norm_params[modality][0], self.norm_params[modality][1])
       
       data[modality] = image
+
 
     ##### Apply random augmentation(s)
     if self.augment:
@@ -99,6 +199,7 @@ class MultiModalDataset(Dataset):
 
     return data
 
+
   @staticmethod
   def stack_images(paths_list):
     """
@@ -116,7 +217,6 @@ class MultiModalDataset(Dataset):
         src_arrays.append(data)                  # append array to list
     image_array = np.stack(src_arrays, axis=0)   # stack image arrays along channel dimension
     return torch.from_numpy(image_array)         # return tensor with shape [channels, h, w]
-
 
 
 

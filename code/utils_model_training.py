@@ -206,7 +206,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     
     if val_accuracy > best_val_accuracy:
       best_val_accuracy = val_accuracy
-      torch.save(model.state_dict(), f"{output_dir}/best_accuracy.pth")
+      # torch.save(model.state_dict(), f"{output_dir}/best_accuracy.pth")
       acc_str = f"New best model saved with accuracy {best_val_accuracy:.2f}%..."
       print(acc_str)
       with open(f"{output_dir}/training_output.txt", 'a') as out_file:
