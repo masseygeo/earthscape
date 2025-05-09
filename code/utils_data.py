@@ -436,9 +436,9 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
     images = [rasterio.open(tile_path) for tile_path in tile_paths]
 
     if resample:
-        mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear)
+        mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear, nodata=np.nan)
     else:
-        mosaic, mosaic_transform = merge(images, indexes=[band_number])
+        mosaic, mosaic_transform = merge(images, indexes=[band_number], nodata=np.nan)
 
     mosaic_meta = images[0].meta.copy()
     mosaic_meta.update({'driver': 'GTiff', 
@@ -446,7 +446,7 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
                         'width': mosaic.shape[2], 
                         'transform': mosaic_transform, 
                         'crs': images[0].crs, 
-                        'count': mosaic.shape[0]})
+                        'count': mosaic.shape[0], 'nodata': np.nan})
     with rasterio.open(output_path, 'w', **mosaic_meta) as output:
         for i in range(mosaic.shape[0]):
             output.write(mosaic[i, :, :], i+1)
@@ -557,7 +557,8 @@ def image_to_reference_image(input_path, reference_path, output_path=None):
         ref_profile = ref.profile
         ref_data = ref.read(1, masked=True)
     
-    dst_data = np.empty_like(ref_data)
+    # dst_data = np.empty_like(ref_data)
+    dst_data = np.empty(ref_data.shape, dtype=ref_data.dtype)
 
     reproject(source=src_data, 
               destination=dst_data, 
@@ -570,7 +571,7 @@ def image_to_reference_image(input_path, reference_path, output_path=None):
 
     dst_meta = ref.meta.copy()
 
-    if not output_path:
+    if output_path is None:
         output_path = input_path
 
     with rasterio.open(output_path, 'w', **dst_meta) as dst:
