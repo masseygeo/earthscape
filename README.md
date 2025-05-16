@@ -14,11 +14,11 @@
 - Baseline models for multilabel classification
 
 ## Navigating the Repository
-- 📁 *code/* – Directory containing all code used for dataset curation pipeline, dataloaders, and models
+- 📁 [*code/*](https://github.com/masseygeo/earthscape/tree/main/code) – Directory containing all code used for dataset curation pipeline, dataloaders, and models
   - In the process of cleaning and organizing...
-- 📁 *data/* – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images
+- 📁 [*data/*](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images
   - In the process of cleaning and organizing...
-- 📁 *models/* – Directory containing patch locations used for all training, validation, and testing, and model results
+- 📁 [*models/*](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results
   - In the process of cleaning and organizing...
 
 ## Exploring the Dataset
