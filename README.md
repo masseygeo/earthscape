@@ -1,9 +1,9 @@
 # EarthScape
 
 [![Paper](https://img.shields.io/badge/Paper-10.48550%2FarXiv.2503.15625-BB3E00)](https://doi.org/10.48550/arXiv.2503.15625)
-[![Dataset](https://img.shields.io/badge/Dataset-10.13023%2Fkgs.data.05.01.2025-F7AD45)](https://uknowledge.uky.edu/kgs_data/16/)
-[![Python](https://img.shields.io/badge/Python-3.10+-537D5D)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-CC%20BY%204.0-D2D0A0)](https://creativecommons.org/licenses/by/4.0/)
+[![Dataset](https://img.shields.io/badge/Dataset-10.13023%2Fkgs.data.05.01.2025-FFA55D)](https://uknowledge.uky.edu/kgs_data/16/)
+[![Python](https://img.shields.io/badge/Python-3.10+-FFDF88)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-CC%20BY%204.0-BBD8A3)](https://creativecommons.org/licenses/by/4.0/)
 
 
 ## Overview
@@ -24,11 +24,11 @@
   - In the process of cleaning and organizing...
 
 ## Exploring the Dataset
-[![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-B6B09F)](#)
-[![Patch Size](https://img.shields.io/badge/Patch%20Size-256x256-B6B09F)](#)
-[![Patch Overlap](https://img.shields.io/badge/Patch%20Overlap-50%25-B6B09F)](#)
-[![Modalities](https://img.shields.io/badge/Channels-37-B6B09F)](#)
-[![Classes](https://img.shields.io/badge/Classes-7-B6B09F)](#)
+[![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-BB3E00)](#)
+[![Patch Size](https://img.shields.io/badge/Patch%20Size-256x256-FFA55D)](#)
+[![Patch Overlap](https://img.shields.io/badge/Patch%20Overlap-50%25-FFDF88)](#)
+[![Modalities](https://img.shields.io/badge/Channels-37-BBD8A3)](#)
+[![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
 
 ## Exploring Multilabel Classification Results
