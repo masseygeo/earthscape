@@ -33,13 +33,17 @@
     - [**../code/run.sh**](https://github.com/masseygeo/earthscape/blob/main/code/run.sh)
       
 - 📁 [**../data**](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images.
-  - *Class labels, class areas, class key code, and patch locations (for GIS).*
-    - []()
+  - *Class labels (all), class areas (all), class encoding key, patch locations (GIS), and example visualization images.*
+    - [**../data/earthscape_areas.csv**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_areas.csv)
+    - [**../data/earthscape_labels.csv**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_labels.csv)
+    - [**../data/earthscape_locations.geojson**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_locations.geojson)
+    - [**../data/hardin_sonora_256_50_2950.png**](https://github.com/masseygeo/earthscape/blob/main/data/hardin_sonora_256_50_2950_modalities.jpg)
+    - [**../data/warren_256_50_21983.png**](https://github.com/masseygeo/earthscape/blob/main/data/warren_256_50_21983_modalities.jpg)
   - *GeoTIFF images and per-patch labels (not saved in GitHub; see download links given in the "Exploring the Dataset" section below).*
     - [**../data/patches_warren**](https://github.com/masseygeo/earthscape/tree/main/data/patches_warren)
       - **../data/patches_warren/*.tif**
       - **../data/patches_warren/*.csv**
-    - [**../data/patches_hardin](https://github.com/masseygeo/earthscape/tree/main/data/patches_hardin)
+    - [**../data/patches_hardin**](https://github.com/masseygeo/earthscape/tree/main/data/patches_hardin)
       - **../data/patches_hardin/*.tif**
       - **../data/patches_hardin/*.csv**
 - 📁 [**../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results.
