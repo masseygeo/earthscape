@@ -43,16 +43,16 @@
       
   - *GeoTIFF images and per-patch labels (not saved in GitHub; see download links given in the "Exploring the Dataset" section below).*
     - [**../data/patches_warren**](https://github.com/masseygeo/earthscape/tree/main/data/patches_warren)
-      - **../data/patches_warren/*.tif**
-      - **../data/patches_warren/*.csv**
+      - ../data/patches_warren/*.tif
+      - ../data/patches_warren/*.csv
     - [**../data/patches_hardin**](https://github.com/masseygeo/earthscape/tree/main/data/patches_hardin)
-      - **../data/patches_hardin/*.tif**
-      - **../data/patches_hardin/*.csv**
+      - ../data/patches_hardin/*.tif
+      - ../data/patches_hardin/*.csv
         
 - 📁 **[../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results.**
   
   - *In the process of cleaning and organizing...*
-    - [file...]()
+    - file...
 
 
 ## Exploring the Dataset
@@ -63,8 +63,8 @@
 [![Modalities](https://img.shields.io/badge/Channels-37-BBD8A3)](#)
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
-- Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
-  - The *README* and *DataDictionary* contain basic metadata and file structure information.
+- **Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/**
+  - The <u>README</u> and *DataDictionary* contain basic metadata and file structure information.
   - A *small example .zip file (15.1 MB)* is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
     - It is strongly recommended to inspect this first before downloading the full dataset packages!
   - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
