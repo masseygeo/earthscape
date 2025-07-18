@@ -74,9 +74,9 @@
 
 - **Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/**
   - The *README* and *DataDictionary* contain basic metadata and file structure information.
-  - A *small example .zip file (15.1 MB)* is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
+  - A *small example .zip file (15.1 MB)* available for easy exploration of the available data for two patch locations (see the main "DOWNLOAD" link on the landing page).
     - It is strongly recommended to inspect this first before downloading the full dataset packages!
-  - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
+  - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each) shown on the landing page.
   - ***NOTE: This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.***
 
 
