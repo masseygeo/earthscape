@@ -3,7 +3,7 @@
 [![Paper](https://img.shields.io/badge/Paper-10.48550%2FarXiv.2503.15625-BB3E00)](https://doi.org/10.48550/arXiv.2503.15625)
 [![Dataset](https://img.shields.io/badge/Dataset-10.13023%2Fkgs.data.05.01.2025-FFA55D)](https://uknowledge.uky.edu/kgs_data/16/)
 [![Python](https://img.shields.io/badge/Python-3.10+-FFDF88)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-CC%20BY%204.0-BBD8A3)](https://creativecommons.org/licenses/by/4.0/)
+[![License](https://img.shields.io/badge/License-CC%20BY%204.0-5E936C)](https://creativecommons.org/licenses/by/4.0/)
 
 
 ***EarthScape*** is a living, open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis, and includes:
