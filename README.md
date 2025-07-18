@@ -88,7 +88,12 @@
 
 
 ## Exploring Multilabel Classification Results
-Selected SGMap-Net results...
+
+- **Unimodal tests...**
+  - Results.... 
+
+- **Multimodal tests...**
+  - results....
 
 
 ## Future Work
