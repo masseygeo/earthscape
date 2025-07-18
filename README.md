@@ -33,7 +33,7 @@ The data pre-processing pipeline can be explored with the following notebooks:
 - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
 - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
 
-The final dataset (segmentation masks, vector labels, images) for each quadrangle can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
+Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
 - The ***README*** and ***DataDictionary*** contain basic metadata and file structure information (see relevant download links)
   - These are versioned and all modifications will be captured here.
 - A ***small example .zip file*** is available for exploring the available information for two patch locations (the main "DOWNLOAD" link)
