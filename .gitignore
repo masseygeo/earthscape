@@ -28,3 +28,4 @@ data/patches_hardin/*.csv
 models/classification/**/*.pth
 models/classification/old
 
+code/old/*.*
