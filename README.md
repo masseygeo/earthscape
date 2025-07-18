@@ -51,7 +51,8 @@
         
 - 📁 [**../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results.
   
-  - In the process of cleaning and organizing...
+  - *In the process of cleaning and organizing...*
+    - [file...]()
 
 
 ## Exploring the Dataset
@@ -62,18 +63,28 @@
 [![Modalities](https://img.shields.io/badge/Channels-37-BBD8A3)](#)
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
-
-- The data pre-processing pipeline can be explored with the following notebooks:
-  - [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
-  - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
-  - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
-
 - Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
   - The *README* and *DataDictionary* contain basic metadata and file structure information.
   - A *small example .zip file (15.1 MB)* is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
     - It is strongly recommended to inspect this first before downloading the full dataset packages!
   - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
   - ***NOTE: This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.***
+
+- Individual images are in GeoTIFF format, but can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend Rasterio.
+```Python
+import rasterio
+from rasterio.plot import show
+
+with rasterio.open("PATH TO GEOTIFF") as src:
+  show(src)
+```
+
+- The data pre-processing pipeline can be explored with the following notebooks:
+  - [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
+  - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
+  - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
+
+
 
 
 ## Exploring Multilabel Classification Results
