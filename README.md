@@ -33,12 +33,14 @@
     - [**../code/run.sh**](https://github.com/masseygeo/earthscape/blob/main/code/run.sh)
       
 - 📁 [**../data**](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images.
+  
   - *Class labels (all), class areas (all), class encoding key, patch locations (GIS), and example visualization images.*
     - [**../data/earthscape_areas.csv**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_areas.csv)
     - [**../data/earthscape_labels.csv**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_labels.csv)
     - [**../data/earthscape_locations.geojson**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_locations.geojson)
     - [**../data/hardin_sonora_256_50_2950.png**](https://github.com/masseygeo/earthscape/blob/main/data/hardin_sonora_256_50_2950_modalities.jpg)
     - [**../data/warren_256_50_21983.png**](https://github.com/masseygeo/earthscape/blob/main/data/warren_256_50_21983_modalities.jpg)
+      
   - *GeoTIFF images and per-patch labels (not saved in GitHub; see download links given in the "Exploring the Dataset" section below).*
     - [**../data/patches_warren**](https://github.com/masseygeo/earthscape/tree/main/data/patches_warren)
       - **../data/patches_warren/*.tif**
@@ -46,7 +48,9 @@
     - [**../data/patches_hardin**](https://github.com/masseygeo/earthscape/tree/main/data/patches_hardin)
       - **../data/patches_hardin/*.tif**
       - **../data/patches_hardin/*.csv**
+        
 - 📁 [**../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results.
+  
   - In the process of cleaning and organizing...
 
 
@@ -57,17 +61,17 @@
 [![Modalities](https://img.shields.io/badge/Channels-37-BBD8A3)](#)
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
-The data pre-processing pipeline can be explored with the following notebooks:
-- [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
-- [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
-- [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
+- The data pre-processing pipeline can be explored with the following notebooks:
+  - [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
+  - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
+  - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
 
-Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
-- The ***README*** and ***DataDictionary*** contain basic metadata and file structure information.
-  - These are versioned and all modifications will be captured here.
-- A ***small example .zip file (15.1 MB)*** is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
-  - It is strongly recommended to inspect this first before downloading the full dataset packages!
-- The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
+- Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
+  - The ***README*** and ***DataDictionary*** contain basic metadata and file structure information.
+    - These are versioned and all modifications will be captured here.
+  - A ***small example .zip file (15.1 MB)*** is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
+    - It is strongly recommended to inspect this first before downloading the full dataset packages!
+  - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
 
 
 ## Exploring Multilabel Classification Results
