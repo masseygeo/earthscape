@@ -59,7 +59,7 @@
 [![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-FFA55D)](#)
 [![Patch Size](https://img.shields.io/badge/Patch%20Size-256x256-FFDF88)](#)
 [![Patch Overlap](https://img.shields.io/badge/Patch%20Overlap-50%25-5E936C)](#)
-[![Modalities](https://img.shields.io/badge/Channels-37-FDF5AA)](#)
+[![Modalities](https://img.shields.io/badge/Channels-37-FFDF88)](#)
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
 
