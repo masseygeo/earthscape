@@ -79,6 +79,7 @@
   - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
   - ***NOTE: This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.***
 
+
 - **Individual images are in GeoTIFF format, but can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend [Rasterio](https://rasterio.readthedocs.io/en/stable/).**
   ```Python
   import rasterio
