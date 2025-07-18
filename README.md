@@ -55,6 +55,7 @@
 
 
 ## Exploring the Dataset
+[![Version](https://img.shields.io/badge/Version-1-F0F1C5)](#)
 [![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-BB3E00)](#)
 [![Patch Size](https://img.shields.io/badge/Patch%20Size-256x256-FFA55D)](#)
 [![Patch Overlap](https://img.shields.io/badge/Patch%20Overlap-50%25-FFDF88)](#)
@@ -67,11 +68,11 @@
   - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
 
 - Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
-  - The ***README*** and ***DataDictionary*** contain basic metadata and file structure information.
-    - These are versioned and all modifications will be captured here.
-  - A ***small example .zip file (15.1 MB)*** is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
+  - The *README* and *DataDictionary* contain basic metadata and file structure information.
+  - A *small example .zip file (15.1 MB)* is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
     - It is strongly recommended to inspect this first before downloading the full dataset packages!
   - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
+  - ***NOTE: This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.***
 
 
 ## Exploring Multilabel Classification Results
