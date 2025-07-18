@@ -17,7 +17,10 @@
 
 ## Navigating the Repository
 - 📁 [*code/*](https://github.com/masseygeo/earthscape/tree/main/code) – Directory containing all code used for dataset curation pipeline, dataloaders, and models
-  - In the process of cleaning and organizing...
+  - Dataset preparation notebooks and utility functions.
+    - [*code/data_prep_howe_valley*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
+    - [*code/data_prep_sonora*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
+    - [*code/data_prep_warren*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
 - 📁 [*data/*](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images
   - In the process of cleaning and organizing...
 - 📁 [*models/*](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results
@@ -37,11 +40,11 @@ The data pre-processing pipeline can be explored with the following notebooks:
 - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
 
 Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
-- The ***README*** and ***DataDictionary*** contain basic metadata and file structure information (see relevant download links)
+- The ***README*** and ***DataDictionary*** contain basic metadata and file structure information.
   - These are versioned and all modifications will be captured here.
-- A ***small example .zip file (15.1 MB)*** is available for exploring the available information for two patch locations (the main "DOWNLOAD" link)
+- A ***small example .zip file (15.1 MB)*** is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
   - It is strongly recommended to inspect this first before downloading the full dataset packages!
-- The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each) (see relevant download links)
+- The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
 
 
 ## Exploring Multilabel Classification Results
