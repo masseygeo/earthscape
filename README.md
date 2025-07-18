@@ -5,6 +5,7 @@
 [![Python](https://img.shields.io/badge/Python-3.10+-FFDF88)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-CC%20BY%204.0-BBD8A3)](https://creativecommons.org/licenses/by/4.0/)
 
+
 ***EarthScape*** is a living, open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis, and includes:
 
 - Expert-labeled surficial geologic masks and labels
@@ -13,6 +14,7 @@
 - Hydrography and infrastructure vector overlays  
 - Baseline models for multilabel classification
 
+
 ## Navigating the Repository
 - 📁 [*code/*](https://github.com/masseygeo/earthscape/tree/main/code) – Directory containing all code used for dataset curation pipeline, dataloaders, and models
   - In the process of cleaning and organizing...
@@ -20,6 +22,7 @@
   - In the process of cleaning and organizing...
 - 📁 [*models/*](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results
   - In the process of cleaning and organizing...
+
 
 ## Exploring the Dataset
 [![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-BB3E00)](#)
@@ -36,13 +39,14 @@ The data pre-processing pipeline can be explored with the following notebooks:
 Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
 - The ***README*** and ***DataDictionary*** contain basic metadata and file structure information (see relevant download links)
   - These are versioned and all modifications will be captured here.
-- A ***small example .zip file*** is available for exploring the available information for two patch locations (the main "DOWNLOAD" link)
+- A ***small example .zip file (15.1 MB)*** is available for exploring the available information for two patch locations (the main "DOWNLOAD" link)
   - It is strongly recommended to inspect this first before downloading the full dataset packages!
 - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each) (see relevant download links)
 
 
 ## Exploring Multilabel Classification Results
 Selected SGMap-Net results...
+
 
 ## Future Work
 - Adding additional 1:24,000-scale surficial geologic quadrangle maps
