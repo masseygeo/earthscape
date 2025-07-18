@@ -23,8 +23,10 @@
     - [*code/data_prep_warren.ipynb*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
     - [*code/utils_data.py*](https://github.com/masseygeo/earthscape/blob/main/code/utils_data.py)
   - Modeling
+    - [*code/model_dataselection.ipynb*](https://github.com/masseygeo/earthscape/blob/main/code/model_dataselection.ipynb)
     - [*code/utils_model_dataloader.py*](https://github.com/masseygeo/earthscape/blob/main/code/utils_model_dataloader.py)
     - [*code/utils_model_training.py*](https://github.com/masseygeo/earthscape/blob/main/code/utils_model_training.py)
+    - [*code/model_classification.ipynb*](https://github.com/masseygeo/earthscape/blob/main/code/model_classification.ipynb)
     - [*code/run.bat*](https://github.com/masseygeo/earthscape/blob/main/code/run.bat)
     - [*code/run.sh*](https://github.com/masseygeo/earthscape/blob/main/code/run.sh)
 - 📁 [*data/*](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images
