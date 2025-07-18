@@ -34,7 +34,7 @@
     - [**../code/run.sh**](https://github.com/masseygeo/earthscape/blob/main/code/run.sh)
     - [**../data/visualizations.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/visualizations.ipynb)
       
-- 📁 **[../data](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images.**
+- 📁 **[../data](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label and area CSVs, and GeoTIFF images.**
   
   - *Class labels (all), class areas (all), class encoding key, patch locations (GIS), and example visualization images.*
     - [**../data/earthscape_areas.csv**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_areas.csv)
@@ -51,7 +51,7 @@
       - ../data/patches_hardin/*.tif
       - ../data/patches_hardin/*.csv
         
-- 📁 **[../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results.**
+- 📁 **[../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing selected training patches and model results.**
   
   - *Selected training, validation, testing, and cross-domain testing patches (GIS).*
     - [**../models/patches**](https://github.com/masseygeo/earthscape/tree/main/models/patches)
