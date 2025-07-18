@@ -53,8 +53,15 @@
         
 - 📁 **[../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results.**
   
-  - *In the process of cleaning and organizing...*
-    - file...
+  - *Selected training, validation, testing, and cross-domain testing patches (GIS).*
+    - [**../models/patches**](https://github.com/masseygeo/earthscape/tree/main/models/patches)
+      - [**../models/patches/warren_patches_train.geojson**](https://github.com/masseygeo/earthscape/blob/main/models/patches/warren_patches_train.geojson)
+      - [**../models/patches/warren_patches_val.geojson**](https://github.com/masseygeo/earthscape/blob/main/models/patches/warren_patches_val.geojson)
+      - [**../models/patches/warren_patches_test.geojson**](https://github.com/masseygeo/earthscape/blob/main/models/patches/warren_patches_test.geojson)
+      - [**../models/patches/hardin_patches_test.geojson**](https://github.com/masseygeo/earthscape/blob/main/models/patches/hardin_patches_test.geojson)
+     
+  - *Unimodal and multimodal model checkpoints, results, and visualizations.*
+    - [**../models/classification**](https://github.com/masseygeo/earthscape/tree/main/models/classification) 
 
 
 ## Exploring the Dataset
@@ -86,16 +93,6 @@
   - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
   - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
 
-
-
-
-## Exploring Multilabel Classification Results
-
-- **Unimodal tests...**
-  - Results.... 
-
-- **Multimodal tests...**
-  - results....
 
 
 ## Future Work
