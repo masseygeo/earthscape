@@ -55,7 +55,7 @@
 
 
 ## Exploring the Dataset
-[![Version](https://img.shields.io/badge/Version-1-F0F1C5)](#)
+[![Version](https://img.shields.io/badge/Version-1.0.1-F0F1C5)](#)
 [![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-BB3E00)](#)
 [![Patch Size](https://img.shields.io/badge/Patch%20Size-256x256-FFA55D)](#)
 [![Patch Overlap](https://img.shields.io/badge/Patch%20Overlap-50%25-FFDF88)](#)
