@@ -29,9 +29,17 @@
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
 The data pre-processing pipeline can be explored with the following notebooks:
-- [*Warren County*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb) County (contains six 1:24,000-scale geologic quadrangle maps)
+- [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
 - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
 - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
+
+The final dataset (segmentation masks, vector labels, images) for each quadrangle can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
+- The ***README*** and ***DataDictionary*** contain basic metadata and file structure information (see relevant download links)
+  - These are versioned and all modifications will be captured here.
+- A ***small example .zip file*** is available for exploring the available information for two patch locations (the main "DOWNLOAD" link)
+  - It is strongly recommended to inspect this first before downloading the full dataset packages!
+- The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each) (see relevant download links)
+
 
 ## Exploring Multilabel Classification Results
 Selected SGMap-Net results...
