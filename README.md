@@ -96,10 +96,17 @@
 
 
 
-## Future Work
+## Ongoing Work
 - Adding additional 1:24,000-scale surficial geologic quadrangle maps
 - Updating the unique patch ID grid for intuitive geospatially aware selection
 - Testing additional modalities
   - New terrain features
   - Datasets with broader coverage (e.g., 1/3-arc-second DEM, Sentinel-1, Sentinel-2, etc.)
 - Segmentation tests
+
+## Citations
+- The dataset:
+  - @article{masseyearthscape, title={EarthScape AI Dataset}, author={Massey, Matthew and Imran, Abdullah-Al-Zubaer and others}, publisher={University of Kentucky Libraries}}
+  - 
+- The manuscript descibing the dataset processing and initial modeling:
+  - @article{massey2025earthscape, title={EarthScape: A Multimodal Dataset for Surficial Geologic Mapping and Earth Surface Analysis}, author={Massey, Matthew and Imran, Abdullah-Al-Zubaer}, journal={arXiv preprint arXiv:2503.15625}, year={2025}}
