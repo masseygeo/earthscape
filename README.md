@@ -70,7 +70,7 @@
   - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
   - ***NOTE: This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.***
 
-- Individual images are in GeoTIFF format, but can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend Rasterio.
+- **Individual images are in GeoTIFF format, but can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend Rasterio.**
   ```Python
   import rasterio
   from rasterio.plot import show
@@ -79,7 +79,7 @@
     show(src)
   ```
 
-- The data pre-processing pipeline can be explored with the following notebooks:
+- **The data pre-processing pipeline can be explored with the following notebooks:**
   - [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
   - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
   - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
