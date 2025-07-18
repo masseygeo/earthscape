@@ -64,7 +64,7 @@
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
 - **Metadata, segmentation masks, vector labels, and images can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/**
-  - The <u>README</u> and *DataDictionary* contain basic metadata and file structure information.
+  - The *README* and *DataDictionary* contain basic metadata and file structure information.
   - A *small example .zip file (15.1 MB)* is available for exploring the available information for two patch locations (see the main "DOWNLOAD" link).
     - It is strongly recommended to inspect this first before downloading the full dataset packages!
   - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each).
