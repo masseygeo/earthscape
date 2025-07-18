@@ -26,8 +26,7 @@ data/sonora/*.tif
 data/warren/*.tif
 
 
-
-models/classification/**/*.pth
 models/classification/old
+models/classification/**/*.pth
 models/patches/*.jpg
 
