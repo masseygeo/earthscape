@@ -16,25 +16,33 @@
 
 
 ## Navigating the Repository
-- 📁 [**code/**](https://github.com/masseygeo/earthscape/tree/main/code) – Directory containing all code used for dataset curation pipeline, dataloaders, and models
+- 📁 [**../code**](https://github.com/masseygeo/earthscape/tree/main/code) – Directory containing all code used for dataset curation pipeline, dataloaders, and models.
   
   - *Dataset preparation (notebooks and utility functions for source downloads, data manipulation, GIS, and visualizations.)*
-    - [**code/data_prep_howe_valley.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
-    - [**code/data_prep_sonora.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
-    - [**code/data_prep_warren.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
-    - [**code/utils_data.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_data.py)
+    - [**../code/data_prep_howe_valley.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
+    - [**../code/data_prep_sonora.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
+    - [**../code/data_prep_warren.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
+    - [**../code/utils_data.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_data.py)
       
   - *Modeling (notebooks, utility functions, and scripts for patch selection, dataloader, focal loss, visualizations, and training.)*
-    - [**code/model_dataselection.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/model_dataselection.ipynb)
-    - [**code/utils_model_dataloader.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_model_dataloader.py)
-    - [**code/utils_model_training.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_model_training.py)
-    - [**code/model_classification.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/model_classification.ipynb)
-    - [**code/run.bat**](https://github.com/masseygeo/earthscape/blob/main/code/run.bat)
-    - [**code/run.sh**](https://github.com/masseygeo/earthscape/blob/main/code/run.sh)
+    - [**../code/model_dataselection.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/model_dataselection.ipynb)
+    - [**../code/utils_model_dataloader.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_model_dataloader.py)
+    - [**../code/utils_model_training.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_model_training.py)
+    - [**../code/model_classification.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/model_classification.ipynb)
+    - [**../code/run.bat**](https://github.com/masseygeo/earthscape/blob/main/code/run.bat)
+    - [**../code/run.sh**](https://github.com/masseygeo/earthscape/blob/main/code/run.sh)
       
-- 📁 [**data/**](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images
-  - In the process of cleaning and organizing...
-- 📁 [**models/**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results
+- 📁 [**../data**](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images.
+  - *Class labels, class areas, class key code, and patch locations (for GIS).*
+    - []()
+  - *GeoTIFF images and per-patch labels (not saved in GitHub; see download links given in the "Exploring the Dataset" section below).*
+    - [**../data/patches_warren**](https://github.com/masseygeo/earthscape/tree/main/data/patches_warren)
+      - **../data/patches_warren/*.tif**
+      - **../data/patches_warren/*.csv**
+    - [**../data/patches_hardin](https://github.com/masseygeo/earthscape/tree/main/data/patches_hardin)
+      - **../data/patches_hardin/*.tif**
+      - **../data/patches_hardin/*.csv**
+- 📁 [**../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing patch locations used for all training, validation, and testing, and model results.
   - In the process of cleaning and organizing...
 
 
