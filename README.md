@@ -71,13 +71,13 @@
   - ***NOTE: This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.***
 
 - Individual images are in GeoTIFF format, but can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend Rasterio.
-```Python
-import rasterio
-from rasterio.plot import show
-
-with rasterio.open("PATH TO GEOTIFF") as src:
-  show(src)
-```
+  ```Python
+  import rasterio
+  from rasterio.plot import show
+  
+  with rasterio.open("PATH TO GEOTIFF") as src:
+    show(src)
+  ```
 
 - The data pre-processing pipeline can be explored with the following notebooks:
   - [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
