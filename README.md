@@ -28,14 +28,16 @@
 [![Modalities](https://img.shields.io/badge/Channels-37-BBD8A3)](#)
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
+The data pre-processing pipeline can be explored with the following notebooks:
+- [![Warren](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb) County (contains six 1:24,000-scale geologic quadrangle maps)
 
 ## Exploring Multilabel Classification Results
 Selected SGMap-Net results...
 
 ## Future Work
-- Adding X additional 1:24,000-scale surficial geologic quadrangle maps (~X more patches!)
+- Adding additional 1:24,000-scale surficial geologic quadrangle maps
 - Updating the unique patch ID grid for intuitive geospatially aware selection
 - Testing additional modalities
   - New terrain features
-  - Using datasets with broader coverage (e.g., 1/3-arc-second DEM, Sentinel-1, Sentinel-2, etc.)
+  - Datasets with broader coverage (e.g., 1/3-arc-second DEM, Sentinel-1, Sentinel-2, etc.)
 - Segmentation tests
