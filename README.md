@@ -29,7 +29,9 @@
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
 The data pre-processing pipeline can be explored with the following notebooks:
-- [![Warren](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb) County (contains six 1:24,000-scale geologic quadrangle maps)
+- [*Warren County*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb) County (contains six 1:24,000-scale geologic quadrangle maps)
+- [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
+- [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
 
 ## Exploring Multilabel Classification Results
 Selected SGMap-Net results...
