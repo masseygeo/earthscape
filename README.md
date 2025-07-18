@@ -32,6 +32,7 @@
     - [**../code/model_classification.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/model_classification.ipynb)
     - [**../code/run.bat**](https://github.com/masseygeo/earthscape/blob/main/code/run.bat)
     - [**../code/run.sh**](https://github.com/masseygeo/earthscape/blob/main/code/run.sh)
+    - [**../data/visualizations.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/visualizations.ipynb)
       
 - 📁 **[../data](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label CSVs, and 1-channel GeoTIFF images.**
   
