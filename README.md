@@ -105,8 +105,8 @@
 - Segmentation tests
 
 ## Citations
-- The dataset:
+- **The dataset:**
   - @article{masseyearthscape, title={EarthScape AI Dataset}, author={Massey, Matthew and Imran, Abdullah-Al-Zubaer and others}, publisher={University of Kentucky Libraries}}
-  - 
-- The manuscript descibing the dataset processing and initial modeling:
+    
+- **The manuscript descibing the dataset processing and initial modeling:**
   - @article{massey2025earthscape, title={EarthScape: A Multimodal Dataset for Surficial Geologic Mapping and Earth Surface Analysis}, author={Massey, Matthew and Imran, Abdullah-Al-Zubaer}, journal={arXiv preprint arXiv:2503.15625}, year={2025}}
