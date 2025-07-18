@@ -6,6 +6,8 @@
 [![License](https://img.shields.io/badge/License-CC%20BY%204.0-5E936C)](https://creativecommons.org/licenses/by/4.0/)
 
 
+[logo]: (https://github.com/masseygeo/earthscape/blob/main/data/warren_256_50_21983_modalities.jpg)
+
 ***EarthScape*** is a living, open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis, and includes:
 
 - Expert-labeled surficial geologic masks and labels
