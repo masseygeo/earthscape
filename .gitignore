@@ -1,30 +1,23 @@
 .vscode
 .env
-.openai_api.txt
+.DS_Store
+__pycache__/
+*.py[cod]
 
 code/old
 
-
 data/*.zip
-
 data/howevalley/*.tif
-
 data/patches_warren/*.tif
 data/patches_warren/*labels.csv
-
 data/patches_hardin/*.tif
 data/patches_hardin/*labels.csv
-
 data/patches_howevalley/*.tif
 data/patches_howevalley/*.csv
-
 data/patches_sonora/*.tif
 data/patches_sonora/*.csv
-
 data/sonora/*.tif
-
 data/warren/*.tif
-
 
 models/classification/old
 models/classification/**/*.pth
