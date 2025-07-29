@@ -69,22 +69,52 @@
 [![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-FFA55D)](#)
 [![Patch Size](https://img.shields.io/badge/Patch%20Size-256x256-FFDF88)](#)
 [![Patch Overlap](https://img.shields.io/badge/Patch%20Overlap-50%25-5E936C)](#)
-[![Modalities](https://img.shields.io/badge/Channels-37-BBD8A3)](#)
+[![Modalities](https://img.shields.io/badge/Channels-38-BBD8A3)](#)
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
-- **Where?**
-  - <ul>Metadata, segmentation masks, vector labels, and features</ul>ul> can be downloaded here: (https://uknowledge.uky.edu/kgs_data/16/)
-    - The *README* and *DataDictionary* contain basic metadata and file structure information.
-    - A *small example .zip file (15.1 MB)* available for easy exploration of the available data for two patch locations (see the main "DOWNLOAD" link on the landing page).
-      - It is strongly recommended to inspect this first before downloading the full dataset packages!
-    - The full datasets for each quadrangle may be downloaded from their respective links (~26-32 GB each) shown on the landing page.
-    - ***NOTE: This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.***
+### **Where to get it?**
+Metadata, segmentation masks, vector labels, and features can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
 
-- **What?**
-- **How?**
+- A *small example file* (15.1 MB) is available for easy inspection of the available data for two patch locations. It is strongly recommended to inspect this first before downloading the full dataset packages! This file is accessed by the labeled "*DOWNLOAD*" link on the landing page.
+  
+- The *README* and *DataDictionary* contain basic metadata and file structure information.
+  
+- The full datasets are availbe as quadrangle-scale downloads (~26-32 GB each) using the direct URLs on the landing page.
+
+*\*This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.*
+
+*\*\*Dataset .zip files are large (~26-32 GB) and we recommend using command line utilities to unzip these to your local machines.*
 
 
-- **Individual images are in GeoTIFF format, but can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend [Rasterio](https://rasterio.readthedocs.io/en/stable/).**
+### **What's included?**
+
+The EarthScape dataset (v1.0.1) has 31,066 patches spanning two continguos areas in East-central United States.
+
+- Each patch is 256x256 covering an area of 1280x1280 square feet (~78 GSD meters).
+  
+- Adjacent patches overlap one another by 50%.
+  
+- Each patch has labeled data and predictive features (38 channels total), including:
+  - Segmentation masks as expert-labeled surficial geologic maps with seven classes (.tif)
+  - One-hot encoded labels (.csv)
+  - Class area perr patch (.csv)
+  - RGB+NIR overhead imagery (each saved as separate .tif files using our workflow)
+  - Digital elevation model (DEM) (.tif)
+  - OpenStreetMap road and railway centerlines (.tif)
+  - U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons (.tif)
+  - Five DEM-derived terrain features calculated at six spatial resolutions (.tif):
+      - Elevation Perrcentile
+      - Planform Curvature
+      - Profile Curvature
+      - Slope
+      - Standard Deviation of Slope
+      
+      
+
+### **How to use it?**
+
+Individual images are in GeoTIFF format, but can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend [Rasterio](https://rasterio.readthedocs.io/en/stable/).
+
   ```Python
   import rasterio
   from rasterio.plot import show
@@ -93,7 +123,7 @@
     show(src)
   ```
 
-- **The data pre-processing pipeline can be explored with the following notebooks:**
+The data pre-processing pipeline can be explored with the following notebooks:
   - [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
   - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
   - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
