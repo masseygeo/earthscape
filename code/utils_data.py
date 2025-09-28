@@ -18,7 +18,7 @@ from math import ceil
 
 # geospatial vector...
 import geopandas as gpd
-import fiona
+# import fiona
 from shapely.geometry import box
 
 # geospatial image...
