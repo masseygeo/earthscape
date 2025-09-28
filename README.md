@@ -13,7 +13,7 @@
 - Hydrography and infrastructure vector overlays  
 - Baseline models for multilabel classification
 
-![logo](https://github.com/masseygeo/earthscape/blob/main/data/warren_256_50_21983_modalities.jpg)
+![logo](https://github.com/masseygeo/earthscape/blob/v1.1/data/warren_256_50_21983_modalities.jpg)
 
 
 ## Navigating the Repository
