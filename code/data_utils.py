@@ -1,27 +1,16 @@
 
-###########
-#  Imports
-###########
-
-# data download & file management...
 import requests
 import os
 import glob
 import zipfile
 import json
-
-# data manipulation...
 import numpy as np
 import pandas as pd
 from scipy.ndimage import gaussian_filter
 from math import ceil
-
-# geospatial vector...
 import geopandas as gpd
-# import fiona
+import fiona
 from shapely.geometry import box
-
-# geospatial image...
 import rasterio
 from rasterio.plot import show
 from rasterio.windows import from_bounds
@@ -30,8 +19,6 @@ from rasterio.merge import merge
 from rasterio.mask import mask
 from rasterio.transform import from_origin
 from rasterio.features import rasterize
-
-# plotting...
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 

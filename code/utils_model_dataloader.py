@@ -13,27 +13,6 @@ import torch.nn.functional as F
 
 
 
-def randomly_select_indpendent_patch_sets(gdf_patches, val_size, seed=111):
-
-  # select random patches...
-  rng = np.random.default_rng(seed=seed)                                          # create random range with seed
-  random_idx = rng.choice(gdf_patches.index, size=val_size, replace=False)        # choose random patches
-  gdf_select = gdf_patches.loc[random_idx].copy()                                 # isolate selected patches
-
-  # remove selected patches & overlapping patches for spatially independent sets of patches...
-  gdf_remaining = gdf_patches[~gdf_patches.index.isin(gdf_select.index)].copy()              # remove selected patches from gdf
-  overlapping_patches = gdf_remaining.sjoin(gdf_select, how='inner', predicate='overlaps')   # identify patches that overlap selected patches
-  gdf_remaining = gdf_remaining[~gdf_remaining.index.isin(overlapping_patches.index)]        # remove overlapping patches from gdf
-
-  # reset index and return two gdf's 
-  gdf_select.reset_index(drop=True, inplace=True)
-  gdf_remaining.reset_index(drop=True, inplace=True)
-
-  return gdf_select, gdf_remaining
-
-
-
-
 # class MultiModalDataset(Dataset):
 #   def __init__(self, ids, data_dir, modalities, norm_params=None, augment=False, task='classification'):
 #     self.ids = ids                   # list of patch IDs

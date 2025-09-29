@@ -385,48 +385,48 @@ def calculate_optimal_thresholds(model, val_loader, device):
 
 
 
-def plot_class_distributions(patch_id_list, patch_count_path, patch_area_path, title):
+# def plot_class_distributions(patch_id_list, patch_count_path, patch_area_path, title):
 
-    ##### calculate counts of occurrences
-    df_count = pd.read_csv(patch_count_path)
-    df_count = df_count.loc[df_count['patch_id'].isin(patch_id_list)]
-    counts = df_count.iloc[:, 1:].sum(axis=0)
-    counts = pd.DataFrame(counts) 
+#     ##### calculate counts of occurrences
+#     df_count = pd.read_csv(patch_count_path)
+#     df_count = df_count.loc[df_count['patch_id'].isin(patch_id_list)]
+#     counts = df_count.iloc[:, 1:].sum(axis=0)
+#     counts = pd.DataFrame(counts) 
 
-    ##### calculate areas in patches
-    df_area = pd.read_csv(patch_area_path)
-    df_area = df_area.loc[df_area['patch_id'].isin(patch_id_list)]
-    df_area_long = df_area.iloc[:, 1:].melt(var_name='Geologic Map Unit', value_name='Proportion')
+#     ##### calculate areas in patches
+#     df_area = pd.read_csv(patch_area_path)
+#     df_area = df_area.loc[df_area['patch_id'].isin(patch_id_list)]
+#     df_area_long = df_area.iloc[:, 1:].melt(var_name='Geologic Map Unit', value_name='Proportion')
 
-    ##### plot class distributions
-    fig, ax = plt.subplots(ncols=2, figsize=(10,4))
+#     ##### plot class distributions
+#     fig, ax = plt.subplots(ncols=2, figsize=(10,4))
 
-    # counts...
-    sns.barplot(ax=ax[0], data=counts, x=counts.index, y=0)
-    ax[0].set_xlabel('')
-    ax[0].set_ylabel('Counts')
-    ax[0].set_title('Class Occurrence', style='italic')
+#     # counts...
+#     sns.barplot(ax=ax[0], data=counts, x=counts.index, y=0)
+#     ax[0].set_xlabel('')
+#     ax[0].set_ylabel('Counts')
+#     ax[0].set_title('Class Occurrence', style='italic')
 
-    # areas...
-    # sns.violinplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
-    #                split=True, width=2)
-    sns.boxplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
-                showfliers=False, fill=False, color='k', width=0.5, linewidth=1)
+#     # areas...
+#     # sns.violinplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
+#     #                split=True, width=2)
+#     sns.boxplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
+#                 showfliers=False, fill=False, color='k', width=0.5, linewidth=1)
     
-    sns.stripplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
-                  jitter=True, edgecolor='k', linewidth=0.2, alpha=0.03, facecolor='#3A6D8C', zorder=0)
+#     sns.stripplot(ax=ax[1], data=df_area_long, x='Geologic Map Unit', y='Proportion', 
+#                   jitter=True, edgecolor='k', linewidth=0.2, alpha=0.03, facecolor='#3A6D8C', zorder=0)
     
 
 
-    ax[1].set_xlabel('')
-    ax[1].set_ylabel('Proportion')
-    ax[1].set_title('Exposed Area', style='italic')
+#     ax[1].set_xlabel('')
+#     ax[1].set_ylabel('Proportion')
+#     ax[1].set_title('Exposed Area', style='italic')
 
-    plt.ylim(0,1)
-    plt.suptitle(f"{title} (n={len(patch_id_list)})")
-    plt.show()
+#     plt.ylim(0,1)
+#     plt.suptitle(f"{title} (n={len(patch_id_list)})")
+#     plt.show()
 
-    return fig
+#     return fig
 
 
 
