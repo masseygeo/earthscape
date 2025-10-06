@@ -12,6 +12,7 @@ from transformers import ViTModel
 
 
 
+
 # class SatMaEViTEncoder2(nn.Module):
 #     def __init__(self):
 #         super().__init__()
@@ -75,22 +76,22 @@ class ResNextEncoder(nn.Module):
         return output              # output shape - [batch_size, 2048, 8, 8]
 
 
-class VAE_encoder(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.encoder = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse")
-        self.hidden_size = 4096
+# class VAE_encoder(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+#         self.encoder = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse")
+#         self.hidden_size = 4096
         
-        # for p in self.encoder.parameters():
-        #     p.requires_grad = False
+#         # for p in self.encoder.parameters():
+#         #     p.requires_grad = False
 
-    def forward(self, x):
-        # input shape - [batch_size, 3, 256, 256]
-        # enc_outputs = model.encode(data)
-        output = self.encoder.encode(x)   # encode input
-        z = output.latent_dist.mean           # [B, 4, 32, 32]
-        z = z.flatten(start_dim=1)      # [B, 4096]
-        return z 
+#     def forward(self, x):
+#         # input shape - [batch_size, 3, 256, 256]
+#         # enc_outputs = model.encode(data)
+#         output = self.encoder.encode(x)   # encode input
+#         z = output.latent_dist.mean           # [B, 4, 32, 32]
+#         z = z.flatten(start_dim=1)      # [B, 4096]
+#         return z 
 
 
 class ViT_encoder(nn.Module):
