@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 from torchvision import models
 # import timm
-from diffusers import AutoencoderKL
-from transformers import ViTModel
+# from diffusers import AutoencoderKL
+# from transformers import ViTModel
 # from model import MaskedAutoencoderViT
 
 # from huggingface_hub import hf_hub_download
