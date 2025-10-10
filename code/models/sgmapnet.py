@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 from torchvision import models
+import torch.nn.functional as F
 
 
 
@@ -65,7 +66,9 @@ class ViT_Encoder(nn.Module):
     
     def forward(self, x):
                                     # input - [B, 3, 256, 256]
-        return self.encoder(x)      # output - [B, 768]
+
+        resize = F.interpolate(x, size=(224, 224), mode='bilinear', align_corners=False)
+        return self.encoder(resize)      # output - [B, 768]
     
 
 
@@ -92,19 +95,22 @@ class Multilabel_Classification(nn.Module):
         self.modalities = list(modality_configs.keys())
 
         # standardize C channels per modality to 3
-        self.standardized = Standardization_Module(modality_configs, std_kernel=std_kernel)
+        self.standardizer = Standardization_Module(modality_configs, std_kernel=std_kernel)
 
         # encode features
-        self.encoder = encoder
+        if encoder == 'resnext':
+            self.encoder = ResNext_Encoder()
+        elif encoder == 'vit':
+            self.encoder = ViT_Encoder()
 
         # MLP classification...
         # get total flattened size for all modalities
         flattened_size = self.encoder.hidden_size * len(self.modalities)
-        self.clf = Classifier(input_dim=flattened_size)
+        self.classifier = Classifier(input_dim=flattened_size)
 
     def forward(self, x):
                                                     # input - [B, C, 256, 256]
-        standardized = self.standardized(x)         # output - [B, 3, 256, 256]
+        standardized = self.standardizer(x)         # output - ResNeXt: [B, 2048, 8, 8]   |   ViT: [B, 768]
 
         encoded = []
         for mod_name in self.modalities:
@@ -114,6 +120,6 @@ class Multilabel_Classification(nn.Module):
 
         flattened = [e.reshape(e.size(0), -1) for e in encoded]
         concatenated = torch.cat(flattened, dim=1)
-        output = self.clf(concatenated)
+        output = self.classifier(concatenated)
 
         return output

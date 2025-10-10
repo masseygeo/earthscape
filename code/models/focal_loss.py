@@ -31,4 +31,4 @@ class FocalLoss(nn.Module):
             return focal_loss.sum()     # aggregate by sum over batch
         
         else:
-            return focal_loss           # per sample focal loss tensor
+            return focal_loss           # per sample focal loss tensor; output - [B, 7]

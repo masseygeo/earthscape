@@ -149,19 +149,16 @@ def validate_epoch(model, val_loader, criterion, device):
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir):
 
-  # out_file = open('training_output.txt', 'w')
 
   best_val_loss = float('inf')
   best_val_accuracy = 0.0
   best_model = 0
-  # best_val_f1 = 0.0
 
   epoch_train_loss = []
   epoch_train_acc = []
-  # epoch_train_macro_f1 = []
+
   epoch_val_loss = []
   epoch_val_acc = []
-  # epoch_val_macro_f1 = []
 
   for epoch in range(num_epochs):
     epoch_str = f"Epoch {epoch+1}/{num_epochs}"
@@ -298,7 +295,7 @@ def plot_label_pr_roc_curves(true, pred, class_cols):
 
     for idx in range(len(class_cols)):
 
-        ax[0].plot(recalls[idx], precisions[idx], linewidth=2, label=class_cols[idx])
+        ax[0].plot(recalls[idx], precisions[idx], linewidth=1, label=class_cols[idx])
         ax[0].set_xlabel('Recall')
         ax[0].set_ylabel('Precision')
         ax[0].set_title('Precision-Recall Curve', style='italic')

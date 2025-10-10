@@ -15,4 +15,4 @@ data/warren/patches_warren/*.*
 data/patches_warren/*.*
 data/patches_hardin/*.*
 
-models/classification/old*
+models/**/*.pth
