@@ -1,5 +1,6 @@
 
 import numpy as np
+import pandas as pd
 import geopandas as gpd
 
 
@@ -46,13 +47,15 @@ def select_indpendent_patches(gdf, n_patches, seed=111):
 
     ##### 2. select remaining & non-overlapping patches 
     # separate selected from remaining patches
-    remaining = gdf[~gdf.index.isin(selected.index)].copy()
-    
+    # remaining = gdf[~gdf.index.isin(selected.index)].copy()
+    remaining = gdf.drop(index=selected.index).copy()
+
     # identify remaining patches that overlap with selected patches
     overlapping = remaining.sjoin(selected, how='inner', predicate='overlaps')
 
     # remove overlapping patches from remaining
-    remaining = remaining[~remaining.index.isin(overlapping.index)]        
+    # remaining = remaining[~remaining.index.isin(overlapping.index)]  
+    remaining = remaining.drop(index=overlapping.index)      
 
 
     ##### 3. reset gdf indices...
@@ -61,3 +64,31 @@ def select_indpendent_patches(gdf, n_patches, seed=111):
 
     return selected, remaining
 
+
+
+def make_smoke_set(labels_path, patches_path, split_size, threshold=0, seed=111):
+
+    rng = np.random.RandomState(seed)
+    labels = pd.read_csv(labels_path)
+    patches = gpd.read_file(patches_path)
+    gdf = pd.merge(left=patches, right=labels, how='left', on='patch_id')
+    classes = list(gdf.columns[2:])
+
+    remaining = gdf.copy()
+    initial_picks = []
+
+    for c in classes:
+        candidate = remaining.loc[remaining[c] > threshold]
+        choice = candidate.sample(n=1, replace=False, random_state=rng)
+        initial_picks.append(choice)
+        remaining.drop(choice.index, inplace=True)
+    
+    selected = pd.concat(initial_picks, axis=0)
+
+    need = max(0, split_size - len(selected))
+    if need > 0:
+        filler = remaining.sample(n=need, replace=False, random_state=rng)
+        selected = pd.concat([selected, filler], axis=0)
+        selected.reset_index(drop=True, inplace=True)
+    
+    return selected

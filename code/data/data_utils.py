@@ -9,7 +9,7 @@ import pandas as pd
 from scipy.ndimage import gaussian_filter
 from math import ceil
 import geopandas as gpd
-# import fiona
+import fiona
 from shapely.geometry import box
 import rasterio
 from rasterio.plot import show

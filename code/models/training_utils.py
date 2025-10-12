@@ -1,18 +1,22 @@
 
 import json
-from datetime import datetime
-import pandas as pd
-import torch
-import torch.nn as nn
-import matplotlib.pyplot as plt
 import os
 import glob
+from datetime import datetime
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import torchinfo
+
+import torch
+import torch.nn as nn
+
 from sklearn.metrics import precision_recall_curve, roc_curve
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.metrics import precision_recall_curve, roc_curve
-from sklearn.metrics import average_precision_score, hamming_loss, accuracy_score
+from sklearn.metrics import average_precision_score
 
-import numpy as np
+
 
 
 def get_norm_stats(stats_path, modality_configs):
@@ -76,28 +80,26 @@ def training_log(model_name, output_dir, seed, train_patch_path, val_patch_path,
     hyper_meta['weight decay'] = optimizer.param_groups[0].get('weight_decay', None)
     hyper_meta['momentum'] = optimizer.param_groups[0].get('momentum', None)
     hyper_meta['loss'] = type(criterion).__name__
-    a = ', '.join([str(a.item()) for a in criterion.alpha.detach().ravel()])
-    hyper_meta['alpha'] = a
-    hyper_meta['gamma'] = criterion.gamma
+    if 'Focal' in hyper_meta['loss']:
+        a = ', '.join([str(a.item()) for a in criterion.alpha.detach().ravel()])
+        hyper_meta['alpha'] = a
+        hyper_meta['gamma'] = criterion.gamma
     metadata['HYPERPARAMETERS'] = hyper_meta
-
-
-    ##### collect model info
-    model_meta = {}
-    model_meta['total parameters'] = sum(p.numel() for p in model.parameters())
-    model_meta['total trainable parameters'] = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    metadata['MODEL'] = model_meta
 
 
     ##### write log to json
     with open(f"{output_dir}/training_metadata.json", 'w') as f:
         json.dump(metadata, f, indent=4)
-
     
-    ##### write model architecture to json
-    json_str = model_to_json(model)
-    with open(f"{output_dir}/model_architecture.json", "w") as f:
-        f.write(json_str)
+    # ##### write model architecture to json
+    # json_str = model_to_json(model)
+    # with open(f"{output_dir}/model_architecture.json", "w") as f:
+    #     f.write(json_str)
+
+    ##### writee model summary to text file (model architecture, trainable parameters, kernel sizes)
+    summary = torchinfo.summary(model, depth=4, verbose=2, col_names=["num_params", "kernel_size"])
+    with open(f"{output_dir}/model_summary.txt", 'w') as f:
+        f.write(str(summary))
 
 
 
@@ -308,7 +310,7 @@ def calculate_global_metrics(targets, predictions, thresholds):
 
     df = pd.DataFrame(columns=['Precision', 'Recall', 'F1', 'AUC', 'mAP', 'Accuracy',
                                'Precision (Wt.)', 'Recall (Wt.)', 'F1 (Wt.)', 'AUC (Wt.)', 'mAP (Wt.)', 'Accuracy (Micro)'])
-    df.loc[0] = np.Nan
+    df.loc[0] = np.nan
 
     targs = targets.numpy().astype(np.int32)
     preds = predictions.numpy()
