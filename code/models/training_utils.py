@@ -15,6 +15,7 @@ from sklearn.metrics import precision_recall_curve, roc_curve
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.metrics import precision_recall_curve, roc_curve
 from sklearn.metrics import average_precision_score
+from sklearn.metrics import accuracy_score
 
 
 
@@ -26,16 +27,16 @@ def get_norm_stats(stats_path, modality_configs):
     for mod_name, data in modality_configs.items():
         data.update({'mean': [], 'sd': []})
         
-        for ext in data['extensions']:
+        for c in data['channels']:
             
-            if ('osm' in ext) or ('nhd' in ext):
+            if ('osm' in c) or ('nhd' in c) or ('geology' in c):
                 data['mean'] = None
                 data['sd'] = None
             
             else:
-                row = df.loc[df['path'] == ext]
+                row = df.loc[df['channel'] == c]
                 data['mean'].append(row['mean'].item())
-                data['sd'].append(row['std'].item())
+                data['sd'].append(row['sd'].item())
     
     return modality_configs
 
@@ -64,7 +65,7 @@ def training_log(model_name, output_dir, seed, train_patch_path, val_patch_path,
     modalities_meta = {}
     for mod_name, data in modality_configs.items():
         modalities_meta[mod_name] = {}
-        modalities_meta[mod_name]['modalities'] = ', '.join(data['extensions'])
+        modalities_meta[mod_name]['modalities'] = ', '.join(data['channels'])
         if not data['mean'] == None:
             modalities_meta[mod_name]['normalization means'] = ', '.join([str(i) for i in data['mean']])
             modalities_meta[mod_name]['normalization sd'] = ', '.join([str(i) for i in data['sd']])
@@ -104,20 +105,18 @@ def training_log(model_name, output_dir, seed, train_patch_path, val_patch_path,
 
 
 
-def model_to_json(model):
-    model_dict = {
-        "model_class": model.__class__.__name__,
-        "layers": []
-    }
-
-    for name, module in model.named_children():
-        model_dict["layers"].append({
-            "name": name,
-            "type": module.__class__.__name__,
-            "params": {k: v.shape for k, v in module.state_dict().items()}
-        })
-
-    return json.dumps(model_dict, indent=4, default=str)
+# def model_to_json(model):
+#     model_dict = {
+#         "model_class": model.__class__.__name__,
+#         "layers": []
+#     }
+#     for name, module in model.named_children():
+#         model_dict["layers"].append({
+#             "name": name,
+#             "type": module.__class__.__name__,
+#             "params": {k: v.shape for k, v in module.state_dict().items()}
+#         })
+#     return json.dumps(model_dict, indent=4, default=str)
 
 
 
@@ -244,6 +243,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
 
     df = pd.DataFrame({'train loss': train_loss, 'train accuracy': train_acc, 'train time': train_time, 
                        'val loss': val_loss, 'val accuracy': val_acc})
+    output_path = f"{output_dir}/training_log.csv"
+    df.to_csv(output_path, index=False)
 
     return df
 
@@ -306,38 +307,58 @@ def calculate_optimal_thresholds(model, val_loader, device):
 
 
 
-def calculate_global_metrics(targets, predictions, thresholds):
+def calculate_global_metrics(targets, probabilities, thresholds):
 
-    df = pd.DataFrame(columns=['Precision', 'Recall', 'F1', 'AUC', 'mAP', 'Accuracy',
-                               'Precision (Wt.)', 'Recall (Wt.)', 'F1 (Wt.)', 'AUC (Wt.)', 'mAP (Wt.)', 'Accuracy (Micro)'])
-    df.loc[0] = np.nan
+    df = pd.DataFrame()
 
     targs = targets.numpy().astype(np.int32)
-    preds = predictions.numpy()
+    probs = probabilities.numpy()
     thresholds = np.asarray(thresholds)
 
     if thresholds.ndim == 0:
-        binary_preds = (preds >= thresholds).astype(np.int32)
+        binary_preds = (probs >= thresholds).astype(np.int32)
 
     else:
-        binary_preds = (preds >= thresholds[None, :]).astype(np.int32)
+        binary_preds = (probs >= thresholds[None, :]).astype(np.int32)
     
-    df['Precision'] = precision_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df['Recall'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df['F1'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df['AUC'] = roc_auc_score(targs, preds, average="macro")
-    df['mAP'] = average_precision_score(targs, preds, average='macro')
+    df.loc[0, 'Precision'] = precision_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df.loc[0, 'Recall'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df.loc[0, 'F1'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df.loc[0, 'AUC'] = roc_auc_score(targs, probs, average="macro")
+    df.loc[0, 'mAP'] = average_precision_score(targs, probs, average='macro')
     
-    df['Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df['Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df['F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df['AUC (Wt.)'] = roc_auc_score(targs, preds, average="weighted")
-    df['mAP (Wt.)'] = average_precision_score(targs, preds, average='weighted')
-    
-    acc_per_class = (binary_preds == targs).sum(axis=0) / targs.shape[0]
-    df['Accuarcy'] = acc_per_class.mean()
-    df['Accuarcy (Micro)'] = (binary_preds == targs).mean()
+    df.loc[0, 'Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    df.loc[0, 'Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    df.loc[0, 'F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    df.loc[0, 'AUC (Wt.)'] = roc_auc_score(targs, probs, average="weighted")
+    df.loc[0, 'mAP (Wt.)'] = average_precision_score(targs, probs, average='weighted')
+    df.loc[0, 'Accuracy (Micro)'] = (binary_preds == targs).mean()
 
+    return df
+
+
+
+def calculate_class_metrics(targets, probabilities, thresholds, classes=['af1', 'Qal', 'Qaf', 'Qat', 'Qc', 'Qca', 'Qr']):
+    df = pd.DataFrame()
+
+    thresholds = np.asarray(thresholds)
+
+    for idx, (unit, thresh) in enumerate(zip(classes, thresholds)):
+
+        probs = probabilities[:, idx].numpy()
+        targs = targets[:, idx].numpy().astype(np.int32)
+        binary_preds = (probs >= thresh).astype(np.int32)
+
+        df.loc[idx, 'Class'] = f"{unit} ({str(round(thresh, 2))})"
+        df.loc[idx, 'True'] = targs.sum()
+        df.loc[idx, 'Predicted'] = binary_preds.sum()
+        df.loc[idx, 'Accuracy'] = accuracy_score(targs, binary_preds)
+        df.loc[idx, 'Precision'] = precision_score(targs, binary_preds)
+        df.loc[idx, 'Recall'] = recall_score(targs, binary_preds)
+        df.loc[idx, 'F1'] = f1_score(targs, binary_preds)
+        df.loc[idx, 'AUC'] = roc_auc_score(targs, probs)
+        df.loc[idx, 'AP'] = average_precision_score(targs, probs)
+    
     return df
 
 
@@ -371,7 +392,7 @@ def plot_training_curves(df, output_dir):
 
 
 
-def plot_label_pr_roc_curves(true, pred, class_cols):
+def plot_label_pr_roc_curves(true, pred, class_cols=['af1', 'Qal', 'Qaf', 'Qat', 'Qc', 'Qca', 'Qr']):
 
     precisions = []
     recalls = []

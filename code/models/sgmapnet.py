@@ -20,7 +20,7 @@ class Standardization_Module(nn.Module):
         for mod_name, data in modality_configs.items():
 
             # number of input channels per modality
-            input_channels = len(data['extensions'])
+            input_channels = len(data['channels'])
 
             # define conv layer per modality 
             self.modality_convs[mod_name] = nn.Conv2d(input_channels, 3, kernel_size=std_kernel)

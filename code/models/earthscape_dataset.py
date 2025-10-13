@@ -44,7 +44,7 @@ class EarthScape_Dataset(Dataset):
                 
                 # iterate through path extensions & get modality channel paths...
                 modality_paths[name] = []
-                for ext in data['extensions']:
+                for ext in data['channels']:
                     mod_paths = os.path.join(resolved_dir, f"{pid}_{ext}")
                     modality_paths[name].append(mod_paths)
             
