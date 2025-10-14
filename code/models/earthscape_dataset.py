@@ -18,7 +18,7 @@ class EarthScape_Dataset(Dataset):
         # nested dict of modality name & file extensions + mean + standard deviation
         self.modalities = modalities    
         # Example: {'ep' : {
-        #                'extensions': [ep_5x5.tif, ep_11x11.tif], 
+        #                'channels': [ep_5x5.tif, ep_11x11.tif], 
         #                'mean': [15.2, 16.23], 
         #                'sd': [12.3, 14.2]}
 
