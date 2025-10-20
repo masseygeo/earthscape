@@ -98,9 +98,9 @@ def training_log(model_name, output_dir, seed, train_patch_path, val_patch_path,
     #     f.write(json_str)
 
     ##### writee model summary to text file (model architecture, trainable parameters, kernel sizes)
-    summary = torchinfo.summary(model, depth=4, verbose=2, col_names=["num_params", "kernel_size"])
+    architecture = torchinfo.summary(model, depth=4, verbose=0, col_names=["num_params", "kernel_size"])
     with open(f"{output_dir}/model_summary.txt", 'w') as f:
-        f.write(str(summary))
+        f.write(str(architecture))
 
 
 

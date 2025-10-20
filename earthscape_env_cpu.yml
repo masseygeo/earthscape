@@ -4,17 +4,17 @@ channels:
   - defaults
 dependencies:
   - geopandas
+  - ipykernel
+  - ipywidgets
+  - jupyterlab
   - matplotlib
   - numpy
+  - pip
   - python
   - rasterio
-  - ipykernel
-  - jupyterlab
-  - pip
+  - torchinfo
+  - tqdm
+  - whitebox  
   - pip:
     - torch
     - torchvision
-  - whitebox
-  - seaborn
-  - ipywidgets
-  - tqdm

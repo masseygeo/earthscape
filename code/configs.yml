@@ -1,0 +1,58 @@
+seed: 111
+
+paths:
+  stats_csv: ../../data/earthscape_image_stats.csv
+  patch_dirs: 
+    - ../../data/warren/patches_warren
+    - ../../data/howevalley/patches_howevalley
+    - ../../data/sonora/patches_sonora
+  splits:
+    train: ../../models/splits/smoke_train.geojson
+    val: ../../models/splits/smoke_val.geojson
+    test: ../../models/splits/smoke_test.geojson
+    cross_test: ../../models/splits/smoke_cross_test.geojson
+
+data: 
+  modalities: 
+    dem: 
+      - dem.tif
+    aerial:
+      - aerialr.tif
+      - aerialg.tif
+      - aerialb.tif
+  apply_normalizations: true
+
+model: 
+  encoder: resnext
+  enable_attention: true
+  embedding_dim: 512
+  num_heads: 8
+  p_attn: 0.0
+  p_resid: 0.0
+
+train:
+  device: auto
+  batch_size: 4
+  num_epochs: 5
+  shuffle_train: true
+  drop_last: true
+  num_workers: 4
+
+optimizer:
+  name: adam
+  lr: 0.001
+  weight_decay: 0.0
+  betas: 
+    - 0.9
+    - 0.999
+
+loss:
+  name: focal
+  gamma: 2.0
+  alpha: 0.25
+  reduction: sum
+
+logging:
+  output_dir_basename: ../../models/smoke
+  make_timestamp_dir: true
+  filename_template: "{encoder}_{modalities}_{timestamp}"
