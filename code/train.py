@@ -1,31 +1,40 @@
-import os
-import json
-import argparse
-import pandas as pd
-import geopandas as gpd
-import matplotlib.pyplot as plt
-import torch
-from torch.utils.data import DataLoader
-import torch.optim as optim
-from sklearn.metrics import average_precision_score
+# add parent directory to path to import global utils
+import sys, os
+sys.path.append(os.path.abspath('..'))
+sys.path.append(os.path.abspath('../'))
+from utils import set_seed
 
-import random
-import numpy as np
-from torchvision import transforms
+from earthscape_dataset import *
+from sgmapnet import *
+
+# import os
+# import json
+# import argparse
+# import pandas as pd
+# import geopandas as gpd
+# import matplotlib.pyplot as plt
+# import torch
+# from torch.utils.data import DataLoader
+# import torch.optim as optim
+# from sklearn.metrics import average_precision_score
+
+# import random
+# import numpy as np
+# from torchvision import transforms
 
 
-# Local imports
-from utils_model_dataloader import MultiModalDataset
-from utils_model_training import (
-    train_model,
-    FocalLoss,
-    calculate_optimal_thresholds,
-    test_model,
-    calculate_label_precision_recall_f1_aucroc,
-    plot_label_pr_roc_curves,
-    calculate_global_metrics
-)
-from model_sgmap_munia import ResNextEncoder, VAE_encoder, MultilabelClassification, ViT_encoder
+# # Local imports
+# from utils_model_dataloader import MultiModalDataset
+# from utils_model_training import (
+#     train_model,
+#     FocalLoss,
+#     calculate_optimal_thresholds,
+#     test_model,
+#     calculate_label_precision_recall_f1_aucroc,
+#     plot_label_pr_roc_curves,
+#     calculate_global_metrics
+# )
+# from model_sgmap_munia import ResNextEncoder, VAE_encoder, MultilabelClassification, ViT_encoder
 # SatMaEViTEncoder
 # from model_cross_attn import CrossModalFusionPerMod, MultiLayerFusion
 
@@ -33,26 +42,26 @@ from model_sgmap_munia import ResNextEncoder, VAE_encoder, MultilabelClassificat
 
 
 
-def set_seed(seed: int):
-    """
-    Set seed for reproducible training and inference across Python, NumPy, and PyTorch (CPU & GPU).
+# def set_seed(seed: int):
+#     """
+#     Set seed for reproducible training and inference across Python, NumPy, and PyTorch (CPU & GPU).
 
-    Parameters
-    ----------
-    seed : int
-        The random seed to use.
-    """
+#     Parameters
+#     ----------
+#     seed : int
+#         The random seed to use.
+#     """
     
-    # set python, numpy, pytorch seeds...
-    random.seed(seed)                          # set Python built-in RNG
-    os.environ["PYTHONHASHSEED"] = str(seed)   # hash-based ops (DataLoader, dict ordering)
-    np.random.seed(seed)                       # set NumPy RNG
-    torch.manual_seed(seed)                    # set PyTorch CPU RNG
-    torch.cuda.manual_seed_all(seed)           # set PyTorch GPU RNG across all CUDA devices
+#     # set python, numpy, pytorch seeds...
+#     random.seed(seed)                          # set Python built-in RNG
+#     os.environ["PYTHONHASHSEED"] = str(seed)   # hash-based ops (DataLoader, dict ordering)
+#     np.random.seed(seed)                       # set NumPy RNG
+#     torch.manual_seed(seed)                    # set PyTorch CPU RNG
+#     torch.cuda.manual_seed_all(seed)           # set PyTorch GPU RNG across all CUDA devices
 
-    # make cudnn deterministic (may slow down training)...
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+#     # make cudnn deterministic (may slow down training)...
+#     torch.backends.cudnn.deterministic = True
+#     torch.backends.cudnn.benchmark = False
 
 
 

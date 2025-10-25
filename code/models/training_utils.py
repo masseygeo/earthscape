@@ -241,8 +241,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
 
         print('\n')
 
-    df = pd.DataFrame({'train loss': train_loss, 'train accuracy': train_acc, 'train time': train_time, 
-                       'val loss': val_loss, 'val accuracy': val_acc})
+    df = pd.DataFrame({'train loss': train_loss, 'train accuracy': train_acc, 'train time': train_time, 'val loss': val_loss, 'val accuracy': val_acc})
     output_path = f"{output_dir}/training_log.csv"
     df.to_csv(output_path, index=False)
 
