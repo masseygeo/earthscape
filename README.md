@@ -11,7 +11,7 @@
 - LiDAR-derived DEMs and geomorphometric terrain features at multiple spatial resolutions  
 - High-resolution aerial RGB+NIR imagery  
 - Hydrography and infrastructure vector overlays  
-- Baseline models for multilabel classification
+- Benchmarks for multilabel classification
 
 ![logo](https://github.com/masseygeo/earthscape/blob/main/data/warren_256_50_21983_modalities.jpg)
 
@@ -130,13 +130,16 @@ The data pre-processing pipeline can be explored with the following notebooks:
 
 
 
-## Ongoing Work
-- Adding additional 1:24,000-scale surficial geologic quadrangle maps
+## Roadmap
+- Expanding the dataset with new surficial geologic maps
 - Updating the unique patch ID grid for intuitive geospatially aware selection
-- Testing additional modalities
-  - New terrain features
-  - Datasets with broader coverage (e.g., 1/3-arc-second DEM, Sentinel-1, Sentinel-2, etc.)
-- Segmentation tests
+- Testing datasets with broader coverage (e.g., 1/3-arc-second DEM, ASTER DEM, etc.)
+- Segmentation benchmarks
+
+
+## Contributing to EarthScape
+We encourage your contributions to EarthScape! Detailed instructions to come...
+
 
 ## Citations
 - **The dataset:**
