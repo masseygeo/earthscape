@@ -236,7 +236,7 @@ def gis_to_image(input_path, output_path, output_resolution, attribute):
         dst.write(output_image, 1)
     
     # write mapping dictionary of integers and categories to JSON
-    output_json_path = output_path.replace('.tif', '.json')
+    output_json_path = output_path.replace('geology.tif', 'class_mapping.json')
     with open(output_json_path, 'w') as file:
         json.dump(mapper, file, indent=4)
 
