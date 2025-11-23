@@ -125,3 +125,4 @@ class EarthScape_Dataset(Dataset):
 
         # return tensor with shape [C, H, W]
         return torch.from_numpy(stacked).to(torch.float32).contiguous()
+    
