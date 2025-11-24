@@ -1,9 +1,9 @@
 experiment:
-  seed: 111
   output_root: ../models/classification
   # custom_dir: none
   # mode: train
   description: "Smoke test run for training, validation, and inference using F1-optimized model."
+  seed: 111
 
 paths:
   patch_dirs: 
