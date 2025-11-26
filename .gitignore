@@ -15,3 +15,6 @@ data/sonora/patches_sonora/*.*
 data/warren/patches_warren/*.*
 
 models/**/*.pth
+
+
+notebooks/viz2.ipynb
