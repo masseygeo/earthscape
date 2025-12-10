@@ -1,21 +1,9 @@
 
 import random
-import os
+import pathlib
 import yaml
 import numpy as np
 import torch
-
-
-##### global dictionary for SG Map class colors
-map_colors = {
-    'af1': '#636566', 
-    'Qal': '#fdf5a4', 
-    'Qaf': '#ffa1db', 
-    'Qat': '#f9e465', 
-    'Qc': '#d6c9a7', 
-    'Qca': '#c49d83', 
-    'Qr': '#b0acd6'
-    }
 
 
 

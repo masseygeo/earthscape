@@ -1,19 +1,40 @@
+# -----------------------------------------
+# Editor / OS Files / Virtual Environments
+# -----------------------------------------
 .vscode
-.env
 .DS_Store
+.env
+
+
+# -----------------------------------------
+# Python Cache / Build Artifacts / Jupyter
+# -----------------------------------------
 __pycache__/
 *.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
 
-code/old/*.*
 
+# -----------------------------------------
+# Large Dataset Files
+# -----------------------------------------
 data/*.zip
-
 data/howevalley/patches_howevalley/*.tif
 data/howevalley/patches_howevalley/*.csv
 data/smoke/patches_smoke/*.*
 data/sonora/patches_sonora/*.*
 data/warren/patches_warren/*.*
 
-models/**/*.pth
 
+# -----------------------------------------
+# Model Weights
+# -----------------------------------------
+models/**/*.pth
+models/**/*.pt
+
+
+# -----------------------------------------
+# Old or Deprecated Code
+# -----------------------------------------
+code/old/*.*
 

@@ -1,6 +1,6 @@
 {
 "type": "FeatureCollection",
-"name": "earthscape_patches",
+"name": "earthscape_1_1_patches",
 "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:EPSG::3089" } },
 "features": [
 { "type": "Feature", "properties": { "patch_id": "hv_256_50_1" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 4814570.058549081906676, 3751885.40979917999357 ], [ 4814570.058549081906676, 3753165.40979917999357 ], [ 4813290.058549081906676, 3753165.40979917999357 ], [ 4813290.058549081906676, 3751885.40979917999357 ], [ 4814570.058549081906676, 3751885.40979917999357 ] ] ] } },
