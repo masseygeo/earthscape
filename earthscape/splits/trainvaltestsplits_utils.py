@@ -33,32 +33,21 @@ def select_indpendent_patches(gdf, n_patches, seed=111):
 
     """
 
-
-    ##### 1. select random patches...
-    # create numpy RNG using seed
+    # select random patches...
     rng = np.random.default_rng(seed=seed)
-
-    # choose random patches
     random_patches_idx = rng.choice(gdf.index, size=n_patches, replace=False)
-
-    # isolate selected patches
     selected = gdf.loc[random_patches_idx].copy()
 
-
-    ##### 2. select remaining & non-overlapping patches 
-    # separate selected from remaining patches
-    # remaining = gdf[~gdf.index.isin(selected.index)].copy()
+    # select remaining & non-overlapping patches 
     remaining = gdf.drop(index=selected.index).copy()
 
     # identify remaining patches that overlap with selected patches
     overlapping = remaining.sjoin(selected, how='inner', predicate='overlaps')
 
     # remove overlapping patches from remaining
-    # remaining = remaining[~remaining.index.isin(overlapping.index)]  
     remaining = remaining.drop(index=overlapping.index)      
 
-
-    ##### 3. reset gdf indices...
+    # reset gdf indices...
     selected.reset_index(drop=True, inplace=True)
     remaining.reset_index(drop=True, inplace=True)
 
@@ -66,12 +55,12 @@ def select_indpendent_patches(gdf, n_patches, seed=111):
 
 
 
-def make_smoke_set(labels_path, patches_path, split_size, threshold=0, seed=111):
+def make_smoke_set(areas_path, patches_path, split_size, threshold=0, seed=111):
 
     rng = np.random.RandomState(seed)
-    labels = pd.read_csv(labels_path)
+    areas = pd.read_csv(areas_path)
     patches = gpd.read_file(patches_path)
-    gdf = pd.merge(left=patches, right=labels, how='left', on='patch_id')
+    gdf = pd.merge(left=patches, right=areas, how='left', on='patch_id')
     classes = list(gdf.columns[2:])
 
     remaining = gdf.copy()
