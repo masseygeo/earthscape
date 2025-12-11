@@ -16,7 +16,7 @@ __pycache__/
 
 
 # -----------------------------------------
-# Large Dataset Files
+# Dataset Files
 # -----------------------------------------
 data/*.zip
 data/howevalley/patches_howevalley/*.tif
@@ -24,6 +24,13 @@ data/howevalley/patches_howevalley/*.csv
 data/smoke/patches_smoke/*.*
 data/sonora/patches_sonora/*.*
 data/warren/patches_warren/*.*
+
+
+# -----------------------------------------
+# Smoke Files
+# -----------------------------------------
+smoke/**/*.tif
+smoke/**/*.csv
 
 
 # -----------------------------------------
