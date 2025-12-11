@@ -43,22 +43,13 @@ def get_norm_stats(stats_path, modality_configs):
 
 
 
-def training_log(model_name, output_dir, seed, train_patch_path, val_patch_path, test_patch_path, cross_test_patch_path, modality_configs, batch_size, num_epochs, optimizer, criterion, model):
+def training_log(model_name, output_dir, seed, train_patches, val_patches, test_patches, cross_patches, modality_configs, batch_size, num_epochs, optimizer, criterion, model):
 
     ##### collect setup info
     metadata = {}
     metadata['NAME'] = model_name
     metadata['DIRECTORY'] = output_dir
     metadata['SEED'] = seed
-
-
-    ##### collect patches info
-    patches_meta = {}
-    patches_meta['training patches'] = train_patch_path
-    patches_meta['validation patches'] = val_patch_path
-    patches_meta['testing patches'] = test_patch_path
-    patches_meta['cross-domain testing patches'] = cross_test_patch_path
-    metadata['PATCHES'] = patches_meta
 
 
     ##### collect modalitiy info
@@ -88,18 +79,23 @@ def training_log(model_name, output_dir, seed, train_patch_path, val_patch_path,
     metadata['HYPERPARAMETERS'] = hyper_meta
 
 
-    ##### write log to json
-    with open(f"{output_dir}/training_metadata.json", 'w') as f:
-        json.dump(metadata, f, indent=4)
-    
-    # ##### write model architecture to json
-    # json_str = model_to_json(model)
-    # with open(f"{output_dir}/model_architecture.json", "w") as f:
-    #     f.write(json_str)
+    ##### collect patches info
+    patches_meta = {}
+    patches_meta['training patches'] = train_patches
+    patches_meta['validation patches'] = val_patches
+    patches_meta['testing patches'] = test_patches
+    patches_meta['cross-domain testing patches'] = cross_patches
+    metadata['PATCHES'] = patches_meta
 
-    ##### writee model summary to text file (model architecture, trainable parameters, kernel sizes)
+
+    ##### write log to json
+    with open(f"{output_dir}/metadata.json", 'w') as f:
+        json.dump(metadata, f, indent=4)
+
+
+    ##### write model summary to text file (model architecture, trainable parameters, kernel sizes)
     architecture = torchinfo.summary(model, depth=4, verbose=0, col_names=["num_params", "kernel_size"])
-    with open(f"{output_dir}/model_summary.txt", 'w') as f:
+    with open(f"{output_dir}/architecture.txt", 'w') as f:
         f.write(str(architecture))
 
 

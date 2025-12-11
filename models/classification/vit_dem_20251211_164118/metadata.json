@@ -1,0 +1,61 @@
+{
+    "NAME": "vit_dem_20251211_164118",
+    "DIRECTORY": "../models/classification/vit_dem_20251211_164118",
+    "SEED": 111,
+    "MODALITIES": {
+        "dem": {
+            "modalities": "dem.tif",
+            "normalization means": "612.5873",
+            "normalization sd": "91.41048"
+        }
+    },
+    "HYPERPARAMETERS": {
+        "batch size": 2,
+        "epochs": 5,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "FocalLoss",
+        "alpha": "0.25",
+        "gamma": 2.0
+    },
+    "PATCHES": {
+        "training patches": [
+            "256_50_18829",
+            "256_50_9732",
+            "256_50_524",
+            "256_50_769",
+            "256_50_4024",
+            "256_50_3146",
+            "256_50_185"
+        ],
+        "validation patches": [
+            "256_50_6506",
+            "256_50_4170",
+            "256_50_9468",
+            "256_50_3997",
+            "256_50_19536",
+            "256_50_6277",
+            "256_50_18130"
+        ],
+        "testing patches": [
+            "256_50_7327",
+            "256_50_22109",
+            "256_50_14821",
+            "256_50_13697",
+            "256_50_16692",
+            "256_50_10852",
+            "256_50_12082"
+        ],
+        "cross-domain testing patches": [
+            "sonora_256_50_739",
+            "hv_256_50_619",
+            "sonora_256_50_1919",
+            "sonora_256_50_2481",
+            "sonora_256_50_975",
+            "hv_256_50_1406",
+            "sonora_256_50_3239"
+        ]
+    }
+}

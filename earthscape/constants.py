@@ -4,9 +4,10 @@
 ##############################
 
 VERSION = '1.1'
-REPO_URL = r'https://github.com/masseygeo/earthscape'
-DATA_URL = r'https://doi.org/10.13023/kgs.data.05.01.2025'
-PAPER_URL = r'https://doi.org/10.48550/arXiv.2503.15625'
+STR_VERSION = f"v{VERSION.replace('.','-')}"
+ES_REPO_URL = r'https://github.com/masseygeo/earthscape'
+ES_DATA_URL = r'https://doi.org/10.13023/kgs.data.05.01.2025'
+ES_PAPER_URL = r'https://doi.org/10.48550/arXiv.2503.15625'
 
 
 ##############################
@@ -34,33 +35,33 @@ MODALITIES = {
 DATASET_DIR = r'../data'
 
 # global files...
-GLOBAL_AREAS_BASE = f"earthscape_v_{VERSION.replace('.', '_')}_areas.csv"
-# GLOBAL_LABELS_BASE = f"earthscape_v_{VERSION.replace('.', '_')}_labels.csv"
-GLOBAL_MAPPING_BASE = f"earthscape_v_{VERSION.replace('.', '_')}_mapping.json"
-GLOBAL_PATCHES_BASE = f"earthscape_v_{VERSION.replace('.', '_')}_patches.geojson"
-GLOBAL_STATS_BASE = f"earthscape_v_{VERSION.replace('.', '_')}_stats.csv"
+GLOBAL_AREAS_BASE = f"earthscape_{STR_VERSION}_areas.csv"
+GLOBAL_MAPPING_BASE = f"earthscape_{STR_VERSION}_mapping.json"
+GLOBAL_PATCHES_BASE = f"earthscape_{STR_VERSION}_patches.geojson"
+GLOBAL_STATS_BASE = f"earthscape_{STR_VERSION}_stats.csv"
 
 # map area local files...
-LOCAL_AREAS_BASE = f"v_{VERSION.replace('.', '_')}_areas.csv"
-# LOCAL_LABELS_BASE = f"v_{VERSION.replace('.', '_')}_labels.csv"
-LOCAL_MAPPING_BASE = f"v_{VERSION.replace('.', '_')}_mapping.json"
-LOCAL_PATCHES_BASE = f"v_{VERSION.replace('.', '_')}_patches.geojson"
-LOCAL_STATS_BASE = f"v_{VERSION.replace('.', '_')}_stats.csv"
+LOCAL_AREAS_BASE = f"{STR_VERSION}_areas.csv"
+LOCAL_MAPPING_BASE = f"{STR_VERSION}_mapping.json"
+LOCAL_PATCHES_BASE = f"{STR_VERSION}_patches.geojson"
+LOCAL_STATS_BASE = f"{STR_VERSION}_stats.csv"
 
 
 ##### model output directory & files
-MODEL_OUTPUT_DIR = r'../models'
-SPLIT_DIR = f"../models/v_{VERSION.replace('.', '_')}_splits"
+MODEL_DIR = r'../models'
+SPLIT_DIR = f"../models/{STR_VERSION}_splits"
+MODEL_CLF_DIR = f"{MODEL_DIR}/classification"
 
 
 ##### smoke set directory & files
 SMOKE_DIR = r'../smoke'
-SMOKE_SPLITS_DIR = f"{SMOKE_DIR}/smoke_v_{VERSION.replace('.', '_')}_splits"
-SMOKE_PATCHES_DIR = f"{SMOKE_DIR}/smoke_v_{VERSION.replace('.', '_')}_patches"
-SMOKE_GLOBAL_AREAS_BASE = f"smoke_v_{VERSION.replace('.', '_')}_areas.csv"
-SMOKE_GLOBAL_MAPPING_BASE = f"smoke_v_{VERSION.replace('.', '_')}_mapping.json"
-SMOKE_GLOBAL_PATCHES_BASE = f"smoke_v_{VERSION.replace('.', '_')}_patches.geojson"
-SMOKE_GLOBAL_STATS_BASE = f"smoke_v_{VERSION.replace('.', '_')}_stats.csv"
+SMOKE_SPLITS_DIR = f"{SMOKE_DIR}/smoke_{STR_VERSION}_splits"
+SMOKE_PATCHES_DIR = f"{SMOKE_DIR}/smoke_{STR_VERSION}_patches"
+
+# SMOKE_GLOBAL_AREAS_BASE = f"smoke_{STR_VERSION}_areas.csv"
+# SMOKE_GLOBAL_MAPPING_BASE = f"smoke_{STR_VERSION}_mapping.json"
+# SMOKE_GLOBAL_PATCHES_BASE = f"smoke_{STR_VERSION}_patches.geojson"
+# SMOKE_GLOBAL_STATS_BASE = f"smoke_{STR_VERSION}_stats.csv"
 
 
 
