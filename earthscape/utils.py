@@ -1,8 +1,13 @@
 
+from earthscape.constants import DATASET_DIR, MODALITIES
 import random
-import pathlib
+from pathlib import Path
+import os
 import yaml
+import glob
+import pandas as pd
 import numpy as np
+import rasterio
 import torch
 
 
@@ -56,3 +61,61 @@ def save_config_snapshot(cfg, run_dir, config_path):
     out_path = run_dir / "config_used.yml"
     with open(out_path, "w") as f:
         yaml.safe_dump(cfg_copy, f)
+
+
+
+
+def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
+
+    # find directories containing GeoTIFF files...
+    patch_dirs = []
+    for current_dir, subdirs, files in os.walk(data_dir):
+        for file in files:
+            if file.lower().endswith('.tif'):
+                patch_dirs.append(current_dir)
+                break
+
+
+    # iterate through modalities->channels->single image paths...
+    df_stats = pd.DataFrame()
+    for mod_name, channels in MODALITIES.items():
+
+        # skip categorical channels...
+        if mod_name in ['osm', 'nhd', 'mask']:
+            continue
+        
+        # iterate through moddality channels...
+        for c in channels:
+            
+            # find path for single image...
+            img_paths = []
+            for pdir in patch_dirs:
+                if not patch_ids:
+                    img_paths.extend(glob.glob(f"{pdir}/*_{c}"))
+                else:
+                    for id in patch_ids:
+                        img_paths.extend(glob.glob(f"{pdir}/{id}_{c}"))
+            img_paths = list(set(img_paths))
+
+            # iterate through image channel paths & collect image stats...
+            pixel_count = 0.0
+            pixel_sum = 0.0
+            pixel_sum2 = 0.0
+            for ip in img_paths:
+                with rasterio.open(ip) as src:
+                    data = src.read(1, masked=True)
+                    vals = data.compressed()
+                    pixel_count += vals.size
+                    pixel_sum += vals.sum()
+                    pixel_sum2 += (vals**2).sum()
+
+            # calculate global stats (mean & sample var/sd)...
+            mean = pixel_sum / pixel_count
+            var = (pixel_sum2 - (pixel_sum**2) / pixel_count) / (pixel_count - 1)
+            sd = np.sqrt(var)
+
+            # save to df...
+            df_stats.loc[c, 'mean'] = mean
+            df_stats.loc[c, 'sd'] = sd
+
+    return df_stats
