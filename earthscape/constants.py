@@ -89,7 +89,7 @@ SRC_URLS = {
 
     'howevalley': r'https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1631&pid=111985',
 
-    'sonora': r'',
+    'sonora': r'https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1630&pid=111983',
 
     'warren': r'',
     }
