@@ -14,16 +14,16 @@ ES_PAPER_URL = r'https://doi.org/10.48550/arXiv.2503.15625'
 # EarthScape 1.x Modalities & Channels
 ##############################
 MODALITIES = {
-    "mask": ['geology.tif'],
+    "mask": ['mask.tif'],
     "dem": ['dem.tif'],
     "aerial": ['aerialr.tif', 'aerialg.tif', 'aerialb.tif', 'aerialnir.tif'],
     "nhd": ['nhd.tif'],
     "osm": ['osm.tif'],
     "ep": ['ep_5x5.tif', 'ep_11x11.tif', 'ep_21x21.tif', 'ep_51x51.tif', 'ep_101x101.tif', 'ep_201x201.tif'],
-    "plc": ['plancurv.tif', 'plancurv_10.tif', 'plancurv_20.tif', 'plancurv_50.tif', 'plancurv_100.tif', 'plancurv_200.tif'],
-    "prc": ['procurv.tif', 'procurv_10.tif', 'procurv_20.tif', 'procurv_50.tif', 'procurv_100.tif', 'procurv_200.tif'],
-    "slope": ['slope.tif', 'slope_10.tif', 'slope_20.tif', 'slope_50.tif', 'slope_100.tif', 'slope_200.tif'],
-    "sds": ['stdslope_5x5.tif', 'stdslope_11x11.tif', 'stdslope_21x21.tif', 'stdslope_51x51.tif', 'stdslope_101x101.tif', 'stdslope_201x201.tif'],
+    "plc": ['plc.tif', 'plc_10.tif', 'plc_20.tif', 'plc_50.tif', 'plc_100.tif', 'plc_200.tif'],
+    "prc": ['prc.tif', 'prc_10.tif', 'prc_20.tif', 'prc_50.tif', 'prc_100.tif', 'prc_200.tif'],
+    "slope": ['s.tif', 's_10.tif', 's_20.tif', 's_50.tif', 's_100.tif', 's_200.tif'],
+    "sds": ['sds_5x5.tif', 'sds_11x11.tif', 'sds_21x21.tif', 'sds_51x51.tif', 'sds_101x101.tif', 'sds_201x201.tif'],
     }
 
 
@@ -64,21 +64,11 @@ GLOBAL_MAPPING_PATH = f"{DATASET_DIR}/earthscape_{STR_VERSION}_mapping.json"
 GLOBAL_PATCHES_PATH = f"{DATASET_DIR}/earthscape_{STR_VERSION}_patches.geojson"
 GLOBAL_STATS_PATH = f"{DATASET_DIR}/earthscape_{STR_VERSION}_stats.csv"
 
-# LOCAL_AREAS_BASE = f"{STR_VERSION}_areas.csv"
-# LOCAL_MAPPING_BASE = f"{STR_VERSION}_mapping.json"
-# LOCAL_PATCHES_BASE = f"{STR_VERSION}_patches.geojson"
-# LOCAL_STATS_BASE = f"{STR_VERSION}_stats.csv"
-
 
 ##### model output directory & files
 MODEL_DIR = r'../models'
 SPLIT_DIR = f"{MODEL_DIR}/splits"
 MODEL_CLF_DIR = f"{MODEL_DIR}/classification"
-
-# SPLIT_TRAIN_PATH = f"{SPLIT_DIR}/{STR_VERSION}_train.geojson"
-# SPLIT_VAL_PATH = f"{SPLIT_DIR}/{STR_VERSION}_val.geojson"
-# SPLIT_TEST_PATH = f"{SPLIT_DIR}/{STR_VERSION}_test.geojson"
-# SPLIT_CROSS_PATH = f"{SPLIT_DIR}/{STR_VERSION}_cross.geojson"
 
 
 ##### smoke set directory & files
@@ -90,9 +80,16 @@ SMOKE_PATCHES_DIR = f"{SMOKE_DIR}/patches"
 ##############################
 # Data Sources
 ##############################
-SGMAP_URLS = []
-DEM_BASE_URLS = []
-AERIAL_BASE_URLS = []
-AERIAL_TILE_INDEX_URL = []
-NHD_URL = []
-OSM_URL = []
+SRC_URLS = {
+    'kyfromabove_index': r'https://ky.app.box.com/index.php?rm=box_download_shared_file&vanity_name=kymartian-kyaped-5k-tile-grids&file_id=f_1173114014568',
+
+    'nhd': r'https://prd-tnm.s3.amazonaws.com/StagedProducts/Hydrography/NHDPlusHR/VPU/Current/GDB/NHDPLUS_H_0511_HU4_GDB.zip',
+
+    'osm': r'http://download.geofabrik.de/north-america/us/kentucky-latest-free.shp.zip',
+
+    'howevalley': r'https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1631&pid=111985',
+
+    'sonora': r'',
+
+    'warren': r'',
+    }
