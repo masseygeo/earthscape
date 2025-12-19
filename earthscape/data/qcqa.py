@@ -1,6 +1,7 @@
 
 import os
 import pandas as pd
+import numpy as np
 import rasterio
 
 
@@ -35,8 +36,11 @@ def check_image_alignment(input_paths, target='geology'):
     # iterate through image paths and get values
     for image, path in zip(image_names, input_paths):
         with rasterio.open(path) as src:
+            # data = src.read(1, masked=True)
+            # n_nodata = int(np.ma.count_masked(data))
             df.loc[df['image'] == image, 'dtype'] = src.meta['dtype']
-            df.loc[df['image'] == image, 'nodata'] = src.nodata
+            df.loc[df['image'] == image, 'nodata_val'] = src.nodata
+            # df.loc[df['image'] == image, 'nodata_n'] = int(np.ma.count_masked(data))
             df.loc[df['image'] == image, 'resolution_x'] = src.res[0]
             df.loc[df['image'] == image, 'resolution_y'] = src.res[1]
             df.loc[df['image'] == image, 'width'] = src.width

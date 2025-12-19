@@ -1,20 +1,23 @@
 name: earthscape
 channels:
   - conda-forge
-  - defaults
 dependencies:
+  - python
   - geopandas
+  - fiona
+  - pyproj
+  - proj
+  - gdal
+  - pyogrio
+  - rasterio
+  - numpy
+  - matplotlib
+  - tqdm
   - ipykernel
   - ipywidgets
   - jupyterlab
-  - matplotlib
-  - numpy
+  - whitebox
   - pip
-  - python
-  - rasterio
-  - torchinfo
-  - tqdm
-  - whitebox  
   - pip:
     - torch
     - torchvision

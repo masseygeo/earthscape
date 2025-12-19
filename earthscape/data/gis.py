@@ -9,9 +9,11 @@ import geopandas as gpd
 import rasterio
 from rasterio.transform import from_origin
 from rasterio.features import rasterize
+import shapely
+from shapely.geometry import Polygon
 
 
-def gis_to_image(input_path, output_path, output_resolution, multiclass_col=None):
+def gis_to_image(input_path, output_path, output_resolution, multiclass_col=None, multiclass_map=SG_MAPPING):
     """
     Function to convert vector geospatial file to GeoTIFF image file with a given resolution and categorical attribute. Output GeoTIFF file is of float32 dtype with NaN representing nodata values.
 
@@ -34,9 +36,13 @@ def gis_to_image(input_path, output_path, output_resolution, multiclass_col=None
     # read input GIS file as geodataframe
     gdf = gpd.read_file(input_path)
 
-    # if input is polygon or multipolygon, then apply 0 buffer to mitigate potential geometry errors
-    if gdf.geom_type.isin(['Polygon', 'MultiPolygon']).any():
-        gdf['geometry'] = gdf['geometry'].buffer(0.1)
+
+    gdf['geometry'] = gdf.geometry.buffer(0)
+    gdf['geometry'] = gdf['geometry'].buffer(0.1)
+
+    # # if input is polygon or multipolygon, then apply 0 buffer to mitigate potential geometry errors
+    # if gdf.geom_type.isin(['Polygon', 'MultiPolygon']).any():
+    #     gdf['geometry'] = gdf['geometry'].buffer(0.1)
     
     # get bounding coordinates & output width and height (using desired resolution)
     minx, miny, maxx, maxy = gdf.total_bounds
@@ -46,11 +52,11 @@ def gis_to_image(input_path, output_path, output_resolution, multiclass_col=None
     # calculate transform for output image
     transform = from_origin(west=minx, north=maxy, xsize=output_resolution, ysize=output_resolution)
 
-    if not multiclass_col:
+    if multiclass_col is None:
         shapes = [(geom, 1) for geom in gdf.geometry]
 
     else:
-        gdf[f"{multiclass_col}_int"] = gdf[multiclass_col].apply(lambda x: SG_MAPPING.get(x, np.nan))
+        gdf[f"{multiclass_col}_int"] = gdf[multiclass_col].apply(lambda x: multiclass_map.get(x, np.nan))
         shapes = [(geom, value) for geom, value in zip(gdf.geometry, gdf[f"{multiclass_col}_int"])]
     
     # rasterize shapes using output height, width, and transform
@@ -109,3 +115,13 @@ def clip_gis_to_boundary(input_path, boundary_path, output_path, gdb_layer=None)
     gdf_output = gpd.clip(gdf_input, mask=gdf_boundary)
     gdf_output.to_file(output_path, driver='GeoJSON')
 
+
+
+def create_aoi_polygon(input_path, output_path):
+    gdf = gpd.read_file(input_path)
+    u = shapely.union_all(gdf.geometry.values, grid_size=0.2)
+    if u.geom_type == "MultiPolygon":
+        u = max(u.geoms, key=lambda p: p.area)
+    aoi = Polygon(u.exterior)
+    gdf_aoi = gpd.GeoDataFrame(geometry=[aoi], crs=gdf.crs)
+    gdf_aoi.to_file(output_path, driver='GeoJSON')
