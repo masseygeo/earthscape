@@ -83,22 +83,26 @@ def extract_patch(image_path, patches_gdf, output_dir):
     -------
     None
     """
+
+    # get image name...
     image_name = os.path.basename(image_path)
     image_name = os.path.splitext(image_name)[0]
 
     with rasterio.open(image_path) as src:
+        src_nodata = src.nodata
 
         for _, row in patches_gdf.iterrows():
 
             geom = row['geometry']
 
-            dst_image, dst_transform = mask(src, shapes=[geom], crop=True, filled=True, nodata=-999999)
+            dst_image, dst_transform = mask(src, shapes=[geom], crop=True, filled=True, nodata=src_nodata)
 
             dst_meta = src.meta.copy()
             dst_meta.update({'driver':'GTiff', 
-                             'height':dst_image.shape[1], 
-                             'width':dst_image.shape[2], 
-                             'transform':dst_transform})
+                             'height': dst_image.shape[1], 
+                             'width': dst_image.shape[2], 
+                             'transform': dst_transform,
+                             'nodata': src_nodata})
         
             output_path = f"{output_dir}/{row['patch_id']}_{image_name}.tif"
     

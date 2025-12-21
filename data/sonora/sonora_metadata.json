@@ -1,0 +1,24 @@
+{
+    "EarthScape": {
+        "version": "1.1",
+        "created": "2025-12-21, 10:55",
+        "patch size": 256,
+        "overlap": "50%",
+        "num patches": 3726,
+        "num channels": 38,
+        "total images": 141588
+    },
+    "Geospatial": {
+        "crs": "EPSG:3089",
+        "units": "us-ft",
+        "resolution": 5.0,
+        "nodata": NaN
+    },
+    "Data Sources": {
+        "kyfromabove_dem_index": "https://kygisserver.ky.gov/arcgis/rest/services/WGS84WM_Services/KY_Data_Tiles_DEM_WGS84WM/MapServer/0",
+        "kyfromabove_aerial_index": "https://services3.arcgis.com/ghsX9CKghMvyYjBU/arcgis/rest/services/Ky_KYAPED_Aerial_Tile_Index_WM_gdb/FeatureServer/0",
+        "nhd": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Hydrography/NHDPlusHR/VPU/Current/GDB/NHDPLUS_H_0511_HU4_GDB.zip",
+        "osm": "http://download.geofabrik.de/north-america/us/kentucky-latest-free.shp.zip",
+        "sonora": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1630&pid=111983"
+    }
+}

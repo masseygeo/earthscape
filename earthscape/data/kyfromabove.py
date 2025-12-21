@@ -3,7 +3,9 @@ from earthscape.data.downloads import download_tif, download_zip
 
 import os
 import glob
+import requests
 import numpy as np
+import pandas as pd
 import geopandas as gpd
 import fiona
 import rasterio
@@ -131,3 +133,74 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
     
     for src in images:
         src.close()
+
+
+
+
+
+def ky_index_tiles(aoi_path, url_field="Phase1_AWS_url", layer_url=r"https://kygisserver.ky.gov/arcgis/rest/services/WGS84WM_Services/KY_Data_Tiles_DEM_WGS84WM/MapServer/0", tile_name_field="Tile_Name", page_size=1000):
+    """
+    Return a GeoDataFrame of DEM tiles that intersect the AOI, with columns:
+      - tile_name_field
+      - url_field
+      - geometry
+
+    Notes:
+      - Uses AOI bbox for server-side prefilter, then precise intersects locally.
+    """
+
+    # setup query for ArcGIS web service
+    query_url = f"{layer_url}/query"
+
+    # read AOI and move to Web Mercator CRS(to match web service)...
+    aoi = gpd.read_file(aoi_path)              # read AOI GeoJSON
+    aoi_3857 = aoi.to_crs(3857)                # reproject to Web Mercator EPSG:3857
+    aoi_geom = aoi_3857.geometry.union_all()   # make sure AOI is one polygon
+    minx, miny, maxx, maxy = aoi_geom.bounds   # get bounding box coordinates
+
+    # page through features in the AOI bbox...
+    chunks = []
+    offset = 0
+    while True:
+        params = {
+            "f": "geojson",
+            "where": "1=1",
+            "outFields": f"{tile_name_field}, {url_field}",
+            "returnGeometry": "true",
+            "outSR": "3857",
+            "inSR": "3857",
+            "geometryType": "esriGeometryEnvelope",
+            "geometry": f"{minx},{miny},{maxx},{maxy}",
+            "spatialRel": "esriSpatialRelIntersects",
+            "resultOffset": offset,
+            "resultRecordCount": page_size,
+            "orderByFields": "OBJECTID",
+        }
+
+        r = requests.post(query_url, data=params, timeout=120)
+        r.raise_for_status()
+
+        gdf = gpd.read_file(r.text)
+        if gdf.empty:
+            break
+
+        chunks.append(gdf)
+
+        if len(gdf) < page_size:
+            break
+
+        offset += page_size
+
+    # return blank gdf...
+    if not chunks:
+        return gpd.GeoDataFrame(columns=[tile_name_field, url_field, "geometry"], geometry="geometry", crs="EPSG:3857")
+
+    # return gdf of tile names...
+    tiles = gpd.GeoDataFrame(pd.concat(chunks, ignore_index=True))
+    tiles_3857 = tiles.to_crs(3857)
+
+    out = tiles_3857[tiles_3857.intersects(aoi_geom)][[tile_name_field, url_field, "geometry"]].copy()
+    out = out.dropna(subset=[url_field])
+    out.rename(columns={tile_name_field: 'tile', url_field:'url'}, inplace=True)
+
+    return out

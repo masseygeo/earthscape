@@ -81,7 +81,11 @@ SMOKE_PATCHES_DIR = f"{SMOKE_DIR}/patches"
 # Data Sources
 ##############################
 SRC_URLS = {
-    'kyfromabove_index': r'https://ky.app.box.com/index.php?rm=box_download_shared_file&vanity_name=kymartian-kyaped-5k-tile-grids&file_id=f_1173114014568',
+    # 'kyfromabove_index': r'https://ky.app.box.com/index.php?rm=box_download_shared_file&vanity_name=kymartian-kyaped-5k-tile-grids&file_id=f_1173114014568',
+
+    'kyfromabove_dem_index': r'https://kygisserver.ky.gov/arcgis/rest/services/WGS84WM_Services/KY_Data_Tiles_DEM_WGS84WM/MapServer/0',
+
+    'kyfromabove_aerial_index': r'https://services3.arcgis.com/ghsX9CKghMvyYjBU/arcgis/rest/services/Ky_KYAPED_Aerial_Tile_Index_WM_gdb/FeatureServer/0',
 
     'nhd': r'https://prd-tnm.s3.amazonaws.com/StagedProducts/Hydrography/NHDPlusHR/VPU/Current/GDB/NHDPLUS_H_0511_HU4_GDB.zip',
 

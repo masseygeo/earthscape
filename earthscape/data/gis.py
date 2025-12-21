@@ -36,13 +36,10 @@ def gis_to_image(input_path, output_path, output_resolution, multiclass_col=None
     # read input GIS file as geodataframe
     gdf = gpd.read_file(input_path)
 
-
-    gdf['geometry'] = gdf.geometry.buffer(0)
-    gdf['geometry'] = gdf['geometry'].buffer(0.1)
-
-    # # if input is polygon or multipolygon, then apply 0 buffer to mitigate potential geometry errors
-    # if gdf.geom_type.isin(['Polygon', 'MultiPolygon']).any():
-    #     gdf['geometry'] = gdf['geometry'].buffer(0.1)
+    # if input is polygon or multipolygon, then apply 0 buffer to mitigate potential geometry errors
+    if gdf.geom_type.isin(['Polygon', 'MultiPolygon']).any():
+        gdf['geometry'] = gdf.geometry.buffer(0)
+        gdf['geometry'] = gdf['geometry'].buffer(0.1)
     
     # get bounding coordinates & output width and height (using desired resolution)
     minx, miny, maxx, maxy = gdf.total_bounds
