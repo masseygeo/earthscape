@@ -11,7 +11,8 @@ import fiona
 import rasterio
 from rasterio.warp import Resampling
 from rasterio.merge import merge
-
+import shapely
+import shapely.geometry
 
 
 def download_data_tiles(index_path, id_field, url_field, output_dir):
@@ -114,9 +115,24 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
     images = [rasterio.open(tile_path) for tile_path in tile_paths]
 
     if resample:
-        mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear)
+        mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear, nodata=np.nan)
     else:
         mosaic, mosaic_transform = merge(images, indexes=[band_number], nodata=np.nan)
+
+
+    nodata_values = []
+    for src in images:
+        if src.nodata is None:
+            continue
+        if isinstance(src.nodata, float) and np.isnan(src.nodata):
+            continue
+        nodata_values.append(src.nodata)
+    nodata_values = sorted(set(nodata_values))
+
+    for nd in nodata_values:
+        mosaic[np.isclose(mosaic, nd)] = np.nan
+
+
 
     mosaic_meta = images[0].meta.copy()
     mosaic_meta.update({'driver': 'GTiff', 
@@ -124,7 +140,9 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
                         'width': mosaic.shape[2], 
                         'transform': mosaic_transform, 
                         'crs': images[0].crs, 
-                        'count': mosaic.shape[0]})
+                        'count': mosaic.shape[0], 
+                        'nodata': np.nan, 
+                        'dtype': mosaic.dtype.name})
     
     with rasterio.open(output_path, 'w', **mosaic_meta) as output:
         for i in range(mosaic.shape[0]):
@@ -137,7 +155,7 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
 
 
 
-def ky_index_tiles(aoi_path, url_field="Phase1_AWS_url", layer_url=r"https://kygisserver.ky.gov/arcgis/rest/services/WGS84WM_Services/KY_Data_Tiles_DEM_WGS84WM/MapServer/0", tile_name_field="Tile_Name", page_size=1000):
+def ky_index_tiles(aoi_path, url_field="Phase1_AWS_url", layer_url=r"https://kygisserver.ky.gov/arcgis/rest/services/WGS84WM_Services/KY_Data_Tiles_DEM_WGS84WM/MapServer/0", tile_name_field="Tile_Name", page_size=1000, pad=0):
     """
     Return a GeoDataFrame of DEM tiles that intersect the AOI, with columns:
       - tile_name_field
@@ -156,6 +174,12 @@ def ky_index_tiles(aoi_path, url_field="Phase1_AWS_url", layer_url=r"https://kyg
     aoi_3857 = aoi.to_crs(3857)                # reproject to Web Mercator EPSG:3857
     aoi_geom = aoi_3857.geometry.union_all()   # make sure AOI is one polygon
     minx, miny, maxx, maxy = aoi_geom.bounds   # get bounding box coordinates
+    
+    # add padding to force inclusion of edge tiles
+    minx -= pad; miny -= pad; maxx += pad; maxy += pad
+
+    # build bbox polygon for filtering...
+    bbox_geom = shapely.geometry.box(minx, miny, maxx, maxy)
 
     # page through features in the AOI bbox...
     chunks = []
@@ -196,9 +220,13 @@ def ky_index_tiles(aoi_path, url_field="Phase1_AWS_url", layer_url=r"https://kyg
 
     # return gdf of tile names...
     tiles = gpd.GeoDataFrame(pd.concat(chunks, ignore_index=True))
-    tiles_3857 = tiles.to_crs(3857)
+    # tiles_3857 = tiles.to_crs(3857)
 
-    out = tiles_3857[tiles_3857.intersects(aoi_geom)][[tile_name_field, url_field, "geometry"]].copy()
+
+    # out = tiles_3857[tiles_3857.intersects(aoi_geom)][[tile_name_field, url_field, "geometry"]].copy()
+    out = tiles[[tile_name_field, url_field, "geometry"]].copy()
+
+
     out = out.dropna(subset=[url_field])
     out.rename(columns={tile_name_field: 'tile', url_field:'url'}, inplace=True)
 

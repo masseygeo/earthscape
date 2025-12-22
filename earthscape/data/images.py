@@ -31,42 +31,60 @@ def image_to_reference_grid(input_path, reference_path, output_dtype=np.float32,
         src_crs = src.crs
         src_nodata = src.nodata
 
+    # convert source sentinel nodata to NaN in-memory
+    if src_nodata is not None:
+        src_data[np.isclose(src_data, src_nodata)] = np.nan
+
     with rasterio.open(reference_path) as ref:
-        dst_meta = ref.meta.copy()
-        dst_transform = ref.transform
-        dst_crs = ref.crs
+        ref_meta = ref.meta.copy()
+        ref_transform = ref.transform
+        ref_crs = ref.crs
+        ref_h = ref.height
+        ref_w = ref.width
 
-    dst_data = np.empty((ref.height, ref.width), dtype=np.float32)
-    
     if output_dtype == np.uint8:
-        dst_nodata = 0
+        ref_nodata = 0
+        ref_data = np.full((ref_h, ref_w), ref_nodata, dtype=np.float32)
     else:
-        dst_nodata = np.nan
+        ref_nodata = np.nan
+        ref_data = np.full((ref_h, ref_w), np.nan, dtype=np.float32)
 
-    reproject(source=src_data,
-        destination=dst_data,
+    reproject(
+        source=src_data,
+        destination=ref_data,
         src_transform=src_transform,
         src_crs=src_crs,
-        src_nodata=src_nodata,
-        dst_transform=dst_transform,
-        dst_crs=dst_crs,
-        dst_nodata=dst_nodata,
-        resampling=Resampling.bilinear)
+        src_nodata=np.nan,
+        dst_transform=ref_transform,
+        dst_crs=ref_crs,
+        dst_nodata=ref_nodata,
+        resampling=Resampling.bilinear
+        )
+    
+    # ensure no sentinel survives
+    if output_dtype != np.uint8 and src_nodata is not None:
+        ref_data[np.isclose(ref_data, src_nodata)] = np.nan
+    
 
     if output_dtype == np.uint8:
-        nodata_mask = dst_data == dst_nodata
-        dst_data = np.clip(np.round(dst_data), 0, 255).astype(np.uint8)
-        dst_data[nodata_mask] = dst_nodata
+        nodata_mask = (ref_data == ref_nodata) | np.isnan(ref_data)
+        ref_data = np.clip(np.round(ref_data), 0, 255).astype(np.uint8)
+        ref_data[nodata_mask] = ref_nodata
 
-    dst_meta.update(count=1, 
-                    dtype=np.dtype(output_dtype).name,
-                    nodata=dst_nodata)
+
+    ref_meta.update({'count': 1, 
+                     'height': ref_h, 
+                     'width': ref_w, 
+                     'transform': ref_transform, 
+                     'crs': ref_crs,
+                     'dtype': np.dtype(output_dtype).name, 
+                     'nodata': ref_nodata})
     
     if output_path is None:
         output_path = input_path
 
-    with rasterio.open(output_path, "w", **dst_meta) as dst:
-        dst.write(dst_data, 1)
+    with rasterio.open(output_path, "w", **ref_meta) as dst:
+        dst.write(ref_data, 1)
 
 
 
