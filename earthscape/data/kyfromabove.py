@@ -114,7 +114,6 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
     images = [rasterio.open(tile_path) for tile_path in tile_paths]
 
     if resample:
-        # mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear, nodata=np.nan)
         mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear)
     else:
         mosaic, mosaic_transform = merge(images, indexes=[band_number], nodata=np.nan)

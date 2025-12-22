@@ -95,5 +95,5 @@ SRC_URLS = {
 
     'sonora': r'https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1630&pid=111983',
 
-    'warren': r'',
+    'warren': r'https://uknowledge.uky.edu/context/kgs_data/article/1014/type/native/viewcontent',
     }

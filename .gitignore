@@ -23,6 +23,12 @@ data/*/patches/*.tif
 data/*/patches/*.csv
 
 
+data/warren/dem_tiles/*.*
+data/warren/*.*
+
+
+
+
 # -----------------------------------------
 # Smoke Files
 # -----------------------------------------
