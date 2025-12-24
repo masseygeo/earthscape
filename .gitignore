@@ -18,8 +18,8 @@ __pycache__/
 # -----------------------------------------
 # Dataset Files
 # -----------------------------------------
-/data/**/patches/*.tif
-/data/**/patches/*.csv
+/data/*/patches/*.tif
+/data/*/patches/*.csv
 
 
 
