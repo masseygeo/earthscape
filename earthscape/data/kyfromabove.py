@@ -112,14 +112,24 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
     -------
     None
     """
+
+    # set up parameters for merging tiles...
+    merge_kwargs = {
+        'indexes': [band_number], 
+        'dtype': np.float32, 
+        'nodata': np.nan
+        }
+
+    # open tile images
     images = [rasterio.open(tile_path) for tile_path in tile_paths]
 
+    # merge tiles (depending on resampling)...
     if resample:
-        mosaic, mosaic_transform = merge(images, indexes=[band_number], res=resample, resampling=Resampling.bilinear, nodata=np.nan)
+        mosaic, mosaic_transform = merge(images, res=resample, resampling=Resampling.bilinear, **merge_kwargs)
     else:
-        mosaic, mosaic_transform = merge(images, indexes=[band_number], nodata=np.nan)
+        mosaic, mosaic_transform = merge(images, **merge_kwargs)
 
-
+    # get unique nodata values...
     nodata_values = []
     for src in images:
         if src.nodata is None:
@@ -129,25 +139,29 @@ def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
         nodata_values.append(src.nodata)
     nodata_values = sorted(set(nodata_values))
 
+    # replace nodata values with nan...
     for nd in nodata_values:
         mosaic[np.isclose(mosaic, nd)] = np.nan
 
-
-
+    # update metadata....
     mosaic_meta = images[0].meta.copy()
-    mosaic_meta.update({'driver': 'GTiff', 
-                        'height': mosaic.shape[1], 
-                        'width': mosaic.shape[2], 
-                        'transform': mosaic_transform, 
-                        'crs': images[0].crs, 
-                        'count': mosaic.shape[0], 
-                        'nodata': np.nan, 
-                        'dtype': mosaic.dtype.name})
+    mosaic_meta.update({
+        'driver': 'GTiff', 
+        'height': mosaic.shape[1], 
+        'width': mosaic.shape[2], 
+        'transform': mosaic_transform, 
+        'crs': images[0].crs, 
+        'count': mosaic.shape[0], 
+        'nodata': np.nan, 
+        'dtype': np.dtype(np.float32).name
+        })
     
+    # write output GeoTIFF mosaic image...
     with rasterio.open(output_path, 'w', **mosaic_meta) as output:
         for i in range(mosaic.shape[0]):
             output.write(mosaic[i, :, :], i+1)
     
+    # close opened tile images
     for src in images:
         src.close()
 

@@ -78,7 +78,7 @@ def validate_patches(patch_path, patch_size):
         
 
 
-def create_metadata(area_name, num_patches, num_tifs, img_meta, patch_size, overlap, output_path, sources=SRC_URLS):
+def create_metadata(area_name, label_space, num_patches, num_tifs, img_meta, patch_size, overlap, output_path, sources=SRC_URLS):
     dataset = {}
     dataset['EarthScape'] = {}
     dataset['EarthScape']['version'] = VERSION
@@ -88,6 +88,7 @@ def create_metadata(area_name, num_patches, num_tifs, img_meta, patch_size, over
     dataset['EarthScape']['num patches'] = int(num_patches)
     dataset['EarthScape']['num channels'] = int(num_tifs / num_patches)
     dataset['EarthScape']['total images'] = num_tifs
+    dataset['EarthScape']['label space'] = label_space
 
     dataset['Geospatial'] = {}
     dataset['Geospatial']['crs'] = img_meta['crs'].to_string()

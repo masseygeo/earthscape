@@ -80,6 +80,7 @@ def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
 
     # iterate through modalities->channels->single image paths...
     df_stats = pd.DataFrame()
+
     for mod_name, channels in MODALITIES.items():
 
         # skip categorical channels...
@@ -100,16 +101,28 @@ def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
             img_paths = list(set(img_paths))
 
             # iterate through image channel paths & collect image stats...
-            pixel_count = 0.0
+            pixel_count = 0
+            nodata_count = 0
             pixel_sum = 0.0
             pixel_sum2 = 0.0
+            global_min = np.inf
+            global_max = -np.inf
+
             for ip in img_paths:
                 with rasterio.open(ip) as src:
                     data = src.read(1, masked=True)
+                    total_pixels = data.size
                     vals = data.compressed()
+
                     pixel_count += vals.size
+                    nodata_count += total_pixels - vals.size
                     pixel_sum += vals.sum()
                     pixel_sum2 += (vals**2).sum()
+
+                    if vals.min() < global_min:
+                        global_min = vals.min()
+                    if vals.max() > global_max:
+                        global_max = vals.max()
 
             # calculate global stats (mean & sample var/sd)...
             mean = pixel_sum / pixel_count
@@ -119,6 +132,9 @@ def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
             # save to df...
             df_stats.loc[c, 'mean'] = mean
             df_stats.loc[c, 'sd'] = sd
+            df_stats.loc[c, 'min'] = global_min
+            df_stats.loc[c, 'max'] = global_max
+            df_stats.loc[c, 'nodata_count'] = nodata_count
 
     return df_stats
 

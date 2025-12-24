@@ -18,14 +18,8 @@ __pycache__/
 # -----------------------------------------
 # Dataset Files
 # -----------------------------------------
-data/*.zip
 data/*/patches/*.tif
 data/*/patches/*.csv
-
-
-data/warren/dem_tiles/*.*
-data/warren/*.*
-
 
 
 
