@@ -20,6 +20,9 @@ __pycache__/
 # -----------------------------------------
 /data/*/patches/*.tif
 /data/*/patches/*.csv
+/data/**/*.tif
+/data/**/*.geojson
+
 
 
 
