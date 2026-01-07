@@ -1,3 +1,4 @@
+
 import os
 import rasterio
 import numpy as np
@@ -61,10 +62,12 @@ class EarthScape_Dataset(Dataset):
         patch_id = self.ids[idx]          # unique patch ID
         entry = self._index[patch_id]     # data dir, label path, & modality paths
 
+
         ##### get label tensor...
         label = np.loadtxt(entry['label_path'])
         label = torch.from_numpy(label).type(torch.float32)
         data = {'label': label}
+
 
         ##### get stacked & normalized image tensor...
         for mod, paths in entry['modality_paths'].items():
@@ -73,7 +76,7 @@ class EarthScape_Dataset(Dataset):
             t = self.stack_images(paths)
 
             # normalize each channel (optional; continuous/non-categorical only)...
-            if self.normalize & (self.modalities[mod]['mean'] != None):
+            if self.normalize and (self.modalities[mod]['mean'] is not None):
                 mean = self.modalities[mod]['mean']
                 sd = self.modalities[mod]['sd']
                 mean = torch.tensor(mean, dtype=torch.float32)[:, None, None]
@@ -82,6 +85,7 @@ class EarthScape_Dataset(Dataset):
             
             # add stacked & normalized image tensor to Dataset
             data[mod] = t
+
 
         ##### apply random augmentation(s)...
         if self.augment:
@@ -96,6 +100,7 @@ class EarthScape_Dataset(Dataset):
             k = torch.randint(low=0, high=4, size=(1,)).item()
             for mod in self.modalities.keys():
                 data[mod] = torch.rot90(data[mod], k=k, dims=(1,2))
+
 
         # ##### resize image to 224x224 (optional)...
         # if self.resize:
