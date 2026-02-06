@@ -4,7 +4,7 @@
 ##############################
 
 VERSION = '1.1'
-STR_VERSION = f"v{VERSION.replace('.','-')}"
+STR_VERSION = f"v{VERSION.replace('.','p')}"
 ES_REPO_URL = r'https://github.com/masseygeo/earthscape'
 ES_DATA_URL = r'https://doi.org/10.13023/kgs.data.05.01.2025'
 ES_PAPER_URL = r'https://doi.org/10.48550/arXiv.2503.15625'
@@ -59,22 +59,18 @@ SG_COLORS = {
 ##### dataset directory & files
 DATASET_DIR = r'../data'
 
-GLOBAL_AREAS_PATH = f"{DATASET_DIR}/earthscape_{STR_VERSION}_areas.csv"
-GLOBAL_MAPPING_PATH = f"{DATASET_DIR}/earthscape_{STR_VERSION}_mapping.json"
-GLOBAL_PATCHES_PATH = f"{DATASET_DIR}/earthscape_{STR_VERSION}_patches.geojson"
-GLOBAL_STATS_PATH = f"{DATASET_DIR}/earthscape_{STR_VERSION}_stats.csv"
+
+##### training/validation/testing splits
+SPLIT_DIR = r'../splits'
+ES_VERSION_SPLIT_DIR = f"{SPLIT_DIR}/es_{STR_VERSION}"
+SMOKE_VERSION_SPLIT_DIR = f"{SPLIT_DIR}/smoke_{STR_VERSION}"
+SMOKE_PATCH_DIR = f"{SMOKE_VERSION_SPLIT_DIR}/patches"
 
 
 ##### model output directory & files
-MODEL_DIR = r'../models'
-SPLIT_DIR = f"{MODEL_DIR}/splits"
+MODEL_DIR = r'../experiments'
 MODEL_CLF_DIR = f"{MODEL_DIR}/classification"
-
-
-##### smoke set directory & files
-SMOKE_DIR = r'../smoke'
-SMOKE_SPLITS_DIR = f"{SMOKE_DIR}/splits"
-SMOKE_PATCHES_DIR = f"{SMOKE_DIR}/patches"
+MODEL_SEG_DIR = f"{MODEL_DIR}/segmentation"
 
 
 ##############################
