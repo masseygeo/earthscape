@@ -55,20 +55,21 @@ def select_indpendent_patches(gdf, n_patches, seed=111):
 
 
 
-def make_smoke_set(areas_path, patches_path, split_size, threshold=0, seed=111):
+
+def make_smoke_set(classes_path, patches_path, split_size, area_threshold=0.2, seed=111):
 
     rng = np.random.RandomState(seed)
-    areas = pd.read_csv(areas_path)
+    classes = pd.read_csv(classes_path)
     patches = gpd.read_file(patches_path)
-    gdf = pd.merge(left=patches, right=areas, how='left', on='patch_id')
-    classes = list(gdf.columns[2:])
+    gdf = pd.merge(left=patches, right=classes, how='left', on='patch_id')
+    class_list = list(gdf.columns[2:])
 
     remaining = gdf.copy()
     initial_picks = []
 
-    for c in classes:
-        candidate = remaining.loc[remaining[c] > threshold]
-        choice = candidate.sample(n=1, replace=False, random_state=rng)
+    for c in class_list:
+        candidates = remaining.loc[remaining[c] > area_threshold]
+        choice = candidates.sample(n=1, replace=False, random_state=rng)
         initial_picks.append(choice)
         remaining.drop(choice.index, inplace=True)
     
@@ -81,3 +82,30 @@ def make_smoke_set(areas_path, patches_path, split_size, threshold=0, seed=111):
         selected.reset_index(drop=True, inplace=True)
     
     return selected
+
+# def make_smoke_set(areas_path, patches_path, split_size, threshold=0, seed=111):
+
+#     rng = np.random.RandomState(seed)
+#     areas = pd.read_csv(areas_path)
+#     patches = gpd.read_file(patches_path)
+#     gdf = pd.merge(left=patches, right=areas, how='left', on='patch_id')
+#     classes = list(gdf.columns[2:])
+
+#     remaining = gdf.copy()
+#     initial_picks = []
+
+#     for c in classes:
+#         candidate = remaining.loc[remaining[c] > threshold]
+#         choice = candidate.sample(n=1, replace=False, random_state=rng)
+#         initial_picks.append(choice)
+#         remaining.drop(choice.index, inplace=True)
+    
+#     selected = pd.concat(initial_picks, axis=0)
+
+#     need = max(0, split_size - len(selected))
+#     if need > 0:
+#         filler = remaining.sample(n=need, replace=False, random_state=rng)
+#         selected = pd.concat([selected, filler], axis=0)
+#         selected.reset_index(drop=True, inplace=True)
+    
+#     return selected

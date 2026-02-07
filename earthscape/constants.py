@@ -64,7 +64,6 @@ DATASET_DIR = r'../data'
 SPLIT_DIR = r'../splits'
 ES_VERSION_SPLIT_DIR = f"{SPLIT_DIR}/es_{STR_VERSION}"
 SMOKE_VERSION_SPLIT_DIR = f"{SPLIT_DIR}/smoke_{STR_VERSION}"
-SMOKE_PATCH_DIR = f"{SMOKE_VERSION_SPLIT_DIR}/patches"
 
 
 ##### model output directory & files
