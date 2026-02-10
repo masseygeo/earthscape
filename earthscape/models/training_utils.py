@@ -1,44 +1,345 @@
 
-import json
 import os
 import glob
+import json
 from datetime import datetime
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import torchinfo
-
 import torch
-import torch.nn as nn
-
+import torchinfo
 from sklearn.metrics import precision_recall_curve, roc_curve
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
-from sklearn.metrics import precision_recall_curve, roc_curve
-from sklearn.metrics import average_precision_score
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, average_precision_score, accuracy_score
+import matplotlib.pyplot as plt
 
 
 
 
 def get_norm_stats(stats_path, modality_configs):
+    """
+    Compute per-channel normalization statistics for each modality.
 
+    Parameters
+    ----------
+    stats_path : str or pathlib.Path
+        Path to a CSV file containing training-set statistics. The first column
+        contains channel identifiers and the CSV includes ``mean`` and ``sd`` columns.
+    modality_configs : dict
+        Dictionary of modality configurations. Each value must contain a
+        ``'channels'`` list specifying channel identifiers.
+
+    Returns
+    -------
+    dict
+        The same ``modality_configs`` object, modified in-place. Each modality is
+        extended with ``'mean'`` and ``'sd'`` lists aligned with ``'channels'``.
+        Channels that should not be normalized have ``None`` entries.
+    """
+
+    # read stats CSV to df
     df = pd.read_csv(stats_path)
 
-    for mod_name, data in modality_configs.items():
+    # iterate through values in modality_configs dictionary
+    for _, data in modality_configs.items():
+
+        # add two additional values for mean and sd
         data.update({'mean': [], 'sd': []})
         
+        # iterate through channels in dictionary list named 'channels' containing modality file suffixes.
         for c in data['channels']:
             
-            if ('osm' in c) or ('nhd' in c) or ('geology' in c):
-                data['mean'] = None
-                data['sd'] = None
+            # categorical images should not have normalization stats (0 or 1)
+            if ('osm' in c) or ('nhd' in c) or ('mask' in c):
+                data['mean'].append(None)
+                data['sd'].append(None)
             
+            # other images should have normalization stats from training dataset
             else:
-                row = df.loc[df['channel'] == c]
+                row = df.loc[df[df.columns[0]] == c]
                 data['mean'].append(row['mean'].item())
                 data['sd'].append(row['sd'].item())
     
+    # return modified dictionary
     return modality_configs
+
+
+
+
+
+def train_epoch(model, train_loader, criterion, optimizer, device):
+    """
+    Train a model for a single training epoch.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be trained. The model is set to training mode.
+    train_loader : torch.utils.data.DataLoader
+        DataLoader yielding training batches. Each batch is a dictionary containing
+        a ``'label'`` tensor and one or more modality tensors.
+    criterion : callable
+        Loss function applied to model outputs and labels.
+    optimizer : torch.optim.Optimizer
+        Optimizer used to update model parameters.
+    device : torch.device
+        Device on which model and tensors are located.
+
+    Returns
+    -------
+    epoch_loss : float
+        Mean loss across all training batches.
+    epoch_accuracy : float
+        Micro-averaged classification accuracy (percentage), computed across all
+        label elements by thresholding sigmoid outputs at 0.5.
+    """
+
+    # set model for training
+    model.train()
+
+    # initialize variables running over epoch...
+    running_loss = torch.zeros((), device=device)
+    correct_preds = torch.zeros((), device=device)
+    total_batches = 0
+    total_elements = 0
+  
+    # iterate through batches...
+    for batch in train_loader:
+
+        # get labels and images from batch...
+        labels = batch['label'].to(device, non_blocking=True).float()
+        modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
+
+        # zero optimizer...
+        optimizer.zero_grad(set_to_none=True)
+
+        # model training...
+        logits = model(modalities)                # forward pass
+        loss = criterion(logits, labels)          # calculate loss
+        loss.backward()                           # back propagation
+        optimizer.step()                          # update parameters
+
+        # update running totals for batch...
+        running_loss += loss.detach()                  # running loss for batch
+        total_batches += 1                             # running count of batches
+        total_elements += labels.numel()               # running count of images
+        probs = torch.sigmoid(logits)                  # probabilities of batch
+        preds = (probs >= 0.5).to(labels.dtype)        # predictions of batch with 50% probability threshold
+        correct_preds += (preds == labels).sum()       # numer of correct predictions vs. ground-truth labels
+
+    # total epoch loss and accuracy...
+    epoch_loss = (running_loss / total_batches).item()                # average batch loss
+    epoch_accuracy = (correct_preds / total_elements * 100).item()    # total accuracy
+
+    return epoch_loss, epoch_accuracy
+
+
+
+
+def validate_epoch(model, val_loader, criterion, device):
+    """
+    Validate a model for one epoch.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to evaluate.
+    val_loader : torch.utils.data.DataLoader
+        Validation DataLoader yielding batches as dicts with a ``'label'`` tensor
+        and one or more modality tensors.
+    criterion : callable
+        Loss function.
+    device : torch.device
+        Device used for evaluation.
+
+    Returns
+    -------
+    epoch_loss : float
+        Mean loss across validation batches.
+    epoch_accuracy : float
+        Micro-averaged classification accuracy (percentage) computed across all 
+        label elements by thresholding sigmoid outputs at 0.5.
+    """
+
+    # set model for evaluation
+    model.eval()
+
+    # initialize variables running over epoch...
+    running_loss = torch.zeros((), device=device)
+    correct_preds = torch.zeros((), device=device)
+    total_batches = 0
+    total_elements = 0
+
+    # iterate through batches...
+    with torch.no_grad():
+        for batch in val_loader:
+
+            # get labels and images from batch...
+            labels = batch['label'].to(device, non_blocking=True)
+            modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
+
+            # get model logits & calculated loss...
+            logits = model(modalities)
+            loss = criterion(logits, labels)
+
+            # update running totals...
+            running_loss += loss.detach()
+            total_batches += 1
+            total_elements += labels.numel()
+            probs = torch.sigmoid(logits)
+            preds = (probs >= 0.5).to(labels.dtype)
+            correct_preds += (preds == labels).sum()
+
+    # calculate loss and accuracy for epoch...
+    epoch_loss = (running_loss / total_batches).item()
+    epoch_accuracy = (correct_preds / total_elements * 100).item()
+
+    return epoch_loss, epoch_accuracy
+
+
+
+
+
+def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir):
+    """
+    Train a model for multiple epochs and log training/validation metrics.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to train.
+    train_loader : torch.utils.data.DataLoader
+        DataLoader yielding training batches.
+    val_loader : torch.utils.data.DataLoader
+        DataLoader yielding validation batches.
+    criterion : callable
+        PyTorch-compatible loss function that accepts (logits, labels) and
+        returns a scalar tensor.
+    optimizer : torch.optim.Optimizer
+        Optimizer used to update model parameters.
+    device : torch.device
+        Device used for training and validation.
+    num_epochs : int
+        Number of training epochs.
+    output_dir : str or pathlib.Path
+        Directory to save the best model checkpoint and the training log CSV.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing per-epoch training/validation loss and accuracy, plus
+        training time in minutes.
+    """
+
+    # initialize variables...
+    train_loss = []                  # training - list of epoch losses
+    train_acc = []                   # training - list of epoch accuracies
+    train_time = []                  # training - list of epoch times
+    val_loss = []                    # validation - list of epoch losses
+    val_acc = []                     # validation - list of epoch accuracies
+    best_val_loss = float('inf')     # validation - best validation loss
+
+    # iterate over epochs...
+    for epoch in range(num_epochs):
+
+        # training...
+        print(f"Epoch {epoch+1}")
+        t0 = datetime.now()
+        epoch_train_loss, epoch_train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
+        t1 = datetime.now()
+
+        train_loss.append(epoch_train_loss)
+        train_acc.append(epoch_train_acc)
+        tt = round((t1-t0).total_seconds() / 60, 2)
+        train_time.append(tt)
+        training_str = f"TRAINING   -- Loss: {epoch_train_loss:.3f}  |  Accuracy: {epoch_train_acc:.2f}%  |  Time: {tt} mins."
+        print(training_str)
+
+
+        # validation...
+        t2 = datetime.now()
+        epoch_val_loss, epoch_val_acc = validate_epoch(model, val_loader, criterion, device)
+        t3 = datetime.now()
+
+        val_loss.append(epoch_val_loss)
+        val_acc.append(epoch_val_acc)
+        val_tt = round((t3-t2).total_seconds() / 60, 2)
+        val_str = f"VALIDATION -- Loss: {epoch_val_loss:.3f}  |  Accuracy: {epoch_val_acc:.2f}%  |  Time: {val_tt} mins."
+        print(val_str)
+
+
+        # save best model...
+        if epoch_val_loss < best_val_loss:
+            best_val_loss = epoch_val_loss
+            previous_checkpoints = glob.glob(f"{output_dir}/best_loss_epoch*.pth")
+            if len(previous_checkpoints) > 0:
+                for path in previous_checkpoints:
+                    os.remove(path)
+            torch.save(model.state_dict(), f"{output_dir}/best_loss_epoch{epoch + 1}.pth")
+            print(f"New best model saved!")
+
+        print('\n')
+
+    # save loss, accuracy, time to training log
+    df = pd.DataFrame({'train loss': train_loss, 'train accuracy': train_acc, 'train time': train_time, 'val loss': val_loss, 'val accuracy': val_acc})
+    output_path = f"{output_dir}/training_log.csv"
+    df.to_csv(output_path, index=False)
+
+    return df
+
+
+
+
+def test_model(model, test_loader, device):
+    """
+    Run inference on a test set and return probabilities and targets.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Trained model used for inference.
+    test_loader : torch.utils.data.DataLoader
+        DataLoader yielding test batches as dicts with a ``'label'`` tensor and one
+        or more modality tensors.
+    device : torch.device
+        Device used for model inference.
+
+    Returns
+    -------
+    probabilities : torch.Tensor
+        Concatenated sigmoid probabilities for all test samples (on CPU).
+    targets : torch.Tensor
+        Concatenated ground-truth labels for all test samples (on CPU).
+    """
+
+    # set model for evaluation
+    model.eval()
+
+    # initialize variables for inference...
+    probs = []     # model probabilities
+    targs = []     # class labels
+
+    # iterate over batches...
+    with torch.inference_mode():
+        for batch in test_loader:
+            
+            # get labels & images from batch...
+            labels = batch['label'].to(device, non_blocking=True)
+            modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
+
+            # model inference from input modalities
+            logits = model(modalities)
+
+            # model probabilities from inference output logits
+            p = torch.sigmoid(logits)
+
+            # append model probabilities & true class labels for batch...
+            probs.append(p.cpu())
+            targs.append(labels.cpu())
+    
+    # get array of probabilities & targets...
+    probabilities = torch.cat(probs, dim=0)
+    targets = torch.cat(targs, dim=0)
+
+    return probabilities, targets
 
 
 
@@ -101,202 +402,78 @@ def training_log(model_name, output_dir, seed, train_patches, val_patches, test_
 
 
 
-# def model_to_json(model):
-#     model_dict = {
-#         "model_class": model.__class__.__name__,
-#         "layers": []
-#     }
-#     for name, module in model.named_children():
-#         model_dict["layers"].append({
-#             "name": name,
-#             "type": module.__class__.__name__,
-#             "params": {k: v.shape for k, v in module.state_dict().items()}
-#         })
-#     return json.dumps(model_dict, indent=4, default=str)
+def calculate_optimal_thresholds(model, loader, device, default_threshold=0.5):
+    """
+    Compute per-class decision thresholds that maximize F1 score. Thresholds 
+    are selected independently for each class by evaluating the precision-recall 
+    curve on the given dataset and choosing the threshold that yields the maximum 
+    F1 score. Classes with no positive or no negative samples fall back to the 
+    default threshold.
 
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Trained model used to generate prediction probabilities.
+    loader : torch.utils.data.DataLoader
+        DataLoader providing the dataset used for threshold optimization.
+    device : torch.device
+        Device on which the model is evaluated.
+    default_threshold : float, optional
+        Threshold used for classes with degenerate targets or undefined
+        precision-recall curves. Default is 0.5.
 
+    Returns
+    -------
+    optimal_thresholds : np.ndarray of shape (n_classes,)
+        Array of per-class optimal thresholds that maximize F1 score.
+    """
 
-def train_epoch(model, train_loader, criterion, optimizer, device):
+    # model inference with loader dataset
+    probabilities, targets = test_model(model, loader, device)
 
-    model.train()
+    # make sure model outputs are on CPU and numpy arrays; labels also cast to int
+    probabilities = probabilities.detach().cpu().numpy()
+    targets = targets.detach().cpu().numpy().astype(np.int32)
 
-    running_loss = torch.zeros((), device=device)
-    correct_preds = torch.zeros((), device=device)
-    total_batches = 0
-    count = 0
-  
-    # iterate through batches...
-    for batch in train_loader:
+    # initialize variables...
+    n_classes = probabilities.shape[1]                                               # number of classes
+    optimal_thresholds = np.full(n_classes, default_threshold, dtype=np.float32)     # array of shape n_classes with default threshold
+    eps = 1e-8                                                                       # value to prevent divide by zero error
 
-        labels = batch['label'].to(device, non_blocking=True).float()
-        modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
+    # iterate over probabilities...
+    for class_idx in range(n_classes):
 
-        optimizer.zero_grad(set_to_none=True)
+        # class targets & probabilities
+        y_targs = targets[:, class_idx]
+        p_model = probabilities[:, class_idx]
 
-        logits = model(modalities)                # forward pass
-        loss = criterion(logits, labels)          # calculate loss
-        loss.backward()                           # back propagation
-        optimizer.step()                          # update parameters
-
-        running_loss += loss.detach()
-        total_batches += 1
-        count += labels.numel()
-        probs = torch.sigmoid(logits)
-        preds = (probs >= 0.5).to(labels.dtype)
-        correct_preds += (preds == labels).sum()
-
-    epoch_loss = (running_loss / total_batches).item()
-    epoch_accuracy = (correct_preds / count * 100).item()
-
-    return epoch_loss, epoch_accuracy
-
-
-
-
-def validate_epoch(model, val_loader, criterion, device):
-
-    model.eval()
-
-    running_loss = torch.zeros((), device=device)
-    correct_preds = torch.zeros((), device=device)
-    total_batches = 0
-    count = 0
-
-    with torch.no_grad():
-
-        for batch in val_loader:
-
-            labels = batch['label'].to(device, non_blocking=True)
-            modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
-
-            logits = model(modalities)
-            loss = criterion(logits, labels)
-
-            running_loss += loss.detach()
-            total_batches += 1
-            count += labels.numel()
-            probs = torch.sigmoid(logits)
-            preds = (probs >= 0.5).to(labels.dtype)
-            correct_preds += (preds == labels).sum()
-
-    epoch_loss = (running_loss / total_batches).item()
-    epoch_accuracy = (correct_preds / count * 100).item()
-
-    return epoch_loss, epoch_accuracy
-
-
-
-
-def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir):
-
-    train_loss = []
-    train_acc = []
-    train_time = []
-
-    val_loss = []
-    val_acc = []
-
-    best_val_loss = float('inf')
-
-
-    for epoch in range(num_epochs):
-
-        print(f"Epoch {epoch+1}")
-
-        # training...
-        t0 = datetime.now()
-        epoch_train_loss, epoch_train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
-        t1 = datetime.now()
-
-        train_loss.append(epoch_train_loss)
-        train_acc.append(epoch_train_acc)
-        tt = round((t1-t0).seconds / 60, 2)
-        train_time.append(tt)
-        training_str = f"TRAINING   -- Loss: {epoch_train_loss:.4f}  |  Accuracy: {epoch_train_acc:.2f}%  |  Time: {tt} mins."
-        print(training_str)
-
-        # validation...
-        t2 = datetime.now()
-        epoch_val_loss, epoch_val_acc = validate_epoch(model, val_loader, criterion, device)
-        t3 = datetime.now()
-
-        val_loss.append(epoch_val_loss)
-        val_acc.append(epoch_val_acc)
-        val_str = f"VALIDATION -- Loss: {epoch_val_loss:.4f}  |  Accuracy: {epoch_val_acc:.2f}%  |  Time: {round((t3-t2).seconds / 60, 2)} mins."
-        print(val_str)
-
-        # save best model...
-        if epoch_val_loss < best_val_loss:
-            best_val_loss = epoch_val_loss
-            previous_checkpoints = glob.glob(f"{output_dir}/best_loss_epoch*.pth")
-            if len(previous_checkpoints) > 0:
-                for path in previous_checkpoints:
-                    os.remove(path)
-            torch.save(model.state_dict(), f"{output_dir}/best_loss_epoch{epoch + 1}.pth")
-            print(f"New best model saved!")
-
-        print('\n')
-
-    df = pd.DataFrame({'train loss': train_loss, 'train accuracy': train_acc, 'train time': train_time, 'val loss': val_loss, 'val accuracy': val_acc})
-    output_path = f"{output_dir}/training_log.csv"
-    df.to_csv(output_path, index=False)
-
-    return df
-
-
-
-
-
-def test_model(model, test_loader, device):
-
-    model.eval()
-
-    probs = []
-    targs = []
-
-    with torch.inference_mode():
-
-        for batch in test_loader:
+        # handle no positives or no negatives for a class; use default threshold
+        if (y_targs.max() == 0) or (y_targs.min() == 1):
+            continue
         
-            labels = batch['label'].to(device, non_blocking=True)
+        # calculate precision, recall across thresholds
+        precision, recall, thresholds = precision_recall_curve(y_targs, p_model)
 
-            modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
+        # handle empty thresholds
+        if thresholds.size == 0:
+            continue
+        
+        # calculate f1 score
+        f1 = 2.0 * ((precision[1:] * recall[1:]) / (precision[1:] + recall[1:] + eps))
 
-            logits = model(modalities)
-            p = torch.sigmoid(logits)
-    
-            probs.append(p.cpu())
-            targs.append(labels.cpu())
-    
-    probabilities = torch.cat(probs, dim=0)
-    targets = torch.cat(targs, dim=0)
-
-    return probabilities, targets
-
-
-
-
-
-def calculate_optimal_thresholds(model, val_loader, device):
-  
-    probabilities, targets = test_model(model, val_loader, device)
-
-    probabilities = probabilities.numpy()
-    targets = targets.numpy().astype(np.int32)
-
-    optimal_thresholds = []
-
-    for class_idx in range (probabilities.shape[1]):
-
-        precision, recall, thresholds = precision_recall_curve(targets[:, class_idx], probabilities[:, class_idx])
-
-        f1 = 2.0 * ((precision[1:] * recall[1:]) / (precision[1:] + recall[1:] + 1e-8))
-
-        best_idx = np.argmax(f1)
-
-        optimal_thresholds.append(thresholds[best_idx])
+        # find best threshold & add to optimal threshold array
+        best_f1 = f1.max()
+        best_idxs = np.where(np.isclose(f1, best_f1))[0]
+        best_idx = best_idxs[-1]
+        # best_idx = np.argmax(f1)
+        optimal_thresholds[class_idx] = thresholds[best_idx]
 
     return optimal_thresholds
+
+
+
+
+
 
 
 

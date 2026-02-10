@@ -8,13 +8,12 @@ import torch.nn.functional as F
 
 
 
-class EarthScape_Dataset(Dataset):
-    def __init__(self, patch_ids, data_dirs, modalities, normalize=True, augment=False, resize=False):
+class Clf_Dataset(Dataset):
+    def __init__(self, patch_ids, data_dirs, modalities, normalize=True, augment=False):
         self.ids = patch_ids           # list of patch IDs
         self.data_dirs = data_dirs     # list of directories containing patches 
         self.normalize = normalize     # normalize continuous images
         self.augment = augment         # apply random horizontal & veritcal flips + 90 deg rotations
-        self.resize = resize           # resize image to 224x224 - for ViT
         
         # nested dict of modality name & file extensions + mean + standard deviation
         self.modalities = modalities    
@@ -101,13 +100,6 @@ class EarthScape_Dataset(Dataset):
             for mod in self.modalities.keys():
                 data[mod] = torch.rot90(data[mod], k=k, dims=(1,2))
 
-
-        # ##### resize image to 224x224 (optional)...
-        # if self.resize:
-        #     resized = img_tensor.unsqueeze(0)              
-        #     img_tensor = F.interpolate(img_tensor, size=(224, 224), mode='bicubic', align_corners=False)    # [1, C, 224, 224]
-        #     img_tensor = img_tensor.squeeze(0)                                          # remove batch dim - [C, 224, 224]
-        # data[modality] = img_tensor
 
         return data
 

@@ -3,10 +3,10 @@
 import sys, os
 sys.path.append(os.path.abspath('..'))
 from utils import set_seed
-from earthscape_dataset import *
+from earthscape.models.dataloaders import *
 from sgmapnet import *
 from training_utils import *
-from focal_loss import *
+from earthscape.models.focal_loss import *
 
 
 import argparse
