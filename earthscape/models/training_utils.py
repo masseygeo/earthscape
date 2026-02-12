@@ -1,4 +1,6 @@
 
+from earthscape.constants import SG_MAPPING
+
 import os
 import glob
 import json
@@ -8,7 +10,7 @@ import numpy as np
 import torch
 import torchinfo
 from sklearn.metrics import precision_recall_curve, roc_curve
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, average_precision_score, accuracy_score
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, average_precision_score, accuracy_score, balanced_accuracy_score
 import matplotlib.pyplot as plt
 
 
@@ -89,7 +91,7 @@ def train_epoch(model, train_loader, criterion, optimizer, device):
         Mean loss across all training batches.
     epoch_accuracy : float
         Micro-averaged classification accuracy (percentage), computed across all
-        label elements by thresholding sigmoid outputs at 0.5.
+        batches by thresholding sigmoid outputs at 0.5.
     """
 
     # set model for training
@@ -225,8 +227,8 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     Returns
     -------
     pandas.DataFrame
-        DataFrame containing per-epoch training/validation loss and accuracy, plus
-        training time in minutes.
+        DataFrame containing per-epoch training & validation loss and accuracy, 
+        plus training time in minutes.
     """
 
     # initialize variables...
@@ -345,12 +347,39 @@ def test_model(model, test_loader, device):
 
 
 def training_log(model_name, output_dir, seed, train_patches, val_patches, test_patches, cross_patches, modality_configs, batch_size, num_epochs, optimizer, criterion, model):
+    """
+    Write experiment metadata and a model architecture summary to disk.
+
+    Parameters
+    ----------
+    model_name : str
+        Experiment/model identifier.
+    output_dir : str or pathlib.Path
+        Directory where `metadata.json` and `architecture.txt` are written.
+    seed : int
+        Random seed used for the experiment.
+    train_patches, val_patches, test_patches, cross_patches : int or str
+        Patch counts/identifiers to record.
+    modality_configs : dict
+        Modality configuration mapping (e.g., channels and optional normalization stats).
+    batch_size : int
+        Training batch size.
+    num_epochs : int
+        Number of training epochs.
+    optimizer : torch.optim.Optimizer
+        Optimizer instance (name and selected hyperparameters are logged).
+    criterion : torch.nn.Module
+        Loss function instance name; alpha and gamma also recorded if focal loss.
+    model : torch.nn.Module
+        Model whose architecture is summarized with torchinfo.
+    """
 
     ##### collect setup info
-    metadata = {}
-    metadata['NAME'] = model_name
-    metadata['DIRECTORY'] = output_dir
-    metadata['SEED'] = seed
+    metadata = {
+        'NAME': model_name,
+        'DIRECTORY': str(output_dir),
+        'SEED': seed
+        }
 
 
     ##### collect modalitiy info
@@ -358,45 +387,49 @@ def training_log(model_name, output_dir, seed, train_patches, val_patches, test_
     for mod_name, data in modality_configs.items():
         modalities_meta[mod_name] = {}
         modalities_meta[mod_name]['modalities'] = ', '.join(data['channels'])
-        if not data['mean'] == None:
+        if data['mean'] is not None:
             modalities_meta[mod_name]['normalization means'] = ', '.join([str(i) for i in data['mean']])
             modalities_meta[mod_name]['normalization sd'] = ', '.join([str(i) for i in data['sd']])
     metadata['MODALITIES'] = modalities_meta
 
 
     ##### collect hyperparameters info
-    hyper_meta = {}
-    hyper_meta['batch size'] = batch_size
-    hyper_meta['epochs'] = num_epochs
-    hyper_meta['optimizer'] = type(optimizer).__name__
-    hyper_meta['learning rate'] = optimizer.param_groups[0]['lr']
-    hyper_meta['weight decay'] = optimizer.param_groups[0].get('weight_decay', None)
-    hyper_meta['momentum'] = optimizer.param_groups[0].get('momentum', None)
-    hyper_meta['loss'] = type(criterion).__name__
+    hyper_meta = {
+        'batch size': batch_size,
+        'epochs': num_epochs, 
+        'optimizer': type(optimizer).__name__,
+        'learning rate': optimizer.param_groups[0]['lr'],
+        'weight decay': optimizer.param_groups[0].get('weight_decay', None),
+        'momentum': optimizer.param_groups[0].get('momentum', None),
+        'loss': type(criterion).__name__
+        }
     if 'Focal' in hyper_meta['loss']:
-        a = ', '.join([str(a.item()) for a in criterion.alpha.detach().ravel()])
-        hyper_meta['alpha'] = a
+        alpha = ', '.join(str(v.item()) for v in criterion.alpha.detach().ravel())
+        hyper_meta['alpha'] = alpha
         hyper_meta['gamma'] = criterion.gamma
     metadata['HYPERPARAMETERS'] = hyper_meta
 
 
     ##### collect patches info
-    patches_meta = {}
-    patches_meta['training patches'] = train_patches
-    patches_meta['validation patches'] = val_patches
-    patches_meta['testing patches'] = test_patches
-    patches_meta['cross-domain testing patches'] = cross_patches
+    patches_meta = {
+        'training patches': train_patches,
+        'validation patches': val_patches,
+        'testing patches': test_patches,
+        'cross-domain testing patches': cross_patches
+        }
     metadata['PATCHES'] = patches_meta
 
 
     ##### write log to json
-    with open(f"{output_dir}/metadata.json", 'w') as f:
+    meta_output_path = os.path.join(output_dir, 'metadata.json')
+    with open(meta_output_path, 'w') as f:
         json.dump(metadata, f, indent=4)
 
 
     ##### write model summary to text file (model architecture, trainable parameters, kernel sizes)
+    arch_output_path = os.path.join(output_dir, 'architecture.txt')
     architecture = torchinfo.summary(model, depth=4, verbose=0, col_names=["num_params", "kernel_size"])
-    with open(f"{output_dir}/architecture.txt", 'w') as f:
+    with open(arch_output_path, 'w') as f:
         f.write(str(architecture))
 
 
@@ -473,85 +506,169 @@ def calculate_optimal_thresholds(model, loader, device, default_threshold=0.5):
 
 
 
+def clf_global_metrics(targets, probabilities, thresholds):
+    """
+    Compute global multi-label classification metrics. Probabilities are 
+    thresholded (using a scalar or per-class thresholds) to obtain binary 
+    predictions.
 
+    Parameters
+    ----------
+    targets : torch.Tensor
+        Ground-truth binary labels.
+    probabilities : torch.Tensor
+        Predicted probabilities or scores.
+    thresholds : float or array-like
+        Decision threshold(s) applied to probabilities.
 
+    Returns
+    -------
+    pandas.DataFrame
+        Single-row DataFrame containing computed metrics: Macro-averaged 
+        and weighted precision, recall, F1, ROC AUC, and mean average 
+        precision (mAP); micro-averaged accuracy (Hamming accuracy) and 
+        balanced accuracy. 
+    """
 
-
-
-
-def calculate_global_metrics(targets, probabilities, thresholds):
-
-    df = pd.DataFrame()
-
-    targs = targets.numpy().astype(np.int32)
-    probs = probabilities.numpy()
+    # move targs, probs, thresh to CPU, move to arrays; cast targets to int...
+    targs = targets.detach().cpu().numpy().astype(np.int32)
+    probs = probabilities.detach().cpu().numpy()
     thresholds = np.asarray(thresholds)
 
+    # calculate binary predictions from either single scalar or per-class array...
     if thresholds.ndim == 0:
-        binary_preds = (probs >= thresholds).astype(np.int32)
-
+        binary_preds = (probs >= thresholds).astype(np.int32)             # if scalar
     else:
-        binary_preds = (probs >= thresholds[None, :]).astype(np.int32)
+        binary_preds = (probs >= thresholds[None, :]).astype(np.int32)    # if array
     
-    df.loc[0, 'Precision'] = precision_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df.loc[0, 'Recall'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df.loc[0, 'F1'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df.loc[0, 'AUC'] = roc_auc_score(targs, probs, average="macro")
-    df.loc[0, 'mAP'] = average_precision_score(targs, probs, average='macro')
+    # initialize dict to hold metrics
+    df = {}
+
+    # calculate global performance metrics (macro- and weighted-)...
+    df['Precision (Macro)'] = precision_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df['Recall (Macro)'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df['F1 (Macro)'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df['AUC (Macro)'] = roc_auc_score(targs, probs, average="macro")
+    df['mAP (Macro)'] = average_precision_score(targs, probs, average='macro')
     
-    df.loc[0, 'Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df.loc[0, 'Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df.loc[0, 'F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df.loc[0, 'AUC (Wt.)'] = roc_auc_score(targs, probs, average="weighted")
-    df.loc[0, 'mAP (Wt.)'] = average_precision_score(targs, probs, average='weighted')
-    df.loc[0, 'Accuracy (Micro)'] = (binary_preds == targs).mean()
+    df['Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    df['Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    df['F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    df['AUC (Wt.)'] = roc_auc_score(targs, probs, average='weighted')
+    df['mAP (Wt.)'] = average_precision_score(targs, probs, average='weighted')
+    df['Accuracy (Micro)'] = (binary_preds == targs).mean()
+    df['Accuracy (Balanced)'] = balanced_accuracy_score(targs, binary_preds)
 
-    return df
+    return pd.DataFrame(df)
 
 
 
-def calculate_class_metrics(targets, probabilities, thresholds, classes=['af1', 'Qal', 'Qaf', 'Qat', 'Qc', 'Qca', 'Qr']):
+
+def clf_class_metrics(targets, probabilities, thresholds, classes):
+    """
+    Compute per-class classification metrics. Probabilities are 
+    thresholded (using a scalar or per-class thresholds) to obtain 
+    binary predictions.
+
+    Parameters
+    ----------
+    targets : torch.Tensor with shape ``(n_samples, n_classes)``
+        Ground-truth binary labels.
+    probabilities : torch.Tensor with shape ``(n_samples, n_classes)``
+        Predicted probabilities.
+    thresholds : float or array-like with shape ``(n_classes,)``
+        Decision threshold(s) applied to probabilities.
+    classes : sequence of str
+        Informal class names corresponding to each column.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame containing per-class metrics for each class: accuracy, 
+        precision, recall (sensitivity, TPR), specificity (TNR), F1, 
+        ROC AUC, and average precision (AP). In addtion, class name, 
+        threshold used, total number of positives (target), and total 
+        number of predicted positives (model)
+    """
+
+    # initialize dataframe
     df = pd.DataFrame()
 
+    # move targs, probs, thresh to CPU, move to arrays; cast targets to int...
+    targets = targets.detach().cpu().numpy().astype(np.int32)
+    probabilities = probabilities.detach().cpu().numpy()
     thresholds = np.asarray(thresholds)
 
+    # calculate binary predictions from either single scalar or per-class array...
+    if thresholds.ndim == 0:
+        thresholds = np.full(probabilities.shape[1], float(thresholds))
+        binary_preds = (probabilities >= thresholds).astype(np.int32)             # if scalar
+    else:
+        binary_preds = (probabilities >= thresholds[None, :]).astype(np.int32)    # if array
+
+    # iterate through each class and calculate performance metrics...
     for idx, (unit, thresh) in enumerate(zip(classes, thresholds)):
 
-        probs = probabilities[:, idx].numpy()
-        targs = targets[:, idx].numpy().astype(np.int32)
-        binary_preds = (probs >= thresh).astype(np.int32)
+        # get targets, probabilities, and binary predictitons for class
+        targs = targets[:, idx]
+        probs = probabilities[:, idx]
+        preds = binary_preds[:, idx]
 
-        df.loc[idx, 'Class'] = f"{unit} ({str(round(thresh, 2))})"
-        df.loc[idx, 'True'] = targs.sum()
-        df.loc[idx, 'Predicted'] = binary_preds.sum()
-        df.loc[idx, 'Accuracy'] = accuracy_score(targs, binary_preds)
-        df.loc[idx, 'Precision'] = precision_score(targs, binary_preds)
-        df.loc[idx, 'Recall'] = recall_score(targs, binary_preds)
-        df.loc[idx, 'F1'] = f1_score(targs, binary_preds)
+        # calculate metrics
+        df.loc[idx, 'Class'] = unit
+        df.loc[idx, 'Threshold'] = thresh
+        df.loc[idx, 'n True'] = targs.sum()
+        df.loc[idx, 'n Predicted'] = preds.sum()
+        df.loc[idx, 'Precision'] = precision_score(targs, preds, zero_division=0.0)
+        df.loc[idx, 'Recall'] = recall_score(targs, preds, zero_division=0.0)
+        df.loc[idx, 'Specificity'] = recall_score(1-targs, 1-preds, zero_division=0.0)
+        df.loc[idx, 'F1'] = f1_score(targs, preds, zero_division=0.0)
         df.loc[idx, 'AUC'] = roc_auc_score(targs, probs)
         df.loc[idx, 'AP'] = average_precision_score(targs, probs)
-    
+        df.loc[idx, 'Accuracy'] = accuracy_score(targs, preds)
+
     return df
 
 
 
 
-def plot_training_curves(df, output_dir):
 
+
+def plot_training_curves(df):
+    """
+    Plot training and validation loss and accuracy over epochs.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame containing columns ``train loss``, ``val loss``,
+        ``train accuracy``, and ``val accuracy`` ordered by epoch.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure containing the loss and accuracy curves.
+    """
+
+    # setup figure and axes for two subplots
     fig, ax = plt.subplots(ncols=2, figsize=(10,6))
 
+    # create generator for epochs
     epochs = range(1, len(df)+1)
 
-    ax[0].plot(epochs, df['train loss'], label='Train')
-    ax[0].plot(epochs, df['val loss'], label='Validation')
-    ax[0].set_ylabel('Focal Loss')
+    # plot loss subplot...
+    ax[0].plot(epochs, df['train loss'], lw=0.75, label='Train',)
+    ax[0].plot(epochs, df['val loss'], lw=0.75, label='Validation')
+    ax[0].set_ylabel('Loss')
 
-    ax[1].plot(epochs, df['train accuracy'], label='Train')
-    ax[1].plot(epochs, df['val accuracy'], label='Validation')
-    ax[1].set_ylabel('Accuracy (%)')
+    # plot micro-averaged accuracy
+    ax[1].plot(epochs, df['train accuracy'], lw=0.75, label='Train')
+    ax[1].plot(epochs, df['val accuracy'], lw=0.75, label='Validation')
+    ax[1].set_ylabel('Micro-accuracy (%)')
 
+    # plot selected model at correct epoch
     for axes in ax:
-        axes.axvline(x=df['val loss'].argmin()+1, linestyle='--', color='k', label='Best model')
+        axes.axvline(x=df['val loss'].argmin()+1, linestyle='--', color='darkred', label='Selected')
         axes.legend(frameon=False)
         axes.set_xticks(epochs)
         axes.set_xticklabels([str(x) if x%5==0 else '' for x in epochs])
@@ -564,46 +681,78 @@ def plot_training_curves(df, output_dir):
 
 
 
-def plot_label_pr_roc_curves(true, pred, class_cols=['af1', 'Qal', 'Qaf', 'Qat', 'Qc', 'Qca', 'Qr']):
-
-    precisions = []
-    recalls = []
-    fprs = []
-    tprs = []
-
-    for idx, unit in enumerate(class_cols):
-
-        Y_true = true[:, idx]
-        y_pred = pred[:, idx]
-
-        p, r, _ = precision_recall_curve(Y_true, y_pred)
-        precisions.append(p)
-        recalls.append(r)
-
-        fpr, tpr, _ = roc_curve(Y_true, y_pred)
-        fprs.append(fpr)
-        tprs.append(tpr)
 
 
+
+def plot_pr_roc_curves(targets, predictions, class_cols):
+    """
+    Plot per-class precision-recall and ROC curves.
+
+    Parameters
+    ----------
+    targets : array-like of shape (n_samples, n_classes)
+        Ground-truth binary labels.
+    predictions : array-like of shape (n_samples, n_classes)
+        Predicted scores or probabilities for each class.
+    class_cols : array-like of str of shape (n_classes)
+        Class names corresponding to each column.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure containing PR and ROC subplots with one curve per class.
+    """
+
+    # initialize figure and axes objects for two subplots 
     fig, ax = plt.subplots(ncols=2, figsize=(10,5))
 
-    for idx in range(len(class_cols)):
+    # initialize list for skipped classes
+    skipped = []
 
-        ax[0].plot(recalls[idx], precisions[idx], linewidth=1, label=class_cols[idx])
-        ax[0].set_xlabel('Recall')
-        ax[0].set_ylabel('Precision')
-        ax[0].set_title('Precision-Recall Curve', style='italic')
+    # iterate through classes...
+    for idx, unit in enumerate(class_cols):
+
+        # get ground truth & predicted labels...
+        Y_true = targets[:, idx]
+        y_pred = predictions[:, idx]
+
+        # if ground truth has no variance (same labels) then skip plots...
+        if Y_true.max() == Y_true.min():
+            skipped.append(unit)
+            continue
+        
+        # get precision & recall for all thresholds for each class...
+        p, r, _ = precision_recall_curve(Y_true, y_pred)
+
+        # get FPR & TPR (recall/sensitivity) for all thresholds for each class...
+        fpr, tpr, _ = roc_curve(Y_true, y_pred)
+
+
+        # plot P-R curve & ROC for each class...
+        ax[0].plot(r, p, linewidth=0.75, color=SG_MAPPING[unit], label=class_cols[idx])
+        ax[1].plot(fpr, tpr, linewidth=0.75, color=SG_MAPPING[unit], label=class_cols[idx])
     
-        ax[1].plot(fprs[idx], tprs[idx], linewidth=1, label=class_cols[idx])
-        ax[1].plot([0,1], [0,1], color='k', linestyle='--', lw=2)
-        ax[1].set_xlabel('False Positive Rate')
-        ax[1].set_ylabel('True Positive Rate')
-        ax[1].set_title('Receiver Operating Curve', style='italic')
+    # customize plots...
+    ax[0].set_xlabel('Recall')
+    ax[0].set_ylabel('Precision')
+    ax[0].set_title('Precision-Recall Curve', style='italic')
+
+    ax[1].plot([0,1], [0,1], color='k', linestyle='--', lw=1)
+    ax[1].set_xlabel('False Positive Rate')
+    ax[1].set_ylabel('True Positive Rate')
+    ax[1].set_title('Receiver Operating Curve', style='italic')
     
     for axes in ax:
         axes.set_xlim(0,1)
         axes.set_ylim(0,1)
     
-    ax[0].legend(loc='upper center', bbox_to_anchor=(1.15, -0.15), ncols=7, frameon=False, fontsize=8)
+    # add legend
+    ax[0].legend(loc='upper center', bbox_to_anchor=(1.15, -0.15), ncols=len(class_cols), frameon=False, fontsize=8)
+
+    # add note for any skipped classes...
+    if skipped:
+        fig.subplots_adjust(bottom=0.28)
+        note = "*Not shown - no ground-truth label variation: " + ", ".join(skipped)
+        fig.text(0.5, 0.03, note, ha='center', va='bottom', fontsize=8, fontstyle='italic')
 
     return fig
