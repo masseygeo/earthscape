@@ -1,9 +1,9 @@
 
-
 import numpy as np
 from scipy.ndimage import gaussian_filter
 import rasterio
 from rasterio.warp import reproject, Resampling, calculate_default_transform
+from rasterio.merge import merge
 
 
 
@@ -89,6 +89,82 @@ def image_to_reference_grid(input_path, reference_path, output_dtype=np.float32,
     # save output image as GeoTIFF
     with rasterio.open(output_path, "w", **src_meta) as dst:
         dst.write(out_data, 1)
+
+
+
+
+def mosaic_image_tiles(tile_paths, output_path, band_number, resample=None):
+    """
+    Function to create a new single GeoTIFF mosaic from multiple smaller image tiles.
+
+    Parameters
+    ----------
+    tile_paths : str
+        List of paths to GeoTIFF tiles.
+    output_path : str
+        Path for new output mosaic GeoTIFF.
+    band_number : int
+        Band (channel) to mosaic.
+    resample : int (optional)
+        Resolution of output image. If not provided, output image will have the same resolution as input image tiles.
+
+    Returns
+    -------
+    None
+    """
+
+    # set up parameters for merging tiles...
+    merge_kwargs = {
+        'indexes': [band_number], 
+        'dtype': np.float32, 
+        'nodata': np.nan
+        }
+
+    # open tile images
+    images = [rasterio.open(tile_path) for tile_path in tile_paths]
+
+    # merge tiles (depending on resampling)...
+    if resample:
+        mosaic, mosaic_transform = merge(images, res=resample, resampling=Resampling.bilinear, **merge_kwargs)
+    else:
+        mosaic, mosaic_transform = merge(images, **merge_kwargs)
+
+    # get unique nodata values...
+    nodata_values = []
+    for src in images:
+        if src.nodata is None:
+            continue
+        if isinstance(src.nodata, float) and np.isnan(src.nodata):
+            continue
+        nodata_values.append(src.nodata)
+    nodata_values = sorted(set(nodata_values))
+
+    # replace nodata values with nan...
+    for nd in nodata_values:
+        mosaic[np.isclose(mosaic, nd)] = np.nan
+
+    # update metadata....
+    mosaic_meta = images[0].meta.copy()
+    mosaic_meta.update({
+        'driver': 'GTiff', 
+        'height': mosaic.shape[1], 
+        'width': mosaic.shape[2], 
+        'transform': mosaic_transform, 
+        'crs': images[0].crs, 
+        'count': mosaic.shape[0], 
+        'nodata': np.nan, 
+        'dtype': np.dtype(np.float32).name
+        })
+    
+    # write output GeoTIFF mosaic image...
+    with rasterio.open(output_path, 'w', **mosaic_meta) as output:
+        for i in range(mosaic.shape[0]):
+            output.write(mosaic[i, :, :], i+1)
+    
+    # close opened tile images
+    for src in images:
+        src.close()
+
 
 
 

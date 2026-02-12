@@ -68,75 +68,75 @@ def save_config_snapshot(cfg, run_dir, config_path):
 
 
 
-def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
+# def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
 
-    # find directories containing GeoTIFF files...
-    patch_dirs = []
-    for current_dir, _, files in os.walk(data_dir):
-        for file in files:
-            if file.lower().endswith('.tif'):
-                patch_dirs.append(current_dir)
-                break
+#     # find directories containing GeoTIFF files...
+#     patch_dirs = []
+#     for current_dir, _, files in os.walk(data_dir):
+#         for file in files:
+#             if file.lower().endswith('.tif'):
+#                 patch_dirs.append(current_dir)
+#                 break
 
-    # iterate through modalities->channels->single image paths...
-    df_stats = pd.DataFrame()
+#     # iterate through modalities->channels->single image paths...
+#     df_stats = pd.DataFrame()
 
-    for mod_name, channels in MODALITIES.items():
+#     for mod_name, channels in MODALITIES.items():
 
-        # skip categorical channels...
-        if mod_name in ['osm', 'nhd', 'mask']:
-            continue
+#         # skip categorical channels...
+#         if mod_name in ['osm', 'nhd', 'mask']:
+#             continue
 
-        # iterate through moddality channels...
-        for c in channels:
+#         # iterate through moddality channels...
+#         for c in channels:
             
-            # find path for single image...
-            img_paths = []
-            for pdir in patch_dirs:
-                if patch_ids is None:
-                    img_paths.extend(glob.glob(f"{pdir}/*_{c}"))
-                else:
-                    for id in patch_ids:
-                        img_paths.extend(glob.glob(f"{pdir}/{id}_{c}"))
-            img_paths = list(set(img_paths))
+#             # find path for single image...
+#             img_paths = []
+#             for pdir in patch_dirs:
+#                 if patch_ids is None:
+#                     img_paths.extend(glob.glob(f"{pdir}/*_{c}"))
+#                 else:
+#                     for id in patch_ids:
+#                         img_paths.extend(glob.glob(f"{pdir}/{id}_{c}"))
+#             img_paths = list(set(img_paths))
 
-            # iterate through image channel paths & collect image stats...
-            pixel_count = 0
-            nodata_count = 0
-            pixel_sum = 0.0
-            pixel_sum2 = 0.0
-            global_min = np.inf
-            global_max = -np.inf
+#             # iterate through image channel paths & collect image stats...
+#             pixel_count = 0
+#             nodata_count = 0
+#             pixel_sum = 0.0
+#             pixel_sum2 = 0.0
+#             global_min = np.inf
+#             global_max = -np.inf
 
-            for ip in img_paths:
-                with rasterio.open(ip) as src:
-                    data = src.read(1, masked=True)
-                    total_pixels = data.size
-                    vals = data.compressed()
+#             for ip in img_paths:
+#                 with rasterio.open(ip) as src:
+#                     data = src.read(1, masked=True)
+#                     total_pixels = data.size
+#                     vals = data.compressed()
 
-                    pixel_count += vals.size
-                    nodata_count += total_pixels - vals.size
-                    pixel_sum += vals.sum()
-                    pixel_sum2 += (vals**2).sum()
+#                     pixel_count += vals.size
+#                     nodata_count += total_pixels - vals.size
+#                     pixel_sum += vals.sum()
+#                     pixel_sum2 += (vals**2).sum()
 
-                    if vals.min() < global_min:
-                        global_min = vals.min()
-                    if vals.max() > global_max:
-                        global_max = vals.max()
+#                     if vals.min() < global_min:
+#                         global_min = vals.min()
+#                     if vals.max() > global_max:
+#                         global_max = vals.max()
 
-            # calculate global stats (mean & sample var/sd)...
-            mean = pixel_sum / pixel_count
-            var = (pixel_sum2 - (pixel_sum**2) / pixel_count) / (pixel_count - 1)
-            sd = np.sqrt(var)
+#             # calculate global stats (mean & sample var/sd)...
+#             mean = pixel_sum / pixel_count
+#             var = (pixel_sum2 - (pixel_sum**2) / pixel_count) / (pixel_count - 1)
+#             sd = np.sqrt(var)
 
-            # save to df...
-            df_stats.loc[c, 'mean'] = mean
-            df_stats.loc[c, 'sd'] = sd
-            df_stats.loc[c, 'min'] = global_min
-            df_stats.loc[c, 'max'] = global_max
-            df_stats.loc[c, 'nodata_count'] = nodata_count
+#             # save to df...
+#             df_stats.loc[c, 'mean'] = mean
+#             df_stats.loc[c, 'sd'] = sd
+#             df_stats.loc[c, 'min'] = global_min
+#             df_stats.loc[c, 'max'] = global_max
+#             df_stats.loc[c, 'nodata_count'] = nodata_count
 
-    return df_stats
+#     return df_stats
 
 
 
@@ -206,3 +206,130 @@ def plot_multi_terrain_features(mdhs_path, terrain_paths, bounds, cmap, title):
 
     plt.suptitle(title, y=0.96)
     plt.show()
+
+
+
+
+
+def plot_training_curves(df):
+    """
+    Plot training and validation loss and accuracy over epochs.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        DataFrame containing columns ``train loss``, ``val loss``,
+        ``train accuracy``, and ``val accuracy`` ordered by epoch.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure containing the loss and accuracy curves.
+    """
+
+    # setup figure and axes for two subplots
+    fig, ax = plt.subplots(ncols=2, figsize=(10,6))
+
+    # create generator for epochs
+    epochs = range(1, len(df)+1)
+
+    # plot loss subplot...
+    ax[0].plot(epochs, df['train loss'], lw=0.75, label='Train',)
+    ax[0].plot(epochs, df['val loss'], lw=0.75, label='Validation')
+    ax[0].set_ylabel('Loss')
+
+    # plot micro-averaged accuracy
+    ax[1].plot(epochs, df['train accuracy'], lw=0.75, label='Train')
+    ax[1].plot(epochs, df['val accuracy'], lw=0.75, label='Validation')
+    ax[1].set_ylabel('Micro-accuracy (%)')
+
+    # plot selected model at correct epoch
+    for axes in ax:
+        axes.axvline(x=df['val loss'].argmin()+1, linestyle='--', color='darkred', label='Selected')
+        axes.legend(frameon=False)
+        axes.set_xticks(epochs)
+        axes.set_xticklabels([str(x) if x%5==0 else '' for x in epochs])
+        axes.set_xlabel('Epochs')
+
+    plt.suptitle(f"Training and Validation Curves", y=0.92)
+
+    return fig
+
+
+
+
+
+
+
+def plot_pr_roc_curves(targets, predictions, class_cols):
+    """
+    Plot per-class precision-recall and ROC curves.
+
+    Parameters
+    ----------
+    targets : array-like of shape (n_samples, n_classes)
+        Ground-truth binary labels.
+    predictions : array-like of shape (n_samples, n_classes)
+        Predicted scores or probabilities for each class.
+    class_cols : array-like of str of shape (n_classes)
+        Class names corresponding to each column.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure containing PR and ROC subplots with one curve per class.
+    """
+
+    # initialize figure and axes objects for two subplots 
+    fig, ax = plt.subplots(ncols=2, figsize=(10,5))
+
+    # initialize list for skipped classes
+    skipped = []
+
+    # iterate through classes...
+    for idx, unit in enumerate(class_cols):
+
+        # get ground truth & predicted labels...
+        Y_true = targets[:, idx]
+        y_pred = predictions[:, idx]
+
+        # if ground truth has no variance (same labels) then skip plots...
+        if Y_true.max() == Y_true.min():
+            skipped.append(unit)
+            continue
+        
+        # get precision & recall for all thresholds for each class...
+        p, r, _ = precision_recall_curve(Y_true, y_pred)
+
+        # get FPR & TPR (recall/sensitivity) for all thresholds for each class...
+        fpr, tpr, _ = roc_curve(Y_true, y_pred)
+
+
+        # plot P-R curve & ROC for each class...
+        ax[0].plot(r, p, linewidth=0.75, color=SG_MAPPING[unit], label=class_cols[idx])
+        ax[1].plot(fpr, tpr, linewidth=0.75, color=SG_MAPPING[unit], label=class_cols[idx])
+    
+    # customize plots...
+    ax[0].set_xlabel('Recall')
+    ax[0].set_ylabel('Precision')
+    ax[0].set_title('Precision-Recall Curve', style='italic')
+
+    ax[1].plot([0,1], [0,1], color='k', linestyle='--', lw=1)
+    ax[1].set_xlabel('False Positive Rate')
+    ax[1].set_ylabel('True Positive Rate')
+    ax[1].set_title('Receiver Operating Curve', style='italic')
+    
+    for axes in ax:
+        axes.set_xlim(0,1)
+        axes.set_ylim(0,1)
+    
+    # add legend
+    ax[0].legend(loc='upper center', bbox_to_anchor=(1.15, -0.15), ncols=len(class_cols), frameon=False, fontsize=8)
+
+    # add note for any skipped classes...
+    if skipped:
+        fig.subplots_adjust(bottom=0.28)
+        note = "*Not shown - no ground-truth label variation: " + ", ".join(skipped)
+        fig.text(0.5, 0.03, note, ha='center', va='bottom', fontsize=8, fontstyle='italic')
+
+    return fig

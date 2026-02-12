@@ -13,6 +13,7 @@ import shapely
 from shapely.geometry import Polygon
 
 
+
 def gis_to_image(input_path, output_path, output_resolution, multiclass_col=None, multiclass_map=SG_MAPPING):
     """
     Function to convert vector geospatial file to GeoTIFF image file with a given resolution and categorical attribute. Output GeoTIFF file is of float32 dtype with NaN representing nodata values.

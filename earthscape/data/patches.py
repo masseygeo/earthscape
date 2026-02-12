@@ -1,5 +1,6 @@
 
 import os
+import glob
 import pandas as pd
 import numpy as np
 import geopandas as gpd
@@ -169,3 +170,76 @@ def calculate_one_hots(areas_path, threshold=None):
     labels[class_cols] = labels[class_cols].astype(int)         # cast bool to int
 
     return labels
+
+
+
+
+def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
+
+    # find directories containing GeoTIFF files...
+    patch_dirs = []
+    for current_dir, _, files in os.walk(data_dir):
+        for file in files:
+            if file.lower().endswith('.tif'):
+                patch_dirs.append(current_dir)
+                break
+
+    # iterate through modalities->channels->single image paths...
+    df_stats = pd.DataFrame()
+
+    for mod_name, channels in MODALITIES.items():
+
+        # skip categorical channels...
+        if mod_name in ['osm', 'nhd', 'mask']:
+            continue
+
+        # iterate through moddality channels...
+        for c in channels:
+            
+            # find path for single image...
+            img_paths = []
+            for pdir in patch_dirs:
+                if patch_ids is None:
+                    img_paths.extend(glob.glob(f"{pdir}/*_{c}"))
+                else:
+                    for id in patch_ids:
+                        img_paths.extend(glob.glob(f"{pdir}/{id}_{c}"))
+            img_paths = list(set(img_paths))
+
+            # iterate through image channel paths & collect image stats...
+            pixel_count = 0
+            nodata_count = 0
+            pixel_sum = 0.0
+            pixel_sum2 = 0.0
+            global_min = np.inf
+            global_max = -np.inf
+
+            for ip in img_paths:
+                with rasterio.open(ip) as src:
+                    data = src.read(1, masked=True)
+                    total_pixels = data.size
+                    vals = data.compressed()
+
+                    pixel_count += vals.size
+                    nodata_count += total_pixels - vals.size
+                    pixel_sum += vals.sum()
+                    pixel_sum2 += (vals**2).sum()
+
+                    if vals.min() < global_min:
+                        global_min = vals.min()
+                    if vals.max() > global_max:
+                        global_max = vals.max()
+
+            # calculate global stats (mean & sample var/sd)...
+            mean = pixel_sum / pixel_count
+            var = (pixel_sum2 - (pixel_sum**2) / pixel_count) / (pixel_count - 1)
+            sd = np.sqrt(var)
+
+            # save to df...
+            df_stats.loc[c, 'mean'] = mean
+            df_stats.loc[c, 'sd'] = sd
+            df_stats.loc[c, 'min'] = global_min
+            df_stats.loc[c, 'max'] = global_max
+            df_stats.loc[c, 'nodata_count'] = nodata_count
+
+    return df_stats
