@@ -1,11 +1,10 @@
 
 import os
-# import glob
+import glob
 import requests
 import zipfile
 import pandas as pd
 import geopandas as gpd
-# import shapely
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -13,16 +12,17 @@ from urllib.parse import urlparse
 
 def download_zip(url, output_dir):
     """
-    Function to download zip file from a specified URL, extract 
-    contents in the specified output directory, and delete the 
-    zip file.
+    Download a ZIP archive from a URL, extract its contents, and
+    remove the temporary archive file. The archive is downloaded 
+    to ``output_dir`` as ``download.zip``, extracted in place, and 
+    then deleted after extraction.
 
     Parameters
     ----------
     url : str
-        Download URL for zip file.
+        URL of the ZIP archive to download.
     output_dir : str or pathlib.Path
-        Directory path to save zip file and extract contents.
+        Directory where the archive is saved and extracted.
 
     Returns
     -------
@@ -47,14 +47,16 @@ def download_zip(url, output_dir):
 
 def download_tif(url, output_path):
     """
-    Function to download TIFF file from a specified URL.
+    Download a GeoTIFF file from a URL and save it to disk. 
+    The file is retrieved via HTTP and written directly to
+    ``output_path`` if the request succeeds.
 
     Parameters
     ----------
     url : str
-        Download URL for GeoTIFF file.
+        URL of the GeoTIFF to download.
     output_path : str or pathlib.Path
-        Path to save GeoTIFF.
+        Destination path for the downloaded file.
 
     Returns
     -------
@@ -73,42 +75,34 @@ def download_tif(url, output_path):
 
 
 
-
-
-
-def ky_index_tiles(aoi_path, 
-                   url_field="Phase1_AWS_url", 
-                   layer_url=r"https://kygisserver.ky.gov/arcgis/rest/services/WGS84WM_Services/KY_Data_Tiles_DEM_WGS84WM/MapServer/0", 
-                   tile_name_field="Tile_Name", 
-                   page_size=1000, 
-                   pad=0):
+def get_ky_index(aoi_path, url_field, layer_url, tile_name_field, page_size=1000, pad=0):
     """
-    Retrieve Kentucky DEM tiles intersecting an AOI. The AOI is 
-    reprojected to EPSG:3857, its bounding box (optionally
-    padded) is used to query the ArcGIS REST tile index layer, and
-    results are paginated until all matching tiles are returned.
+    Retrieve Kentucky From Above index tiles intersecting an AOI. The 
+    AOI is reprojected to EPSG:3857, its bounding box (optionally padded)
+    is used to query an ArcGIS REST tile-index layer, and results are
+    paginated until all matching features are retrieved.
 
     Parameters
     ----------
-    aoi_path : str or pathlib.Path
+    aoi_path : str or path-like
         Path to an AOI vector dataset readable by GeoPandas.
     url_field : str
-        Field name containing the tile download URL.
+        Field name in the index layer containing the tile download URL.
     layer_url : str
         ArcGIS REST layer URL (ending in /MapServer/<layer_id>).
     tile_name_field : str
-        Field name containing the tile name.
-    page_size : int
+        Field name in the index layer containing the tile name/identifier.
+    page_size : int, default=1000
         Number of records requested per page from the REST service.
-    pad : float
-        Padding (in EPSG:3857 units) applied to the AOI bounding box.
+    pad : float, default=0
+        Padding distance (EPSG:3857 units) applied to the AOI bounding box.
 
     Returns
     -------
     geopandas.GeoDataFrame
-        GeoDataFrame in EPSG:3857 with columns ['tile', 'url', 'geometry'].
+        GeoDataFrame in EPSG:3857 containing intersecting tile footprints.
+        When non-empty, columns are ['tile', 'url', 'geometry'].
     """
-
 
     # setup query for ArcGIS web service
     query_url = f"{layer_url}/query"
@@ -170,16 +164,15 @@ def ky_index_tiles(aoi_path,
 
 
 
-def get_kyfromabove_tiles(index_path, id_field, url_field, output_dir):
+
+def get_ky_data(index_path, id_field, url_field, output_dir):
     """
-    Download KYFromAbove tiles listed in an index dataset. Reads a GeoJSON 
-    (or other GeoPandas-readable vector file) containing
-    tile identifiers and download URLs, then iterates through each record
-    and downloads the referenced resource. Files with a ``.tif`` extension
-    are downloaded directly to ``output_dir`` using the tile id as the
-    output filename. Files with a ``.zip`` extension are downloaded and
-    handled via ``download_zip``. Other extensions are reported but not
-    downloaded.
+    Download KYFromAbove tiles listed in an index dataset. Reads a 
+    vector index file containing tile identifiers and download
+    URLs, then iterates through each record and downloads the referenced
+    resource. Existing files matching the tile identifier and extension
+    in ``output_dir`` are skipped, allowing interrupted download sessions
+    to resume.
 
     Parameters
     ----------
@@ -195,9 +188,7 @@ def get_kyfromabove_tiles(index_path, id_field, url_field, output_dir):
     Returns
     -------
     None
-        Files are written to ``output_dir``.
     """
-
     # read KyFromAbove data tile index GeoJSON as gdf
     gdf = gpd.read_file(index_path)
     
@@ -207,20 +198,20 @@ def get_kyfromabove_tiles(index_path, id_field, url_field, output_dir):
         url = tile[url_field]
         ext = Path(urlparse(url).path).suffix.lower()
 
+        # check for existing file (i.e., able to restart downloads where last ended)
+        candidate_glob = os.path.join(output_dir, f"*{tile_id}{ext}")
+        if len(glob.glob(candidate_glob)) > 0:
+            continue
+
         # download TIFF images...
-        if ext == 'tif':
+        if ext == '.tif':
             output_path = f"{output_dir}/{tile_id}.tif"
             download_tif(url, output_path)
 
         # download .ZIP files...
-        elif ext == 'zip':
+        elif ext == '.zip':
             download_zip(url, output_dir)
 
         # print failure mode...
         else:
             print(f"Unsupported download type for tile {tile_id}: {ext or '(no extension)'}")
-
-
-        
-
-        

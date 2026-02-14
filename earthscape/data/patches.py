@@ -1,4 +1,5 @@
 
+# from earthscape.constants import DATASET_DIR, MODALITIES
 import os
 import glob
 import pandas as pd
@@ -11,172 +12,130 @@ from rasterio.mask import mask
 
 
 
-def create_image_patches(reference_path, patch_size, patch_overlap, boundary_path, output_path, name_prefix=None):
+def patches_create(reference_path, patch_size, patch_overlap, boundary_path, output_path, name_prefix=None):
     """
-    Function to create geospatial polygons that represent square image patch locations saved as a GeoJSON. The size of the image patches (assumed to be square) and the proportion of overlap between adjacent patches is specified. Each patch will have a unique id created from the patch_size, patch_overlap, and a unique number.
+    Create square patch polygons aligned to a reference raster grid over an AOI. 
+    
+    Patch polygons are generated on the pixel grid of `reference_path` so that patch
+    edges align exactly with raster pixel boundaries. The raster provides the CRS,
+    resolution, and raster-aligned bounds used to step a regular patch grid. The
+    AOI provided by `boundary_path` is expected to represent the same area as the
+    reference raster (vector vs. raster representation), and is used to retain only
+    patches that are fully contained within the AOI geometry.
+
+    Patch size is specified in pixels and converted to map units using the raster
+    pixel size. Adjacent patches are spaced according to `patch_overlap`. Each
+    retained patch is assigned a unique `patch_id` derived from patch size, overlap
+    percentage, and a sequential index (optionally prefixed).
 
     Parameters
     ----------
     reference_path : str
-        Path to a reference GeoTIFF image that represents the area where patches will be created.
+        Path to a reference GeoTIFF used to define CRS, pixel resolution, and
+        raster-aligned bounds for patch generation.
     patch_size : int or float
-        Size of the square patch in pixels.
+        Size of each square patch in pixels.
     patch_overlap : float
-        Proportion of overlap between adjacent patches.
+        Proportion of overlap between adjacent patches (e.g., 0.25 for 25% overlap).
     boundary_path : str
-        Path to area of interest boundary GeoJSON file (should be aligned with boundaries of reference_path image) to ensure patch polygons intersect.
+        Path to the AOI boundary GeoJSON. Patches are kept only if fully contained
+        within the AOI geometry. The AOI is assumed to correspond to the same area
+        as `reference_path` (vector vs. raster extent differences).
     output_path : str
-        Path for output patch polygon GeoJSON file.
-
-    Returns
-    -------
-    None.
-    """
-
-    boundary = gpd.read_file(boundary_path)
-
-    with rasterio.open(reference_path) as src:
-        bounds = src.bounds
-        res = src.res[0]
-        crs = src.crs
-        
-    patch_size_units = patch_size * res
-    overlap_start_units = patch_size_units * (1 - patch_overlap)
-
-    patches = []
-    x = bounds.left
-    while x < bounds.right:
-        y = bounds.bottom
-        while y < bounds.top:
-            patch = box(x, y, x+patch_size_units, y+patch_size_units)
-
-            if patch.within(boundary.geometry).any():
-                patches.append(patch)
-            y += overlap_start_units
-        x += overlap_start_units
-    
-    gdf = gpd.GeoDataFrame(geometry=patches, crs=crs)
-
-    if not name_prefix:
-        gdf['patch_id'] = [f"{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
-    else:
-        gdf['patch_id'] = [f"{name_prefix}_{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
-        
-    gdf.to_file(output_path, driver='GeoJSON')
-
-
-
-
-def extract_patch(image_path, patches_gdf, output_dir):
-    """
-    Function to use extract image patches from a geodataframe of patch polygyons.
-
-    Parameters
-    ----------
-    image_path : str
-        Path to image to extract patch.
-    patches_gdf : geodataframe
-        Geodataframe of patch polygons.
-    output_dir : str
-        Path for output image patch. Unique patch id from geodataframe will be used for prefix filename.
+        Destination path for the output patch polygon GeoJSON.
+    name_prefix : str, optional
+        Optional prefix to prepend to generated patch IDs.
 
     Returns
     -------
     None
     """
+    # read AOI boundary as gdf & get boundary geometry...
+    boundary = gpd.read_file(boundary_path)
+    boundary_union = boundary.geometry.union_all()
 
-    # get image name...
-    image_name = os.path.basename(image_path)
-    image_name = os.path.splitext(image_name)[0]
-
-    with rasterio.open(image_path) as src:
-        src_nodata = src.nodata
-
-        for _, row in patches_gdf.iterrows():
-
-            geom = row['geometry']
-
-            dst_image, dst_transform = mask(src, shapes=[geom], crop=True, filled=True, nodata=src_nodata)
-
-            dst_meta = src.meta.copy()
-            dst_meta.update({'driver':'GTiff', 
-                             'height': dst_image.shape[1], 
-                             'width': dst_image.shape[2], 
-                             'transform': dst_transform,
-                             'nodata': src_nodata})
-        
-            output_path = f"{output_dir}/{row['patch_id']}_{image_name}.tif"
+    # get bounding coordinates, resolution, & CRS of reference target image...
+    with rasterio.open(reference_path) as src:
+        bounds = src.bounds
+        res = src.res[0]
+        crs = src.crs
     
-            with rasterio.open(output_path, 'w', **dst_meta) as dst:
-                dst.write(dst_image)
+    # calculate patch size in CRS units
+    patch_size_units = patch_size * res
 
+    # calculate distance from patch1 edge to adjacent patch2 edge in CRS units
+    overlap_start_units = patch_size_units * (1 - patch_overlap)
 
+    # initialize list to hold patch polygon geometries
+    patches = []
 
+    # initialize E-W starting point
+    x = bounds.left
 
-def calculate_patch_areas(patches_path, mask_path, label_space):
+    # create patches while x is in AOI...
+    while x < bounds.right:
+
+        # initialize N-S starting point
+        y = bounds.bottom
+
+        # create patches while y is in AOI...
+        while y < bounds.top:
+
+            # create patch polygon geometry using x,y coordinates (lower left, SE)
+            patch = box(x, y, x+patch_size_units, y+patch_size_units)
+
+            # append patch ONLY if patch is fully contained withint AOI...
+            if boundary_union.contains(patch):
+                patches.append(patch)
+
+        # update lower left coordinates...
+            y += overlap_start_units
+        x += overlap_start_units
     
-    ##### read data as dataframes...
-    patches = gpd.read_file(patches_path)
-    mask = gpd.read_file(mask_path)
+    # create gdf of final patches...
+    gdf = gpd.GeoDataFrame(geometry=patches, crs=crs)
 
-
-    ##### intersect map units with patches, then compute areas...
-    overlay = gpd.overlay(mask, patches, how='intersection')   # spatial overlay of geologic map units intersecting each patch
-    overlay['area_in_patch'] = overlay.geometry.area           # calculate area of each geologic map unit in each area
-
-
-    ##### convert to within-patch proportions...
-    for patch in overlay['patch_id'].unique():
-        geology_areas = overlay.loc[overlay['patch_id'] == patch, 'area_in_patch'].values          # get array of geologic map unit areas 
-        total_area = overlay.loc[overlay['patch_id'] == patch, 'area_in_patch'].sum(axis=0)        # get total area covered by map unit in each patch
-        overlay.loc[overlay['patch_id'] == patch, 'area_in_patch'] = geology_areas / total_area    # calculate proportions of each map unit in each patch
-    overlay['area_in_patch'] = overlay['area_in_patch'].astype(np.float32)                         # convert to float32 for consistency with all other data
-
-
-    ##### create new dataframe for patches (rows) and class area proportions (columns)...
-    initialize_dict = {'patch_id': patches['patch_id']}
-    df_areas = pd.DataFrame(initialize_dict)
-    df_areas[label_space] = 0
-    df_areas[label_space] = df_areas[label_space].astype(np.float32)
-
-
-    ##### group overlay and insert areas into df...
-    # group overlay gdf by patch and geologic map unit type
-    # NOTE: there can be multiple map units of same type within each patch, so need to also group by Symbol for overall area
-    grouped = overlay.groupby(['patch_id', 'Symbol']).agg({'area_in_patch':'sum'})
-    for (patch, symbol), row in grouped.iterrows():
-        area = row['area_in_patch'].item()                           # get area of unique map unit in specific patch
-        df_areas.loc[df_areas['patch_id']==patch, symbol] = area     # insert into dataframe
-
-    return df_areas
+    # create unique patch ID for each patch...
+    if not name_prefix:
+        gdf['patch_id'] = [f"{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
+    else:
+        gdf['patch_id'] = [f"{name_prefix}_{patch_size}_{int(patch_overlap*100)}_{i}" for i in range(1, len(gdf)+1)]
+    
+    # save as GeoJSON
+    gdf.to_file(output_path, driver='GeoJSON')
 
 
 
 
-def calculate_one_hots(areas_path, threshold=None):
+def patches_get_stats(data_dir, modalities, patch_ids=None, cat_chans=['osm', 'nhd', 'mask']):
+    """
+    Compute global summary statistics for patch GeoTIFF channels within a dataset. 
+    This function searches `data_dir` recursively for patch subdirectories
+    containing GeoTIFF files, then aggregates per-channel statistics across all
+    matching patch images for each modality listed in `modalities`. Modalities
+    listed in `cat_chans` are skipped (assumed categorical). Statistics are
+    computed over valid (unmasked) pixels only.
 
-    ##### read areas into df...
-    areas = pd.read_csv(areas_path)
-    labels = areas.copy()
-    class_cols = labels.columns[1:]
-    labels[class_cols] = labels[class_cols].astype(np.float32)
+    Parameters
+    ----------
+    data_dir : str
+        Root directory containing patch subdirectories with GeoTIFF files.
+    modalities : dict[str, list[str]]
+        Mapping from modality name to a list of channel filename suffixes
+        (e.g., {"dem": ["dem.tif"], "ep": ["ep_5x5.tif", "ep_11x11.tif"]}).
+    patch_ids : sequence of str, optional
+        If provided, restricts computation to the specified patch IDs (prefixes).
+    cat_chans : list[str], optional
+        Modality names to skip (treated as categorical), by default
+        ["osm", "nhd", "mask"].
 
-
-    ##### calculate one-hot labels using threshold (if given)...
-    if threshold is None:                                       # labels for presence (1 or more pixels) of class in patch 
-        labels[class_cols] = labels[class_cols] > 0
-    else:                                                       # labels for presence & footprint of class in patch
-        labels[class_cols] = labels[class_cols] >= threshold
-    labels[class_cols] = labels[class_cols].astype(int)         # cast bool to int
-
-    return labels
-
-
-
-
-def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
-
-    # find directories containing GeoTIFF files...
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame indexed by modality channel suffix containing global mean, standard
+        deviation, min, max, and nodata pixel counts aggregated across all images.
+    """
+    # find all sub-directories containing GeoTIFF files...
     patch_dirs = []
     for current_dir, _, files in os.walk(data_dir):
         for file in files:
@@ -184,26 +143,34 @@ def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
                 patch_dirs.append(current_dir)
                 break
 
-    # iterate through modalities->channels->single image paths...
+    # initialize df to hold statistics
     df_stats = pd.DataFrame()
 
-    for mod_name, channels in MODALITIES.items():
+    # iterate through dict of modality names (keys) & list of channel path suffixes (values)...
+    # EXAMPLE: {'dem': ['dem.tif'], 'ep': ['ep_5x5.tif', 'ep_11x11.tif']}
+    for mod_name, channels in modalities.items():
 
         # skip categorical channels...
-        if mod_name in ['osm', 'nhd', 'mask']:
+        if mod_name in cat_chans:
             continue
 
-        # iterate through moddality channels...
+        # iterate through modality channels...
         for c in channels:
             
-            # find path for single image...
+            # get image paths from all sub-directories found above...
             img_paths = []
             for pdir in patch_dirs:
+
+                # for all images...
                 if patch_ids is None:
                     img_paths.extend(glob.glob(f"{pdir}/*_{c}"))
+                
+                # for specified images only
                 else:
                     for id in patch_ids:
                         img_paths.extend(glob.glob(f"{pdir}/{id}_{c}"))
+            
+            # remove duplicates of empty globs 
             img_paths = list(set(img_paths))
 
             # iterate through image channel paths & collect image stats...
@@ -243,3 +210,187 @@ def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
             df_stats.loc[c, 'nodata_count'] = nodata_count
 
     return df_stats
+
+
+
+
+def patches_get_areas(patches_path, mask_path, label_space):
+    """
+    Compute per-patch class area proportions from a vector mask layer.
+
+    Patch polygon layer and a categorical mask layer are intersected using
+    `geopandas.overlay`, and the area of each mask class within each patch
+    is computed and aggregated. Areas are normalized to proportions per patch.
+
+    The output `pandas.DataFrame` contains one row per patch (`patch_id`) and 
+    one column per class defined in `label_space`. The `label_space` argument 
+    is used to enforce a consistent schema across runs: classes not present in 
+    a given patch (or dataset) are included with proportion 0 to ensure stable 
+    column structure.
+
+    Parameters
+    ----------
+    patches_path : str
+        Path to a patch polygon GeoJSON (must include a `patch_id` column).
+    mask_path : str
+        Path to a categorical mask GeoJSON (must include a `Symbol` column).
+    label_space : sequence of str
+        Ordered list of class labels to include as output columns. Ensures
+        consistent column schema even if some classes are absent.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame indexed by patch with class area proportions as columns.
+    """
+    # read patch polygons & target mask GeoJSON version) as gdf's...
+    patches = gpd.read_file(patches_path)
+    mask = gpd.read_file(mask_path)
+
+    # spatial overlay of mask intersecting each patch
+    overlay = gpd.overlay(mask, patches, how='intersection')
+
+    # calculate area of each class in mask for each patch
+    overlay['area_in_patch'] = overlay.geometry.area           
+
+    # convert areas to within-patch proportions...
+    for patch in overlay['patch_id'].unique():
+
+        # get array of areas for each class
+        geology_areas = overlay.loc[overlay['patch_id'] == patch, 'area_in_patch'].values
+
+        # get total area of patch (should all be same)
+        total_area = overlay.loc[overlay['patch_id'] == patch, 'area_in_patch'].sum(axis=0)
+
+        # calculate proportions of each class in each patch
+        overlay.loc[overlay['patch_id'] == patch, 'area_in_patch'] = geology_areas / total_area
+
+    # convert to float32 for consistency with all other data
+    overlay['area_in_patch'] = overlay['area_in_patch'].astype(np.float32)                         
+
+    # create new df for patches (rows) and class area proportions (columns)...
+    areas_dict = {'patch_id': patches['patch_id']}                     # create dict of patch IDs
+    df_areas = pd.DataFrame(areas_dict)                                # create df of patch IDs
+    df_areas[label_space] = 0                                          # create cols for class labels
+    df_areas[label_space] = df_areas[label_space].astype(np.float32)   # convert to float
+
+    # group overlay gdf by patch and geologic map unit type
+    # NOTE: there can be multiple instances of same class within each patch -> need to also group by Symbol for overall area
+    grouped = overlay.groupby(['patch_id', 'Symbol']).agg({'area_in_patch':'sum'})
+
+    # iterate over grouped patches...
+    for (patch, symbol), row in grouped.iterrows():
+        area = row['area_in_patch'].item()                           # get total area of class
+        df_areas.loc[df_areas['patch_id']==patch, symbol] = area     # insert into new df
+
+    return df_areas
+
+
+
+
+def patches_get_labels(areas_path, threshold=None):
+    """
+    Calculate one-hot class labels using per-patch class area proportions CSV file. 
+    This function reads a CSV of per-patch class area proportions (e.g.,
+    output from `patch_get_areas`) and converts the class proportion columns
+    into binary labels. By default, a class is labeled as present if its
+    proportion is greater than 0. If `threshold` is provided, a class is
+    labeled as present only if its proportion is greater than or equal to
+    that threshold. The output preserves the original column schema (including 
+    `patch_id`) and returns integer binary labels (0 or 1) for each class.
+
+    Parameters
+    ----------
+    areas_path : str
+        Path to CSV file containing per-patch class area proportions; first 
+        column assumed to be a non-class column (e.g., `patch_id`).
+    threshold : float, optional
+        Minimum proportion required to mark a class as present. If None,
+        any proportion > 0 is considered present.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with the same schema as the input, where class columns
+        contain binary (0/1) labels.
+    """
+
+
+    # read per-patch class areas CSV into df
+    areas = pd.read_csv(areas_path)
+
+    # copy areas for consistent schema
+    labels = areas.copy()
+
+    # cast class columns to float
+    class_cols = labels.columns[1:]
+    labels[class_cols] = labels[class_cols].astype(np.float32)
+
+    # calculate one-hot labels (using threshold if given)...
+    # labels indicate class presence in patch (1 or more pixels of exposure)
+    if threshold is None:                                       
+        labels[class_cols] = labels[class_cols] > 0
+
+    # labels indicate presence & area proportion threshold in patch
+    else:                                                       
+        labels[class_cols] = labels[class_cols] >= threshold
+    
+    # cast binary labels to int
+    labels[class_cols] = labels[class_cols].astype(int)
+
+    return labels
+
+
+
+
+def img_to_patch(image_path, patches_gdf, output_dir):
+    """
+    Extract 1-channel images defined by patch polygon geometries and write 
+    them as GeoTIFFs. For each polygon in `patches_gdf`, this function crops 
+    `image_path` to the polygon extent using `rasterio.mask.mask` and writes 
+    the cropped raster to `output_dir`. Output filenames are prefixed with the 
+    polygon's `patch_id` and the source image base name.
+
+    Parameters
+    ----------
+    image_path : str
+        Path to the source raster from which patches are extracted.
+    patches_gdf : geopandas.GeoDataFrame
+        GeoDataFrame containing patch polygons in a `geometry` column and a
+        `patch_id` column used for naming outputs.
+    output_dir : str
+        Output directory where patch GeoTIFFs will be written.
+
+    Returns
+    -------
+    None
+    """
+    # get image name...
+    image_name = os.path.basename(image_path)
+    image_name = os.path.splitext(image_name)[0]
+
+    # open large source image to extract the smaller patch image from...
+    with rasterio.open(image_path) as src:
+        src_nodata = src.nodata
+
+        # iterate through geodataframe of patch polygons...
+        for _, row in patches_gdf.iterrows():
+            
+            # get spatial geometry of patch
+            geom = row['geometry']
+            
+            # mask source image using current patch geometry to get patch image
+            dst_image, dst_transform = mask(src, shapes=[geom], crop=True, filled=True, nodata=src_nodata)
+
+            # copy source metadata & update for patch image...
+            dst_meta = src.meta.copy()
+            dst_meta.update({'driver':'GTiff', 
+                             'height': dst_image.shape[1], 
+                             'width': dst_image.shape[2], 
+                             'transform': dst_transform,
+                             'nodata': src_nodata})
+
+            # save patch image using unique patch ID in gdf & source image name...
+            output_path = f"{output_dir}/{row['patch_id']}_{image_name}.tif"
+            with rasterio.open(output_path, 'w', **dst_meta) as dst:
+                dst.write(dst_image)

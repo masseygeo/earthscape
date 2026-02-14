@@ -1,64 +1,92 @@
 
-from earthscape.constants import DATASET_DIR, MODALITIES
-import random
-from pathlib import Path
 import os
+from pathlib import Path
 import yaml
-import glob
-import pandas as pd
+import random
 import numpy as np
 import rasterio
 from rasterio.plot import show
 from rasterio.windows import from_bounds
 import torch
+from sklearn.metrics import precision_recall_curve, roc_curve
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 
-def set_seed(seed):
+
+
+def set_seed(seed, strict=False):
     """
-    Set seed for reproducible training and inference across Python, NumPy, and PyTorch (CPU & GPU).
+    Set random seeds for reproducible behavior in Python, NumPy, and PyTorch.
+
+    Seeds the Python built-in RNG, NumPy RNG, and PyTorch RNG for both
+    CPU and all available CUDA devices. When ``strict=True``, enables
+    deterministic cuDNN behavior and enforces deterministic PyTorch
+    algorithms, which may reduce performance.
 
     Parameters
     ----------
     seed : int
-        The random seed to use.
+        Random seed value.
+    strict : bool, default=False
+        If True, enforce deterministic cuDNN behavior and PyTorch
+        deterministic algorithms.
 
-    Return
-    ------
+    Returns
+    -------
     None
     """
-    
+
     # set python, numpy, pytorch seeds...
-    random.seed(seed)                          # set Python built-in RNG
-    np.random.seed(seed)                       # set NumPy RNG
-    torch.manual_seed(seed)                    # set PyTorch CPU RNG
-    torch.cuda.manual_seed_all(seed)           # set PyTorch GPU RNG across all CUDA devices
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
-    # make cudnn deterministic (may slow down training)...
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    # optionally set pytorch deterministic settings (may slow training)...
+    if strict:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True)
 
 
 
-def seed_worker(worker_id):
+
+
+def set_worker_seed(worker_id):
+    """
+    Initialize random seeds for a PyTorch DataLoader worker.
+
+    Derives a worker-specific seed from ``torch.initial_seed()`` and
+    uses it to seed NumPy and Python's built-in random module. Intended
+    for use as the ``worker_init_fn`` argument in ``torch.utils.data.DataLoader``
+    to ensure reproducible data loading when ``num_workers > 0``.
+
+    Parameters
+    ----------
+    worker_id : int
+        Worker process identifier assigned by the DataLoader.
+
+    Returns
+    -------
+    None
+    """
     worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
 
 
-def load_config(path: str) -> dict:
+
+def config_load(path: str) -> dict:
     with open(path, "r") as f:
         cfg = yaml.safe_load(f)
     return cfg
 
 
 
-def save_config_snapshot(cfg, run_dir, config_path):
-    """
-    Save the resolved config to run_dir/config_used.yml for reproducibility.
-    """
+
+def config_save(cfg, run_dir, config_path):
     cfg_copy = cfg.copy()
     cfg_copy["experiment"]["config_path"] = str(Path(config_path).resolve())
     out_path = run_dir / "config_used.yml"
@@ -68,99 +96,31 @@ def save_config_snapshot(cfg, run_dir, config_path):
 
 
 
-# def calculate_dataset_stats(data_dir=DATASET_DIR, patch_ids=None):
-
-#     # find directories containing GeoTIFF files...
-#     patch_dirs = []
-#     for current_dir, _, files in os.walk(data_dir):
-#         for file in files:
-#             if file.lower().endswith('.tif'):
-#                 patch_dirs.append(current_dir)
-#                 break
-
-#     # iterate through modalities->channels->single image paths...
-#     df_stats = pd.DataFrame()
-
-#     for mod_name, channels in MODALITIES.items():
-
-#         # skip categorical channels...
-#         if mod_name in ['osm', 'nhd', 'mask']:
-#             continue
-
-#         # iterate through moddality channels...
-#         for c in channels:
-            
-#             # find path for single image...
-#             img_paths = []
-#             for pdir in patch_dirs:
-#                 if patch_ids is None:
-#                     img_paths.extend(glob.glob(f"{pdir}/*_{c}"))
-#                 else:
-#                     for id in patch_ids:
-#                         img_paths.extend(glob.glob(f"{pdir}/{id}_{c}"))
-#             img_paths = list(set(img_paths))
-
-#             # iterate through image channel paths & collect image stats...
-#             pixel_count = 0
-#             nodata_count = 0
-#             pixel_sum = 0.0
-#             pixel_sum2 = 0.0
-#             global_min = np.inf
-#             global_max = -np.inf
-
-#             for ip in img_paths:
-#                 with rasterio.open(ip) as src:
-#                     data = src.read(1, masked=True)
-#                     total_pixels = data.size
-#                     vals = data.compressed()
-
-#                     pixel_count += vals.size
-#                     nodata_count += total_pixels - vals.size
-#                     pixel_sum += vals.sum()
-#                     pixel_sum2 += (vals**2).sum()
-
-#                     if vals.min() < global_min:
-#                         global_min = vals.min()
-#                     if vals.max() > global_max:
-#                         global_max = vals.max()
-
-#             # calculate global stats (mean & sample var/sd)...
-#             mean = pixel_sum / pixel_count
-#             var = (pixel_sum2 - (pixel_sum**2) / pixel_count) / (pixel_count - 1)
-#             sd = np.sqrt(var)
-
-#             # save to df...
-#             df_stats.loc[c, 'mean'] = mean
-#             df_stats.loc[c, 'sd'] = sd
-#             df_stats.loc[c, 'min'] = global_min
-#             df_stats.loc[c, 'max'] = global_max
-#             df_stats.loc[c, 'nodata_count'] = nodata_count
-
-#     return df_stats
-
-
-
-
 def plot_multi_terrain_features(mdhs_path, terrain_paths, bounds, cmap, title):
     """
-    Function to plot six terrain features from the same defined area. Terrain features have 50% transparency overlaying a multi-directional hillshade image.
+    Plot multiple terrain feature images over a multi-directional hillshade 
+    background. Creates a 2x3 panel figure and, for each terrain raster, 
+    plots a cropped multi-directional hillshade as the base layer with the 
+    terrain raster overlaid at 50% transparency. Each panel includes a 
+    small colorbar scaled to the raster's min/max within the requested bounds.
 
     Parameters
     ----------
-    mdhs_path : str
-        Path to multi-directional hillshade GeoTIFF.
-    terrain_paths : iterable
-        List or tuple of paths terrain features at multiple resolutions
-    bounds : iterable
-        List or tuple of bounding coordinates (left, bottom, right, top) of area of interest.
-    cmap : str or variable
-        Name of Matplotlib colormap or custom colormap.
+    mdhs_path : str or path-like
+        Path to a multi-directional hillshade GeoTIFF.
+    terrain_paths : sequence of str or path-like
+        Paths to terrain-feature rasters to plot (expected length 6).
+    bounds : sequence of float
+        Bounding box (left, bottom, right, top) in the rasters' coordinate
+        reference system.
+    cmap : str or matplotlib.colors.Colormap
+        Colormap for the terrain-feature overlay.
     title : str
-        Title of terrain feature plot.
+        Suptitle for the figure.
 
     Returns
     -------
-    None.
+    None
     """
 
     # set up plot assuming six scales/terrain features
@@ -210,21 +170,24 @@ def plot_multi_terrain_features(mdhs_path, terrain_paths, bounds, cmap, title):
 
 
 
-
 def plot_training_curves(df):
     """
-    Plot training and validation loss and accuracy over epochs.
+    Plot training and validation loss and accuracy over 
+    epochs. Generates a two-panel figure showing loss and micro-accuracy 
+    for training and validation sets across epochs. The epoch with the
+    minimum validation loss is marked with a vertical dashed line.
 
     Parameters
     ----------
     df : pandas.DataFrame
-        DataFrame containing columns ``train loss``, ``val loss``,
-        ``train accuracy``, and ``val accuracy`` ordered by epoch.
+        DataFrame ordered by epoch containing columns:
+        ``train loss``, ``val loss``, ``train accuracy``,
+        and ``val accuracy``.
 
     Returns
     -------
     matplotlib.figure.Figure
-        Figure containing the loss and accuracy curves.
+        Figure containing the loss and accuracy subplots.
     """
 
     # setup figure and axes for two subplots
@@ -245,7 +208,7 @@ def plot_training_curves(df):
 
     # plot selected model at correct epoch
     for axes in ax:
-        axes.axvline(x=df['val loss'].argmin()+1, linestyle='--', color='darkred', label='Selected')
+        axes.axvline(x=df['val loss'].values.argmin()+1, linestyle='--', color='darkred', label='Selected')
         axes.legend(frameon=False)
         axes.set_xticks(epochs)
         axes.set_xticklabels([str(x) if x%5==0 else '' for x in epochs])
@@ -258,20 +221,17 @@ def plot_training_curves(df):
 
 
 
-
-
-
 def plot_pr_roc_curves(targets, predictions, class_cols):
     """
     Plot per-class precision-recall and ROC curves.
 
     Parameters
     ----------
-    targets : array-like of shape (n_samples, n_classes)
+    targets : array-like, shape (n_samples, n_classes)
         Ground-truth binary labels.
-    predictions : array-like of shape (n_samples, n_classes)
+    predictions : array-like, shape (n_samples, n_classes)
         Predicted scores or probabilities for each class.
-    class_cols : array-like of str of shape (n_classes)
+    class_cols : array-like of str, shape (n_classes)
         Class names corresponding to each column.
 
     Returns
@@ -304,10 +264,9 @@ def plot_pr_roc_curves(targets, predictions, class_cols):
         # get FPR & TPR (recall/sensitivity) for all thresholds for each class...
         fpr, tpr, _ = roc_curve(Y_true, y_pred)
 
-
         # plot P-R curve & ROC for each class...
-        ax[0].plot(r, p, linewidth=0.75, color=SG_MAPPING[unit], label=class_cols[idx])
-        ax[1].plot(fpr, tpr, linewidth=0.75, color=SG_MAPPING[unit], label=class_cols[idx])
+        ax[0].plot(r, p, linewidth=0.75, label=class_cols[idx])
+        ax[1].plot(fpr, tpr, linewidth=0.75, label=class_cols[idx])
     
     # customize plots...
     ax[0].set_xlabel('Recall')

@@ -1,5 +1,5 @@
 
-from earthscape.constants import SG_MAPPING
+# from earthscape.constants import SG_MAPPING
 
 import os
 import glob
@@ -9,60 +9,9 @@ import pandas as pd
 import numpy as np
 import torch
 import torchinfo
-from sklearn.metrics import precision_recall_curve, roc_curve
+from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, average_precision_score, accuracy_score, balanced_accuracy_score
-import matplotlib.pyplot as plt
-
-
-
-
-def get_norm_stats(stats_path, modality_configs):
-    """
-    Compute per-channel normalization statistics for each modality.
-
-    Parameters
-    ----------
-    stats_path : str or pathlib.Path
-        Path to a CSV file containing training-set statistics. The first column
-        contains channel identifiers and the CSV includes ``mean`` and ``sd`` columns.
-    modality_configs : dict
-        Dictionary of modality configurations. Each value must contain a
-        ``'channels'`` list specifying channel identifiers.
-
-    Returns
-    -------
-    dict
-        The same ``modality_configs`` object, modified in-place. Each modality is
-        extended with ``'mean'`` and ``'sd'`` lists aligned with ``'channels'``.
-        Channels that should not be normalized have ``None`` entries.
-    """
-
-    # read stats CSV to df
-    df = pd.read_csv(stats_path)
-
-    # iterate through values in modality_configs dictionary
-    for _, data in modality_configs.items():
-
-        # add two additional values for mean and sd
-        data.update({'mean': [], 'sd': []})
-        
-        # iterate through channels in dictionary list named 'channels' containing modality file suffixes.
-        for c in data['channels']:
-            
-            # categorical images should not have normalization stats (0 or 1)
-            if ('osm' in c) or ('nhd' in c) or ('mask' in c):
-                data['mean'].append(None)
-                data['sd'].append(None)
-            
-            # other images should have normalization stats from training dataset
-            else:
-                row = df.loc[df[df.columns[0]] == c]
-                data['mean'].append(row['mean'].item())
-                data['sd'].append(row['sd'].item())
-    
-    # return modified dictionary
-    return modality_configs
-
+# import matplotlib.pyplot as plt
 
 
 
@@ -345,97 +294,56 @@ def test_model(model, test_loader, device):
 
 
 
-
-def training_log(model_name, output_dir, seed, train_patches, val_patches, test_patches, cross_patches, modality_configs, batch_size, num_epochs, optimizer, criterion, model):
+def get_norm_stats(stats_path, modality_configs):
     """
-    Write experiment metadata and a model architecture summary to disk.
+    Compute per-channel normalization statistics for each modality.
 
     Parameters
     ----------
-    model_name : str
-        Experiment/model identifier.
-    output_dir : str or pathlib.Path
-        Directory where `metadata.json` and `architecture.txt` are written.
-    seed : int
-        Random seed used for the experiment.
-    train_patches, val_patches, test_patches, cross_patches : int or str
-        Patch counts/identifiers to record.
+    stats_path : str or pathlib.Path
+        Path to a CSV file containing training-set statistics. The first column
+        contains channel identifiers and the CSV includes ``mean`` and ``sd`` columns.
     modality_configs : dict
-        Modality configuration mapping (e.g., channels and optional normalization stats).
-    batch_size : int
-        Training batch size.
-    num_epochs : int
-        Number of training epochs.
-    optimizer : torch.optim.Optimizer
-        Optimizer instance (name and selected hyperparameters are logged).
-    criterion : torch.nn.Module
-        Loss function instance name; alpha and gamma also recorded if focal loss.
-    model : torch.nn.Module
-        Model whose architecture is summarized with torchinfo.
+        Dictionary of modality configurations. Each value must contain a
+        ``'channels'`` list specifying channel identifiers.
+
+    Returns
+    -------
+    dict
+        The same ``modality_configs`` object, modified in-place. Each modality is
+        extended with ``'mean'`` and ``'sd'`` lists aligned with ``'channels'``.
+        Channels that should not be normalized have ``None`` entries.
     """
 
-    ##### collect setup info
-    metadata = {
-        'NAME': model_name,
-        'DIRECTORY': str(output_dir),
-        'SEED': seed
-        }
+    # read stats CSV to df
+    df = pd.read_csv(stats_path)
 
+    # iterate through values in modality_configs dictionary
+    for _, data in modality_configs.items():
 
-    ##### collect modalitiy info
-    modalities_meta = {}
-    for mod_name, data in modality_configs.items():
-        modalities_meta[mod_name] = {}
-        modalities_meta[mod_name]['modalities'] = ', '.join(data['channels'])
-        if data['mean'] is not None:
-            modalities_meta[mod_name]['normalization means'] = ', '.join([str(i) for i in data['mean']])
-            modalities_meta[mod_name]['normalization sd'] = ', '.join([str(i) for i in data['sd']])
-    metadata['MODALITIES'] = modalities_meta
-
-
-    ##### collect hyperparameters info
-    hyper_meta = {
-        'batch size': batch_size,
-        'epochs': num_epochs, 
-        'optimizer': type(optimizer).__name__,
-        'learning rate': optimizer.param_groups[0]['lr'],
-        'weight decay': optimizer.param_groups[0].get('weight_decay', None),
-        'momentum': optimizer.param_groups[0].get('momentum', None),
-        'loss': type(criterion).__name__
-        }
-    if 'Focal' in hyper_meta['loss']:
-        alpha = ', '.join(str(v.item()) for v in criterion.alpha.detach().ravel())
-        hyper_meta['alpha'] = alpha
-        hyper_meta['gamma'] = criterion.gamma
-    metadata['HYPERPARAMETERS'] = hyper_meta
-
-
-    ##### collect patches info
-    patches_meta = {
-        'training patches': train_patches,
-        'validation patches': val_patches,
-        'testing patches': test_patches,
-        'cross-domain testing patches': cross_patches
-        }
-    metadata['PATCHES'] = patches_meta
-
-
-    ##### write log to json
-    meta_output_path = os.path.join(output_dir, 'metadata.json')
-    with open(meta_output_path, 'w') as f:
-        json.dump(metadata, f, indent=4)
-
-
-    ##### write model summary to text file (model architecture, trainable parameters, kernel sizes)
-    arch_output_path = os.path.join(output_dir, 'architecture.txt')
-    architecture = torchinfo.summary(model, depth=4, verbose=0, col_names=["num_params", "kernel_size"])
-    with open(arch_output_path, 'w') as f:
-        f.write(str(architecture))
+        # add two additional values for mean and sd
+        data.update({'mean': [], 'sd': []})
+        
+        # iterate through channels in dictionary list named 'channels' containing modality file suffixes.
+        for c in data['channels']:
+            
+            # categorical images should not have normalization stats (0 or 1)
+            if ('osm' in c) or ('nhd' in c) or ('mask' in c):
+                data['mean'].append(None)
+                data['sd'].append(None)
+            
+            # other images should have normalization stats from training dataset
+            else:
+                row = df.loc[df[df.columns[0]] == c]
+                data['mean'].append(row['mean'].item())
+                data['sd'].append(row['sd'].item())
+    
+    # return modified dictionary
+    return modality_configs
 
 
 
-
-def calculate_optimal_thresholds(model, loader, device, default_threshold=0.5):
+def get_optimal_thresholds(model, loader, device, default_threshold=0.5):
     """
     Compute per-class decision thresholds that maximize F1 score. Thresholds 
     are selected independently for each class by evaluating the precision-recall 
@@ -506,7 +414,7 @@ def calculate_optimal_thresholds(model, loader, device, default_threshold=0.5):
 
 
 
-def clf_global_metrics(targets, probabilities, thresholds):
+def get_global_metrics(targets, probabilities, thresholds):
     """
     Compute global multi-label classification metrics. Probabilities are 
     thresholded (using a scalar or per-class thresholds) to obtain binary 
@@ -564,7 +472,7 @@ def clf_global_metrics(targets, probabilities, thresholds):
 
 
 
-def clf_class_metrics(targets, probabilities, thresholds, classes):
+def get_class_metrics(targets, probabilities, thresholds, classes):
     """
     Compute per-class classification metrics. Probabilities are 
     thresholded (using a scalar or per-class thresholds) to obtain 
@@ -631,6 +539,92 @@ def clf_class_metrics(targets, probabilities, thresholds, classes):
 
 
 
+def log_experiment_metadata(model_name, output_dir, seed, train_patches, val_patches, test_patches, cross_patches, modality_configs, batch_size, num_epochs, optimizer, criterion, model):
+    """
+    Write experiment metadata and a model architecture summary to disk.
+
+    Parameters
+    ----------
+    model_name : str
+        Experiment/model identifier.
+    output_dir : str or pathlib.Path
+        Directory where `metadata.json` and `architecture.txt` are written.
+    seed : int
+        Random seed used for the experiment.
+    train_patches, val_patches, test_patches, cross_patches : int or str
+        Patch counts/identifiers to record.
+    modality_configs : dict
+        Modality configuration mapping (e.g., channels and optional normalization stats).
+    batch_size : int
+        Training batch size.
+    num_epochs : int
+        Number of training epochs.
+    optimizer : torch.optim.Optimizer
+        Optimizer instance (name and selected hyperparameters are logged).
+    criterion : torch.nn.Module
+        Loss function instance name; alpha and gamma also recorded if focal loss.
+    model : torch.nn.Module
+        Model whose architecture is summarized with torchinfo.
+
+    Returns
+    --------
+    None
+    """
+
+    ##### collect setup info
+    metadata = {
+        'NAME': model_name,
+        'DIRECTORY': str(output_dir),
+        'SEED': seed
+        }
 
 
+    ##### collect modalitiy info
+    modalities_meta = {}
+    for mod_name, data in modality_configs.items():
+        modalities_meta[mod_name] = {}
+        modalities_meta[mod_name]['modalities'] = ', '.join(data['channels'])
+        if data['mean'] is not None:
+            modalities_meta[mod_name]['normalization means'] = ', '.join([str(i) for i in data['mean']])
+            modalities_meta[mod_name]['normalization sd'] = ', '.join([str(i) for i in data['sd']])
+    metadata['MODALITIES'] = modalities_meta
 
+
+    ##### collect hyperparameters info
+    hyper_meta = {
+        'batch size': batch_size,
+        'epochs': num_epochs, 
+        'optimizer': type(optimizer).__name__,
+        'learning rate': optimizer.param_groups[0]['lr'],
+        'weight decay': optimizer.param_groups[0].get('weight_decay', None),
+        'momentum': optimizer.param_groups[0].get('momentum', None),
+        'loss': type(criterion).__name__
+        }
+    if 'Focal' in hyper_meta['loss']:
+        alpha = ', '.join(str(v.item()) for v in criterion.alpha.detach().ravel())
+        hyper_meta['alpha'] = alpha
+        hyper_meta['gamma'] = criterion.gamma
+    metadata['HYPERPARAMETERS'] = hyper_meta
+
+
+    ##### collect patches info
+    patches_meta = {
+        'training patches': train_patches,
+        'validation patches': val_patches,
+        'testing patches': test_patches,
+        'cross-domain testing patches': cross_patches
+        }
+    metadata['PATCHES'] = patches_meta
+
+
+    ##### write log to json
+    meta_output_path = os.path.join(output_dir, 'metadata.json')
+    with open(meta_output_path, 'w') as f:
+        json.dump(metadata, f, indent=4)
+
+
+    ##### write model summary to text file (model architecture, trainable parameters, kernel sizes)
+    arch_output_path = os.path.join(output_dir, 'architecture.txt')
+    architecture = torchinfo.summary(model, depth=4, verbose=0, col_names=["num_params", "kernel_size"])
+    with open(arch_output_path, 'w') as f:
+        f.write(str(architecture))

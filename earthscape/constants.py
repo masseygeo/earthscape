@@ -1,7 +1,7 @@
 
-##############################
+#############################################
 # EarthScape Metadata
-##############################
+#############################################
 
 VERSION = '1.1'
 STR_VERSION = f"v{VERSION.replace('.','p')}"
@@ -10,9 +10,9 @@ ES_DATA_URL = r'https://doi.org/10.13023/kgs.data.05.01.2025'
 ES_PAPER_URL = r'https://doi.org/10.48550/arXiv.2503.15625'
 
 
-##############################
-# EarthScape 1.x Modalities & Channels
-##############################
+#############################################
+# Modalities & Channels
+#############################################
 MODALITIES = {
     "mask": ['mask.tif'],
     "dem": ['dem.tif'],
@@ -27,9 +27,9 @@ MODALITIES = {
     }
 
 
-##############################
+#############################################
 # SG Map Units & Colors (for visualizations)
-##############################
+#############################################
 
 SG_MAPPING = {
     'af1': 1, 
@@ -52,9 +52,9 @@ SG_COLORS = {
     }
 
 
-##############################
+#############################################
 # Default Filenames
-##############################
+#############################################
 
 ##### dataset directory & files
 DATASET_DIR = r'../data'
@@ -72,23 +72,28 @@ MODEL_CLF_DIR = f"{MODEL_DIR}/classification"
 MODEL_SEG_DIR = f"{MODEL_DIR}/segmentation"
 
 
-##############################
+#############################################
 # Data Sources
-##############################
+#############################################
 SRC_URLS = {
-    # 'kyfromabove_index': r'https://ky.app.box.com/index.php?rm=box_download_shared_file&vanity_name=kymartian-kyaped-5k-tile-grids&file_id=f_1173114014568',
 
+    # kentucky DEM tile index - ESRI API
     'kyfromabove_dem_index': r'https://kygisserver.ky.gov/arcgis/rest/services/WGS84WM_Services/KY_Data_Tiles_DEM_WGS84WM/MapServer/0',
 
+    # kentucky aerial RGB+NIR tile index - ESRI API
     'kyfromabove_aerial_index': r'https://services3.arcgis.com/ghsX9CKghMvyYjBU/arcgis/rest/services/Ky_KYAPED_Aerial_Tile_Index_WM_gdb/FeatureServer/0',
 
+    # National Hydrography Dataset Plus HR - geodatabase download
     'nhd': r'https://prd-tnm.s3.amazonaws.com/StagedProducts/Hydrography/NHDPlusHR/VPU/Current/GDB/NHDPLUS_H_0511_HU4_GDB.zip',
 
+    # Open Street Maps - shapefile download
     'osm': r'http://download.geofabrik.de/north-america/us/kentucky-latest-free.shp.zip',
 
+    # Kentucky Surficial Geologic Maps - geodatabase downloads...
+    # Hardin County subset
     'howevalley': r'https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1631&pid=111985',
-
     'sonora': r'https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1630&pid=111983',
 
+    # Warren County subset
     'warren': r'https://uknowledge.uky.edu/context/kgs_data/article/1014/type/native/viewcontent',
     }

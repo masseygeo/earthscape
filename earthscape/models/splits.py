@@ -4,7 +4,7 @@ import pandas as pd
 import geopandas as gpd
 
 
-def select_indpendent_patches(gdf, n_patches, seed=111):
+def splits_select_independent(gdf, n_patches, seed=111):
     """
     Randomly select a subset of patch polygons, then remove from the remainder any patches that *geographically overlap* the selected ones. By design, selected patches may overlap each other; the constraint is only enforced between `selected` and `remaining`.
 
@@ -56,7 +56,7 @@ def select_indpendent_patches(gdf, n_patches, seed=111):
 
 
 
-def make_smoke_set(classes_path, patches_path, split_size, area_threshold=0.2, seed=111):
+def splits_make_smokeset(classes_path, patches_path, split_size, area_threshold=0.2, seed=111):
 
     rng = np.random.RandomState(seed)
     classes = pd.read_csv(classes_path)
