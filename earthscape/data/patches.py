@@ -1,11 +1,9 @@
 
-# from earthscape.constants import DATASET_DIR, MODALITIES
 import os
 import glob
 import pandas as pd
 import numpy as np
 import geopandas as gpd
-# import fiona
 from shapely.geometry import box
 import rasterio
 from rasterio.mask import mask
@@ -30,20 +28,20 @@ def patches_create(reference_path, patch_size, patch_overlap, boundary_path, out
 
     Parameters
     ----------
-    reference_path : str
+    reference_path : str or os.PathLike
         Path to a reference GeoTIFF used to define CRS, pixel resolution, and
         raster-aligned bounds for patch generation.
-    patch_size : int or float
+    patch_size : int
         Size of each square patch in pixels.
     patch_overlap : float
         Proportion of overlap between adjacent patches (e.g., 0.25 for 25% overlap).
-    boundary_path : str
+    boundary_path : str or os.PathLike
         Path to the AOI boundary GeoJSON. Patches are kept only if fully contained
         within the AOI geometry. The AOI is assumed to correspond to the same area
         as `reference_path` (vector vs. raster extent differences).
-    output_path : str
+    output_path : str or os.PathLike
         Destination path for the output patch polygon GeoJSON.
-    name_prefix : str, optional
+    name_prefix : str or None, default=None
         Optional prefix to prepend to generated patch IDs.
 
     Returns
@@ -110,6 +108,7 @@ def patches_create(reference_path, patch_size, patch_overlap, boundary_path, out
 def patches_get_stats(data_dir, modalities, patch_ids=None, cat_chans=['osm', 'nhd', 'mask']):
     """
     Compute global summary statistics for patch GeoTIFF channels within a dataset. 
+    
     This function searches `data_dir` recursively for patch subdirectories
     containing GeoTIFF files, then aggregates per-channel statistics across all
     matching patch images for each modality listed in `modalities`. Modalities
@@ -118,16 +117,15 @@ def patches_get_stats(data_dir, modalities, patch_ids=None, cat_chans=['osm', 'n
 
     Parameters
     ----------
-    data_dir : str
+    data_dir : str or os.PathLike
         Root directory containing patch subdirectories with GeoTIFF files.
     modalities : dict[str, list[str]]
         Mapping from modality name to a list of channel filename suffixes
         (e.g., {"dem": ["dem.tif"], "ep": ["ep_5x5.tif", "ep_11x11.tif"]}).
-    patch_ids : sequence of str, optional
+    patch_ids : sequence of str or None, default=None
         If provided, restricts computation to the specified patch IDs (prefixes).
-    cat_chans : list[str], optional
-        Modality names to skip (treated as categorical), by default
-        ["osm", "nhd", "mask"].
+    cat_chans : sequence of str or None, default=["osm", "nhd", "mask"]
+        Modality names to skip (treated as categorical).
 
     Returns
     -------
@@ -230,9 +228,9 @@ def patches_get_areas(patches_path, mask_path, label_space):
 
     Parameters
     ----------
-    patches_path : str
+    patches_path : str or os.PathLike
         Path to a patch polygon GeoJSON (must include a `patch_id` column).
-    mask_path : str
+    mask_path : str or os.PathLike
         Path to a categorical mask GeoJSON (must include a `Symbol` column).
     label_space : sequence of str
         Ordered list of class labels to include as output columns. Ensures
@@ -291,6 +289,7 @@ def patches_get_areas(patches_path, mask_path, label_space):
 def patches_get_labels(areas_path, threshold=None):
     """
     Calculate one-hot class labels using per-patch class area proportions CSV file. 
+    
     This function reads a CSV of per-patch class area proportions (e.g.,
     output from `patch_get_areas`) and converts the class proportion columns
     into binary labels. By default, a class is labeled as present if its
@@ -301,10 +300,10 @@ def patches_get_labels(areas_path, threshold=None):
 
     Parameters
     ----------
-    areas_path : str
+    areas_path : str or os.PathLike
         Path to CSV file containing per-patch class area proportions; first 
         column assumed to be a non-class column (e.g., `patch_id`).
-    threshold : float, optional
+    threshold : float or None, default=None
         Minimum proportion required to mark a class as present. If None,
         any proportion > 0 is considered present.
 
@@ -346,19 +345,21 @@ def patches_get_labels(areas_path, threshold=None):
 def img_to_patch(image_path, patches_gdf, output_dir):
     """
     Extract 1-channel images defined by patch polygon geometries and write 
-    them as GeoTIFFs. For each polygon in `patches_gdf`, this function crops 
+    them as GeoTIFFs. 
+    
+    For each polygon in `patches_gdf`, this function crops 
     `image_path` to the polygon extent using `rasterio.mask.mask` and writes 
     the cropped raster to `output_dir`. Output filenames are prefixed with the 
     polygon's `patch_id` and the source image base name.
 
     Parameters
     ----------
-    image_path : str
+    image_path : str or os.PathLike
         Path to the source raster from which patches are extracted.
     patches_gdf : geopandas.GeoDataFrame
         GeoDataFrame containing patch polygons in a `geometry` column and a
         `patch_id` column used for naming outputs.
-    output_dir : str
+    output_dir : str or os.PathLike
         Output directory where patch GeoTIFFs will be written.
 
     Returns

@@ -21,7 +21,7 @@ def download_zip(url, output_dir):
     ----------
     url : str
         URL of the ZIP archive to download.
-    output_dir : str or pathlib.Path
+    output_dir : str or os.PathLike
         Directory where the archive is saved and extracted.
 
     Returns
@@ -55,7 +55,7 @@ def download_tif(url, output_path):
     ----------
     url : str
         URL of the GeoTIFF to download.
-    output_path : str or pathlib.Path
+    output_path : str or os.PathLike
         Destination path for the downloaded file.
 
     Returns
@@ -77,14 +77,15 @@ def download_tif(url, output_path):
 
 def get_ky_index(aoi_path, url_field, layer_url, tile_name_field, page_size=1000, pad=0):
     """
-    Retrieve Kentucky From Above index tiles intersecting an AOI. The 
-    AOI is reprojected to EPSG:3857, its bounding box (optionally padded)
+    Retrieve Kentucky From Above index tiles intersecting an AOI. 
+    
+    The AOI is reprojected to EPSG:3857, its bounding box (optionally padded)
     is used to query an ArcGIS REST tile-index layer, and results are
     paginated until all matching features are retrieved.
 
     Parameters
     ----------
-    aoi_path : str or path-like
+    aoi_path : str or os.PathLike
         Path to an AOI vector dataset readable by GeoPandas.
     url_field : str
         Field name in the index layer containing the tile download URL.
@@ -167,8 +168,9 @@ def get_ky_index(aoi_path, url_field, layer_url, tile_name_field, page_size=1000
 
 def get_ky_data(index_path, id_field, url_field, output_dir):
     """
-    Download KYFromAbove tiles listed in an index dataset. Reads a 
-    vector index file containing tile identifiers and download
+    Download KYFromAbove tiles listed in an index dataset. 
+    
+    Reads a vector index file containing tile identifiers and download
     URLs, then iterates through each record and downloads the referenced
     resource. Existing files matching the tile identifier and extension
     in ``output_dir`` are skipped, allowing interrupted download sessions
@@ -176,13 +178,13 @@ def get_ky_data(index_path, id_field, url_field, output_dir):
 
     Parameters
     ----------
-    index_path : str or path-like
+    index_path : str or os.PathLike
         Path to a vector dataset readable by GeoPandas containing tile records.
     id_field : str
         Field name containing the tile identifier used for output naming.
     url_field : str
         Field name containing the download URL.
-    output_dir : str or path-like
+    output_dir : str or os.PathLike
         Directory where downloaded files will be written.
 
     Returns

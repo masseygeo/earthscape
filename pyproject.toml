@@ -10,5 +10,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
 
+[project.scripts]
+es-clf-train = "earthscape.cli.train:main"
+
 [tool.setuptools.packages.find]
 where = ["."]

@@ -1,12 +1,12 @@
 
 # add parent directory to path to import global utils
-import sys, os
-sys.path.append(os.path.abspath('..'))
-from utils import set_seed
-from earthscape.models.dataloaders import *
-from sgmapnet import *
-from training_utils import *
-from earthscape.models.focal_loss import *
+# import sys, os
+# sys.path.append(os.path.abspath('..'))
+# from utils import set_seed
+# from earthscape.models.dataloaders import *
+# from sgmapnet import *
+# from training_utils import *
+# from earthscape.models.focal_loss import *
 
 
 import argparse

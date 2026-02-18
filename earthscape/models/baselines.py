@@ -5,31 +5,62 @@ from torchvision.models import resnet18, resnet50, vit_b_16
 
 
 
-def create_resnet_clf(arch, in_channels, out_classes):
+def create_resnet_clf(architecture: str, in_channels: int, out_features: int):
+    """
+    Instantiate a ResNet classifier with modified input and output layers.
 
-    if arch == 'resnet18':
+    A torchvision ResNet backbone is created without pretrained weights.
+    The first convolutional layer is replaced to accept ``in_channels``
+    input channels, and the final fully connected layer is replaced to
+    produce ``out_features`` outputs.
+
+    Parameters
+    ----------
+    architecture : str
+        ResNet architecture identifier. Supported values are
+        {"resnet18", "resnet50"}.
+    in_channels : int
+        Number of input channels for the first convolutional layer.
+    out_features : int
+        Number of output features for the final fully connected layer.
+
+    Returns
+    -------
+    model : torch.nn.Module
+        Modified ResNet classifier.
+    """
+
+    # initialize correct model & no pre-trained weights
+    if architecture == 'resnet18':
         model = resnet18(weights=None)
-    elif arch == 'resnet50':
+    elif architecture == 'resnet50':
         model = resnet50(weights=None)
+    else:
+        raise ValueError(f"Unsupported architecture: {architecture}")
     
+    # modify first conv layer to accept 1:C input channels...
+    old_conv1 = model.conv1
     new_conv1 = torch.nn.Conv2d(
-        in_channels=in_channels, 
-        out_channels = model.conv1.out_channels,
-        kernel_size = model.conv1.kernel_size,
-        stride = model.conv1.stride,
-        padding = model.conv1.padding,
-        dilation = model.conv1.dilation,
-        groups = model.conv1.groups,
-        bias = (model.conv1.bias is not None),
-        padding_mode = model.conv1.padding_mode,
+        in_channels = in_channels, 
+        out_channels = old_conv1.out_channels,
+        kernel_size = old_conv1.kernel_size,
+        stride = old_conv1.stride,
+        padding = old_conv1.padding,
+        dilation = old_conv1.dilation,
+        groups = old_conv1.groups,
+        bias = (old_conv1.bias is not None),
+        padding_mode = old_conv1.padding_mode,
         )
     
+    # modify final fc layer to produce correct K output classes...
+    old_fc = model.fc
     new_fc = torch.nn.Linear(
-        in_features = model.fc.in_features, 
-        out_features = out_classes, 
-        bias = (model.fc.bias is not None)
+        in_features = old_fc.in_features, 
+        out_features = out_features, 
+        bias = (old_fc.bias is not None)
         )
 
+    # return modified resnet classifier... 
     model.conv1 = new_conv1
     model.fc = new_fc
     
@@ -39,19 +70,44 @@ def create_resnet_clf(arch, in_channels, out_classes):
 
 
 def create_vit_clf(in_channels, num_classes, image_size):
+    """
+    Instantiate a ViT-B/16 classifier with modified input layers and output size.
 
+    A torchvision ViT-B/16 model is created without pretrained weights. The patch
+    embedding projection (``conv_proj``) is replaced to accept ``in_channels`` input
+    channels, and the classification head is configured to produce ``num_classes``
+    outputs via the constructor.
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels for the patch embedding projection.
+    num_classes : int
+        Number of output classes.
+    image_size : int or tuple of int, length 2
+        Input image size. For ViT-B/16, each dimension should be divisible by 16.
+
+    Returns
+    -------
+    model : torch.nn.Module
+        Modified ViT classifier.
+    """
+
+    # initialize torchvision vit b/16 model with modified image_size and num_classes output
     model = vit_b_16(weights=None, image_size=image_size, num_classes=num_classes)
 
+    # modify patch embedding conv to accept custom input channels
+    old = model.conv_proj
     model.conv_proj = torch.nn.Conv2d(
-        in_channels = in_channels,
-        out_channels = model.out_channels,
-        kernel_size = model.kernel_size,
-        stride = model.stride,
-        padding = model.padding,
-        dilation = model.dilation,
-        groups = model.groups,
-        bias = (model.bias is not None),
-        padding_mode = model.padding_mode,
+        in_channels=in_channels,
+        out_channels=old.out_channels,
+        kernel_size=old.kernel_size,
+        stride=old.stride,
+        padding=old.padding,
+        dilation=old.dilation,
+        groups=old.groups,
+        bias=(old.bias is not None),
+        padding_mode=old.padding_mode,
     )
 
     return model

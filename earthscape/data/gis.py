@@ -14,8 +14,9 @@ from scipy.ndimage import gaussian_filter
 
 def vec_to_img(input_path, output_path, output_resolution, multiclass_map, multiclass_col=None):
     """
-    Rasterize a vector geospatial dataset to a single-band GeoTIFF. The 
-    output raster grid is defined from the input dataset bounds and
+    Rasterize a vector geospatial dataset to a single-band GeoTIFF. 
+    
+    The output raster grid is defined from the input dataset bounds and
     `output_resolution` (in the dataset CRS units). If `multiclass_col` is
     provided, values are mapped to numeric class codes using `multiclass_map`
     and burned into the raster; otherwise all geometries are burned with value 1.
@@ -24,16 +25,16 @@ def vec_to_img(input_path, output_path, output_resolution, multiclass_map, multi
 
     Parameters
     ----------
-    input_path : str
+    input_path : str or os.PathLike
         Path to an input vector dataset readable by GeoPandas (e.g., GeoJSON,
         Shapefile).
-    output_path : str
+    output_path : str or os.PathLike
         Destination path for the output GeoTIFF.
-    output_resolution : float or int
+    output_resolution : int or float
         Pixel size in the native units of the input dataset CRS.
-    multiclass_map : dict
-        Mapping from attribute values to numeric class codes.
-    multiclass_col : str, default=None
+    multiclass_map : dict of {str: int}
+        Mapping from class names to numeric codes.
+    multiclass_col : str or None, default=None
         Attribute column name to use for multiclass rasterization. If None,
         produces a binary raster (burn value 1).
 
@@ -93,18 +94,19 @@ def vec_to_img(input_path, output_path, output_resolution, multiclass_map, multi
 
 def vec_clip(input_path, boundary_path, output_path, gdb_layer=None):
     """
-    Function to clip GIS spatial data to the extent of an area of interest polygon and save the clipped feature(s) as a new GeoJSON file.
+    Function to clip GIS spatial data to the extent of an AOI polygon 
+    and save the clipped feature(s) as a new GeoJSON file.
 
     Parameters
     ----------
-    input_path : str
+    input_path : str or os.PathLike
         Path to GIS spatial input file. If this is a geodatabase (.gdb), then the gdb_layer argument must be specified.
-    boundary_path : str
+    boundary_path : str or os.PathLike
         Path to area of interest polygon.
-    output_path : str
+    output_path : str or os.PathLike
         Path for output GeoJSON.
-    gdb_layer : str (optional)
-        Name of geodatabase layer to be clipped. Default is None.
+    gdb_layer : str or None, default=None
+        Name of geodatabase layer to be clipped.
 
     Returns
     -------
@@ -128,7 +130,8 @@ def vec_clip(input_path, boundary_path, output_path, gdb_layer=None):
 
 def vec_to_aoi(input_path, output_path, grid_size=0.2):
     """
-    Build an area-of-interest (AOI) polygon from vector geometries and write it to GeoJSON.
+    Build an area of interest (AOI) polygon from vector geometries and write it to GeoJSON.
+    
     The input dataset is read with GeoPandas and all geometries are unioned into a single
     footprint using `shapely.union_all`. If the union results in a MultiPolygon, the
     largest polygon by area is selected as the AOI. The optional `grid_size` parameter
@@ -136,9 +139,9 @@ def vec_to_aoi(input_path, output_path, grid_size=0.2):
 
     Parameters
     ----------
-    input_path : str
+    input_path : str or os.PathLike
         Path to an input vector dataset readable by GeoPandas.
-    output_path : str
+    output_path : str or os.PathLike
         Destination path for the output AOI GeoJSON.
     grid_size : float, default=0.2
         Grid size passed to `shapely.union_all` to snap coordinates during union. Units
@@ -163,6 +166,7 @@ def vec_to_aoi(input_path, output_path, grid_size=0.2):
 def img_to_reference(input_path, reference_path, output_dtype=np.float32, output_path=None, resampling=Resampling.bilinear):
     """
     Reproject and resample a single-band raster to match a reference raster grid. 
+    
     The input raster is reprojected to the CRS of `reference_path` and resampled
     onto the reference transform, height, and width. Intermediate processing is
     performed in float32 with NaN used as the internal nodata representation.
@@ -171,20 +175,18 @@ def img_to_reference(input_path, reference_path, output_dtype=np.float32, output
 
     Parameters
     ----------
-    input_path : str
+    input_path : str or os.PathLike
         Path to the input raster (single band) to be reprojected.
-    reference_path : str
+    reference_path : str or os.PathLike
         Path to the reference raster whose CRS, transform, width, and height
         define the output grid.
-    output_dtype : numpy.dtype, optional
+    output_dtype : numpy.dtype or type, default=np.float32
         Output data type. Must be either `np.float32` or `np.uint8`.
-        Default is `np.float32`.
-    output_path : str, optional
+    output_path : str or os.PathLike or None, default=None
         Destination path for the output GeoTIFF. If None, the input file is
         overwritten.
-    resampling : rasterio.enums.Resampling, optional
+    resampling : rasterio.enums.Resampling, default=Resampling.bilinear
         Resampling method used during reprojection (e.g., bilinear, nearest).
-        Default is `Resampling.bilinear`.
 
     Returns
     -------
@@ -269,22 +271,23 @@ def img_to_reference(input_path, reference_path, output_dtype=np.float32, output
 def img_resample(input_path, new_resolution, output_path, resampling=Resampling.bilinear):
     """
     Resample a single-band raster to a new spatial resolution. 
-    The raster is resampled in its native CRS to `new_resolution`, preserving
+    T
+    he raster is resampled in its native CRS to `new_resolution`, preserving
     its spatial extent. Output dimensions and transform are recalculated using
     `calculate_default_transform`, and the resampled raster is written to a
     new GeoTIFF.
 
     Parameters
     ----------
-    input_path : str
+    input_path : str or os.PathLike
         Path to the input raster (single band).
-    new_resolution : float or tuple of float
+    new_resolution : int or float or tuple of int or float, len 2
         Target pixel size in the units of the raster CRS. May be a single
         value (square pixels) or (xres, yres).
-    output_path : str
+    output_path : str or os.PathLike
         Destination path for the resampled GeoTIFF.
-    resampling : rasterio.enums.Resampling, optional
-        Resampling method used during interpolation. Default is bilinear.
+    resampling : rasterio.enums.Resampling, default=Resampling.bilinear
+        Resampling method used during interpolation.
 
     Returns
     -------
@@ -329,6 +332,7 @@ def img_resample(input_path, new_resolution, output_path, resampling=Resampling.
 def img_filter(input_path, sigma):
     """
     Apply a Gaussian smoothing filter to a single-band raster in-place. 
+    
     The input raster is read as a masked array and smoothed using
     `scipy.ndimage.gaussian_filter` with the specified standard deviation.
     Masked (nodata) pixels are preserved and not allowed to contaminate
@@ -336,7 +340,7 @@ def img_filter(input_path, sigma):
 
     Parameters
     ----------
-    input_path : str
+    input_path : str or os.PathLike
         Path to the input raster (single band).
     sigma : float
         Standard deviation of the Gaussian kernel, in pixel units.
@@ -371,6 +375,7 @@ def img_filter(input_path, sigma):
 def images_mosaic(tile_paths, output_path, band_number, resample=None):
     """
     Merge multiple raster tiles into a single mosaic GeoTIFF. 
+    
     Tiles are opened and merged using `rasterio.merge.merge`.
     A single band is selected from each tile via `band_number` (1-based),
     and the mosaic is written as float32. Any per-tile numeric nodata values
@@ -378,13 +383,13 @@ def images_mosaic(tile_paths, output_path, band_number, resample=None):
 
     Parameters
     ----------
-    tile_paths : sequence of str
+    tile_paths : sequence of str or os.PathLike
         Paths to input raster tiles.
-    output_path : str
+    output_path : str or os.PathLike
         Destination path for the output mosaic GeoTIFF.
     band_number : int
         1-based band index to read from each tile.
-    resample : float or tuple of float, optional
+    resample : int or float or tuple of int or float, len 2
         Target output resolution passed to `merge(..., res=...)`. If provided,
         tiles are resampled using bilinear interpolation.
 
@@ -451,6 +456,7 @@ def images_mosaic(tile_paths, output_path, band_number, resample=None):
 def images_overlay(image_paths, output_path, mode='binary', class_values=None):
     """
     Combine multiple categorical rasters into a single output raster. 
+    
     This function is intended for categorical rasters stored as float32,
     where features are represented by nonzero values, background is 0, and
     nodata is NaN.
@@ -466,16 +472,16 @@ def images_overlay(image_paths, output_path, mode='binary', class_values=None):
 
     Parameters
     ----------
-    image_paths : sequence of str
+    image_paths : sequence of str or os.PathLike
         Paths to input single-band categorical rasters on the same grid.
         Rasters are assumed to be float32 with nonzero = class presence. 
         In non-binary mode, order defines class priority (later = higher).
-    output_path : str
+    output_path : str or os.PathLike
         Destination path for the output GeoTIFF.
-    mode : str {"binary", other}, optional
+    mode : str, default="binary"
         Input "binary" produces a union mask; any other value enables
         priority-based categorical overlay.
-    class_values : sequence of int or float, optional
+    class_values : sequence of int or float or None, default=None
         Class codes corresponding to each input raster in non-binary mode.
         If None, defaults to 1..N for N input rasters.
 

@@ -1,5 +1,5 @@
 
-from earthscape.constants import SRC_URLS, VERSION
+from earthscape.utils.constants import SRC_URLS, VERSION
 
 import os
 from datetime import datetime
@@ -8,18 +8,21 @@ import pandas as pd
 import numpy as np
 import rasterio
 
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+from rasterio.plot import show
+from rasterio.windows import from_bounds
 
 
 
 def qc_coalignment(input_paths, target_path, atol=1e-9, rtol=0.0):
     """
-    Check image grid alignment relative to a target image. For each raster 
-    in `input_paths`, this function collects quality control (QC)
+    Check image grid alignment relative to a target image. 
+    
+    For each raster in `input_paths`, this function collects quality control (QC)
     metadata including dtype, nodata value, resolution, dimensions, and bounds.
     It then determines whether each image is co-aligned with `target_path`
-    based on the QC metrics.
-    
-    Alignment is defined as:
+    based on the QC metrics. Alignment is defined as:
         - Exact match for integer fields (`width`, `height`)
         - Tolerant match for floating-point fields (`res_x`, `res_y`,
         `left`, `bottom`, `right`, `top`) using `numpy.isclose`
@@ -31,22 +34,21 @@ def qc_coalignment(input_paths, target_path, atol=1e-9, rtol=0.0):
 
     Parameters
     ----------
-    input_paths : sequence of str
+    input_paths : sequence of str or os.PathLike
         Paths to raster files to evaluate.
-    target_path : str
+    target_path : str or os.PathLike
         Path to the target raster defining the reference grid. 
         Assumed to also be included in `input_paths`.
-    atol : float, optional
+    atol : float, default=1e-9
         Absolute tolerance for floating-point grid comparisons.
-        Default is 1e-9.
-    rtol : float, optional
+    rtol : float, default=0.0
         Relative tolerance for floating-point grid comparisons.
-        Default is 0.0.
 
     Returns
     -------
     pandas.DataFrame
-        DataFrame containing one row per input image with all information described above.
+        DataFrame containing one row per input image and all associated 
+        information described above.
     """
    
     # get basenames of images...
@@ -97,14 +99,15 @@ def qc_coalignment(input_paths, target_path, atol=1e-9, rtol=0.0):
 def qc_patch_size(patch_path, patch_size):
     """
     Validate an image patch by size and nodata content. 
+
     This function checks whether a patch image matches the expected
-    square dimensions (`patch_size` x `patch_size`) and contains no
+    square dimensions (`patch_size`, `patch_size`) and contains no
     nodata pixels. If the patch fails validation, its file path is
-    returned; otherwise, None is returned.
+    returned.
 
     Parameters
     ----------
-    patch_path : str
+    patch_path : str or os.PathLike
         Path to the raster patch to validate.
     patch_size : int
         Expected patch height and width in pixels.
@@ -131,9 +134,10 @@ def qc_patch_size(patch_path, patch_size):
 
 
 
-def create_metadata(area_name, label_space, num_patches, num_tifs, img_meta, patch_size, overlap, output_path, sources=SRC_URLS, version=VERSION):
+def create_metadata(area_name, label_space, num_patches, num_imgs, img_meta, patch_size, overlap, output_path, sources=SRC_URLS, version=VERSION):
     """
     Create and write a dataset metadata JSON file. 
+    
     This function compiles dataset-level metadata for an EarthScape subset,
     including version information, patch configuration, channel count,
     geospatial properties, and selected data sources. The metadata is written
@@ -147,22 +151,21 @@ def create_metadata(area_name, label_space, num_patches, num_tifs, img_meta, pat
         List of class labels included in the dataset.
     num_patches : int
         Total number of image patches.
-    num_tifs : int
-        Total number of GeoTIFF files in the dataset.
+    num_imgs : int
+        Total number of images in the dataset.
     img_meta : dict
-        Raster metadata dictionary (e.g., from `rasterio.open(...).meta`)
+        Raster metadata dictionary from `rasterio.open(...).meta`
         used to extract CRS, resolution, and nodata information.
     patch_size : int
         Patch size in pixels.
     overlap : float
         Patch overlap proportion (e.g., 0.25 for 25%).
-    output_path : str
+    output_path : str or os.PathLike
         Path to write the metadata JSON file.
     sources : dict
         Dictionary of data source names and descriptions. 
-        Default is `SRC_URLS` from `earthscape.constants`.
     version : str
-        Dataset version identifier. Default is `VERSION` from `earthscape.constants`.
+        Dataset version identifier..
 
     Returns
     -------
@@ -175,8 +178,8 @@ def create_metadata(area_name, label_space, num_patches, num_tifs, img_meta, pat
     dataset['EarthScape']['patch size'] = patch_size
     dataset['EarthScape']['overlap'] = str(int(overlap * 100))+'%'
     dataset['EarthScape']['num patches'] = int(num_patches)
-    dataset['EarthScape']['num channels'] = int(num_tifs / num_patches)
-    dataset['EarthScape']['total images'] = num_tifs
+    dataset['EarthScape']['num channels'] = int(num_imgs / num_patches)
+    dataset['EarthScape']['total images'] = num_imgs
     dataset['EarthScape']['label space'] = label_space
 
     dataset['Geospatial'] = {}
@@ -192,3 +195,78 @@ def create_metadata(area_name, label_space, num_patches, num_tifs, img_meta, pat
 
     with open(output_path, "w") as f:
         json.dump(dataset, f, indent=4)
+
+
+
+def plot_multi_terrain_features(mdhs_path, terrain_paths, bounds, cmap, title):
+    """
+    Plot multiple terrain feature images over a multi-directional hillshade 
+    background. 
+    
+    Creates a 2x3 panel figure and, for each terrain raster, 
+    plots a cropped multi-directional hillshade as the base layer with the 
+    terrain raster overlaid at 50% transparency. Each panel includes a 
+    small colorbar scaled to the raster's min/max within the requested bounds.
+
+    Parameters
+    ----------
+    mdhs_path : str or os.PathLike
+        Path to a multi-directional hillshade GeoTIFF.
+    terrain_paths : sequence of str or os.PathLike
+        Paths to terrain-feature rasters to plot (expected length 6).
+    bounds : sequence of float
+        Bounding box (left, bottom, right, top) in the rasters' coordinate
+        reference system.
+    cmap : str or matplotlib.colors.Colormap
+        Colormap for the terrain-feature overlay.
+    title : str
+        Suptitle for the figure.
+
+    Returns
+    -------
+    None
+    """
+
+    # set up plot assuming six scales/terrain features
+    fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(12,8), sharex=True, sharey=True)
+    fig.subplots_adjust(wspace=0.1, hspace=0.1)
+    ax = ax.ravel()
+
+    with rasterio.open(mdhs_path) as mdhs:
+
+        # iterate through each terrain feature (six total)
+        for idx, path in enumerate(terrain_paths):
+            with rasterio.open(path) as src:
+
+                # set up window for feature, get transform, and data
+                window = from_bounds(*bounds, src.transform)
+                transform = src.window_transform(window)
+                data = src.read(1, window=window)
+                min_val = np.min(data)
+                max_val = np.max(data)
+
+                # plot feature; this will be hidden and is only for colorbar
+                hidden = ax[idx].imshow(data, cmap=cmap)
+
+                # plot multi-directional hillshade as base layer (on top of hidden)
+                mdhs_window = from_bounds(*bounds, mdhs.transform)
+                mdhs_data = mdhs.read(1, window=mdhs_window)
+                mdhs_transform = mdhs.window_transform(mdhs_window)
+                show(mdhs_data, ax=ax[idx], cmap='binary_r', transform=mdhs_transform)
+
+                # plot terrain feature with transparency (to overlay on hillshade)
+                show(data, ax=ax[idx], cmap=cmap, transform=transform, alpha=0.5)
+
+                # plot custom color bar
+                cax = inset_axes(ax[idx], width='5%', height='40%', loc='lower right')
+                fig.colorbar(hidden, cax=cax, ticks=[min_val, max_val])
+                cax.yaxis.set_ticks_position('left')
+
+                # customize plot elements
+                ax[idx].tick_params(axis='both', which='major', labelsize=8)
+                ax[idx].tick_params(axis='x', labelrotation=60)
+                ax[idx].ticklabel_format(style='plain')
+                ax[idx].set_title(os.path.basename(path), style='italic', fontsize=10)
+
+    plt.suptitle(title, y=0.96)
+    plt.show()

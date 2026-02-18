@@ -1,0 +1,36 @@
+{
+    "NAME": "vit_dem_20260218_162208",
+    "DIRECTORY": "../experiments/classification/vit_dem_20260218_162208",
+    "SEED": 111,
+    "INPUTS": {
+        "dem": {
+            "modalities": "dem.tif",
+            "input shape": "1, 1, 256, 256",
+            "normalization means": "578.66797",
+            "normalization sd": "74.129265"
+        }
+    },
+    "HYPERPARAMETERS": {
+        "batch size": 2,
+        "epochs": 5,
+        "optimizer": "Adam",
+        "learning rate": 0.001,
+        "weight decay": 0,
+        "momentum": null,
+        "loss": "BCEFocalLogits",
+        "alpha": null,
+        "gamma": 0.0,
+        "reduction": "mean",
+        "pos_weight": null
+    },
+    "PATCHES": {
+        "training set": "../splits/smoke_v1p1/smoke_train_id.geojson",
+        "training n": 7,
+        "validation set": "../splits/smoke_v1p1/smoke_val_id.geojson",
+        "validation n": 7,
+        "test set": "../splits/smoke_v1p1/smoke_test_id.geojson",
+        "test n": 7,
+        "cross test set": "../splits/smoke_v1p1/smoke_test_cd.geojson",
+        "cross test n": 7
+    }
+}

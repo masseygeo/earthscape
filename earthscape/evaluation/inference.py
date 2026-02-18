@@ -1,0 +1,69 @@
+
+import torch
+
+
+
+
+def test_model(model, test_loader, device, baseline=True):
+    """
+    Run inference on a test set and return probabilities and targets.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Trained model used for inference.
+    test_loader : torch.utils.data.DataLoader
+        DataLoader yielding test batches as dicts with a ``'label'`` tensor and one
+        or more modality tensors.
+    device : torch.device
+        Device used for model inference.
+
+    Returns
+    -------
+    probabilities : torch.Tensor
+        Concatenated sigmoid probabilities for all test samples (on CPU).
+    targets : torch.Tensor
+        Concatenated ground-truth labels for all test samples (on CPU).
+    baseline : bool, default True
+        Controls how input tensors are extracted from each batch. If True,
+        a single modality tensor is selected from the input dictionary and
+        passed to the model. If False, the full modality dictionary is passed 
+        to the model (e.g., for SGMap-Net).
+    """
+
+    # set model for evaluation
+    model.eval()
+
+    # initialize variables for inference...
+    probs = []     # model probabilities
+    targs = []     # class labels
+
+    # iterate over batches...
+    with torch.inference_mode():
+        for batch in test_loader:
+            
+            # get labels & images from batch...
+            labels = batch['label'].to(device, non_blocking=True)
+            
+            # dict of modality tensors to pass to model (SGMap-Net)
+            modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
+
+            # single tensor to pass to model (baseline tests)
+            if baseline:
+                modalities = next(iter(modalities.values())) 
+
+            # model inference from input modalities
+            logits = model(modalities)
+
+            # model probabilities from inference output logits
+            p = torch.sigmoid(logits)
+
+            # append model probabilities & true class labels for batch...
+            probs.append(p.cpu())
+            targs.append(labels.cpu())
+    
+    # get array of probabilities & targets...
+    probabilities = torch.cat(probs, dim=0)
+    targets = torch.cat(targs, dim=0)
+
+    return probabilities, targets
