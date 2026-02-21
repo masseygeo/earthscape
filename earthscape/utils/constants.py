@@ -56,17 +56,21 @@ SG_COLORS = {
 # Default Filenames
 #############################################
 
-##### dataset directory & files
+##### source code directory
+SRC_DIR = r'../earthscape'
+
+
+##### dataset directory
 DATASET_DIR = r'../data'
 
 
-##### training/validation/testing splits
+##### training/validation/testing split directories
 SPLIT_DIR = r'../splits'
 ES_VERSION_SPLIT_DIR = f"{SPLIT_DIR}/es_{STR_VERSION}"
 SMOKE_VERSION_SPLIT_DIR = f"{SPLIT_DIR}/smoke_{STR_VERSION}"
 
 
-##### model output directory & files
+##### model output directories
 MODEL_DIR = r'../experiments'
 MODEL_CLF_DIR = f"{MODEL_DIR}/classification"
 MODEL_SEG_DIR = f"{MODEL_DIR}/segmentation"

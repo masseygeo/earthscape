@@ -18,7 +18,7 @@ paths:
   areas_csv: ../data/earthscape_areas.csv
   patch_geojson: ../data/earthscape_patches.geojson
   labels_csv: ../data/earthscape_labels.csv
-  stats_csv: data/earthscape_image_stats.csv
+  stats_csv: ../data/earthscape_image_stats.csv
   # class_mapping: ../data/earthscape_class_mapping.json
 
 data: 

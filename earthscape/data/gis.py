@@ -268,6 +268,53 @@ def img_to_reference(input_path, reference_path, output_dtype=np.float32, output
 
 
 
+def img_to_int(src_path, dst_path=None):
+    """
+    Convert a single-band float raster patch to uint8.
+
+    The function reads a raster, replaces NaN and infinite values
+    (NaN -> 0, +inf -> 255, -inf -> 0), clips values to the 0-255 range,
+    casts to uint8, removes nodata metadata, and writes the result.
+
+    Parameters
+    ----------
+    src_path : str
+        Path to input single-band raster.
+    dst_path : str, optional
+        Output path. If None, overwrites `src_path`.
+
+    Notes
+    -----
+    - Assumes valid data are already in the 0-255 range.
+    - Any NaN or infinite values are coerced to valid uint8 values.
+    - The output raster has dtype uint8 and no nodata value set.
+    """
+
+    # open image & get data array & geospatial metadata...
+    with rasterio.open(src_path) as src:
+        src_data = src.read(1)
+        src_data = np.nan_to_num(src_data, nan=0.0, posinf=255.0, neginf=0.0)
+        dst_meta = src.meta.copy()
+
+    # clip to valid uint8 range & cast to uint8
+    dst_data = np.clip(src_data, 0, 255).astype(np.uint8)
+
+    # update metadata
+    dst_meta.update({
+        'nodata': None, 
+        'dtype': 'uint8'
+        })
+    
+    # save cast image...
+    if not dst_path:
+        dst_path = src_path
+    
+    with rasterio.open(dst_path, 'w', **dst_meta) as dst:
+        dst.write(dst_data, 1)
+
+
+
+
 def img_resample(input_path, new_resolution, output_path, resampling=Resampling.bilinear):
     """
     Resample a single-band raster to a new spatial resolution. 

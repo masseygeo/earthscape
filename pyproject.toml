@@ -11,7 +11,8 @@ requires-python = ">=3.10"
 dependencies = []
 
 [project.scripts]
-es-clf-train = "earthscape.cli.train:main"
+train_cls = "earthscape.cli.train_cls:main"
+inference_cls = "earthscape.cli.inference_cls:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

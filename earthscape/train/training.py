@@ -261,307 +261,6 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
 
 
 
-# def test_model(model, test_loader, device):
-#     """
-#     Run inference on a test set and return probabilities and targets.
-
-#     Parameters
-#     ----------
-#     model : torch.nn.Module
-#         Trained model used for inference.
-#     test_loader : torch.utils.data.DataLoader
-#         DataLoader yielding test batches as dicts with a ``'label'`` tensor and one
-#         or more modality tensors.
-#     device : torch.device
-#         Device used for model inference.
-
-#     Returns
-#     -------
-#     probabilities : torch.Tensor
-#         Concatenated sigmoid probabilities for all test samples (on CPU).
-#     targets : torch.Tensor
-#         Concatenated ground-truth labels for all test samples (on CPU).
-#     """
-
-#     # set model for evaluation
-#     model.eval()
-
-#     # initialize variables for inference...
-#     probs = []     # model probabilities
-#     targs = []     # class labels
-
-#     # iterate over batches...
-#     with torch.inference_mode():
-#         for batch in test_loader:
-            
-#             # get labels & images from batch...
-#             labels = batch['label'].to(device, non_blocking=True)
-#             modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
-
-#             # model inference from input modalities
-#             logits = model(modalities)
-
-#             # model probabilities from inference output logits
-#             p = torch.sigmoid(logits)
-
-#             # append model probabilities & true class labels for batch...
-#             probs.append(p.cpu())
-#             targs.append(labels.cpu())
-    
-#     # get array of probabilities & targets...
-#     probabilities = torch.cat(probs, dim=0)
-#     targets = torch.cat(targs, dim=0)
-
-#     return probabilities, targets
-
-
-
-# def get_norm_stats(stats_path, modality_configs):
-#     """
-#     Compute per-channel normalization statistics for each modality.
-
-#     Parameters
-#     ----------
-#     stats_path : str or pathlib.Path
-#         Path to a CSV file containing training-set statistics. The first column
-#         contains channel identifiers and the CSV includes ``mean`` and ``sd`` columns.
-#     modality_configs : dict
-#         Dictionary of modality configurations. Each value must contain a
-#         ``'channels'`` list specifying channel identifiers.
-
-#     Returns
-#     -------
-#     dict
-#         The same ``modality_configs`` object, modified in-place. Each modality is
-#         extended with ``'mean'`` and ``'sd'`` lists aligned with ``'channels'``.
-#         Channels that should not be normalized have ``None`` entries.
-#     """
-
-#     # read stats CSV to df
-#     df = pd.read_csv(stats_path)
-
-#     # iterate through values in modality_configs dictionary
-#     for _, data in modality_configs.items():
-
-#         # add two additional values for mean and sd
-#         data.update({'mean': [], 'sd': []})
-        
-#         # iterate through channels in dictionary list named 'channels' containing modality file suffixes.
-#         for c in data['channels']:
-            
-#             # categorical images should not have normalization stats (0 or 1)
-#             if ('osm' in c) or ('nhd' in c) or ('mask' in c):
-#                 data['mean'].append(None)
-#                 data['sd'].append(None)
-            
-#             # other images should have normalization stats from training dataset
-#             else:
-#                 row = df.loc[df[df.columns[0]] == c]
-#                 data['mean'].append(row['mean'].item())
-#                 data['sd'].append(row['sd'].item())
-    
-#     # return modified dictionary
-#     return modality_configs
-
-
-
-
-# def get_optimal_thresholds(model, loader, device, default_threshold=0.5):
-#     """
-#     Compute per-class decision thresholds that maximize F1 score. Thresholds 
-#     are selected independently for each class by evaluating the precision-recall 
-#     curve on the given dataset and choosing the threshold that yields the maximum 
-#     F1 score. Classes with no positive or no negative samples fall back to the 
-#     default threshold.
-
-#     Parameters
-#     ----------
-#     model : torch.nn.Module
-#         Trained model used to generate prediction probabilities.
-#     loader : torch.utils.data.DataLoader
-#         DataLoader providing the dataset used for threshold optimization.
-#     device : torch.device
-#         Device on which the model is evaluated.
-#     default_threshold : float, optional
-#         Threshold used for classes with degenerate targets or undefined
-#         precision-recall curves. Default is 0.5.
-
-#     Returns
-#     -------
-#     optimal_thresholds : np.ndarray of shape (n_classes,)
-#         Array of per-class optimal thresholds that maximize F1 score.
-#     """
-
-#     # model inference with loader dataset
-#     probabilities, targets = test_model(model, loader, device)
-
-#     # make sure model outputs are on CPU and numpy arrays; labels also cast to int
-#     probabilities = probabilities.detach().cpu().numpy()
-#     targets = targets.detach().cpu().numpy().astype(np.int32)
-
-#     # initialize variables...
-#     n_classes = probabilities.shape[1]                                               # number of classes
-#     optimal_thresholds = np.full(n_classes, default_threshold, dtype=np.float32)     # array of shape n_classes with default threshold
-#     eps = 1e-8                                                                       # value to prevent divide by zero error
-
-#     # iterate over probabilities...
-#     for class_idx in range(n_classes):
-
-#         # class targets & probabilities
-#         y_targs = targets[:, class_idx]
-#         p_model = probabilities[:, class_idx]
-
-#         # handle no positives or no negatives for a class; use default threshold
-#         if (y_targs.max() == 0) or (y_targs.min() == 1):
-#             continue
-        
-#         # calculate precision, recall across thresholds
-#         precision, recall, thresholds = precision_recall_curve(y_targs, p_model)
-
-#         # handle empty thresholds
-#         if thresholds.size == 0:
-#             continue
-        
-#         # calculate f1 score
-#         f1 = 2.0 * ((precision[1:] * recall[1:]) / (precision[1:] + recall[1:] + eps))
-
-#         # find best threshold & add to optimal threshold array
-#         best_f1 = f1.max()
-#         best_idxs = np.where(np.isclose(f1, best_f1))[0]
-#         best_idx = best_idxs[-1]
-#         # best_idx = np.argmax(f1)
-#         optimal_thresholds[class_idx] = thresholds[best_idx]
-
-#     return optimal_thresholds
-
-
-
-
-# def get_global_metrics(targets, probabilities, thresholds):
-#     """
-#     Compute global multi-label classification metrics. Probabilities are 
-#     thresholded (using a scalar or per-class thresholds) to obtain binary 
-#     predictions.
-
-#     Parameters
-#     ----------
-#     targets : torch.Tensor
-#         Ground-truth binary labels.
-#     probabilities : torch.Tensor
-#         Predicted probabilities or scores.
-#     thresholds : float or array-like
-#         Decision threshold(s) applied to probabilities.
-
-#     Returns
-#     -------
-#     pandas.DataFrame
-#         Single-row DataFrame containing computed metrics: Macro-averaged 
-#         and weighted precision, recall, F1, ROC AUC, and mean average 
-#         precision (mAP); micro-averaged accuracy (Hamming accuracy) and 
-#         balanced accuracy. 
-#     """
-
-#     # move targs, probs, thresh to CPU, move to arrays; cast targets to int...
-#     targs = targets.detach().cpu().numpy().astype(np.int32)
-#     probs = probabilities.detach().cpu().numpy()
-#     thresholds = np.asarray(thresholds)
-
-#     # calculate binary predictions from either single scalar or per-class array...
-#     if thresholds.ndim == 0:
-#         binary_preds = (probs >= thresholds).astype(np.int32)             # if scalar
-#     else:
-#         binary_preds = (probs >= thresholds[None, :]).astype(np.int32)    # if array
-    
-#     # initialize dict to hold metrics
-#     df = {}
-
-#     # calculate global performance metrics (macro- and weighted-)...
-#     df['Precision (Macro)'] = precision_score(targs, binary_preds, average='macro', zero_division=0.0)
-#     df['Recall (Macro)'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
-#     df['F1 (Macro)'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
-#     df['AUC (Macro)'] = roc_auc_score(targs, probs, average="macro")
-#     df['mAP (Macro)'] = average_precision_score(targs, probs, average='macro')
-    
-#     df['Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
-#     df['Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
-#     df['F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
-#     df['AUC (Wt.)'] = roc_auc_score(targs, probs, average='weighted')
-#     df['mAP (Wt.)'] = average_precision_score(targs, probs, average='weighted')
-#     df['Accuracy (Micro)'] = (binary_preds == targs).mean()
-#     df['Accuracy (Balanced)'] = balanced_accuracy_score(targs, binary_preds)
-
-#     return pd.DataFrame(df)
-
-
-
-
-# def get_class_metrics(targets, probabilities, thresholds, classes):
-#     """
-#     Compute per-class classification metrics. Probabilities are 
-#     thresholded (using a scalar or per-class thresholds) to obtain 
-#     binary predictions.
-
-#     Parameters
-#     ----------
-#     targets : torch.Tensor with shape ``(n_samples, n_classes)``
-#         Ground-truth binary labels.
-#     probabilities : torch.Tensor with shape ``(n_samples, n_classes)``
-#         Predicted probabilities.
-#     thresholds : float or array-like with shape ``(n_classes,)``
-#         Decision threshold(s) applied to probabilities.
-#     classes : sequence of str
-#         Informal class names corresponding to each column.
-
-#     Returns
-#     -------
-#     pandas.DataFrame
-#         DataFrame containing per-class metrics for each class: accuracy, 
-#         precision, recall (sensitivity, TPR), specificity (TNR), F1, 
-#         ROC AUC, and average precision (AP). In addtion, class name, 
-#         threshold used, total number of positives (target), and total 
-#         number of predicted positives (model)
-#     """
-
-#     # initialize dataframe
-#     df = pd.DataFrame()
-
-#     # move targs, probs, thresh to CPU, move to arrays; cast targets to int...
-#     targets = targets.detach().cpu().numpy().astype(np.int32)
-#     probabilities = probabilities.detach().cpu().numpy()
-#     thresholds = np.asarray(thresholds)
-
-#     # calculate binary predictions from either single scalar or per-class array...
-#     if thresholds.ndim == 0:
-#         thresholds = np.full(probabilities.shape[1], float(thresholds))
-#         binary_preds = (probabilities >= thresholds).astype(np.int32)             # if scalar
-#     else:
-#         binary_preds = (probabilities >= thresholds[None, :]).astype(np.int32)    # if array
-
-#     # iterate through each class and calculate performance metrics...
-#     for idx, (unit, thresh) in enumerate(zip(classes, thresholds)):
-
-#         # get targets, probabilities, and binary predictitons for class
-#         targs = targets[:, idx]
-#         probs = probabilities[:, idx]
-#         preds = binary_preds[:, idx]
-
-#         # calculate metrics
-#         df.loc[idx, 'Class'] = unit
-#         df.loc[idx, 'Threshold'] = thresh
-#         df.loc[idx, 'n True'] = targs.sum()
-#         df.loc[idx, 'n Predicted'] = preds.sum()
-#         df.loc[idx, 'Precision'] = precision_score(targs, preds, zero_division=0.0)
-#         df.loc[idx, 'Recall'] = recall_score(targs, preds, zero_division=0.0)
-#         df.loc[idx, 'Specificity'] = recall_score(1-targs, 1-preds, zero_division=0.0)
-#         df.loc[idx, 'F1'] = f1_score(targs, preds, zero_division=0.0)
-#         df.loc[idx, 'AUC'] = roc_auc_score(targs, probs)
-#         df.loc[idx, 'AP'] = average_precision_score(targs, probs)
-#         df.loc[idx, 'Accuracy'] = accuracy_score(targs, preds)
-
-#     return df
-
-
-
 def train_metadata(model_name, output_dir, seed, train_path, train_patches, val_path, val_patches, test_path, test_patches, cross_path, cross_patches, modality_configs, batch_size, num_epochs, optimizer, criterion, model, input_size):
     """
     Write experiment metadata and a model architecture summary to disk.
@@ -607,7 +306,7 @@ def train_metadata(model_name, output_dir, seed, train_path, train_patches, val_
     for mod_name, data in modality_configs.items():
         modalities_meta[mod_name] = {}
         modalities_meta[mod_name]['modalities'] = ', '.join(data['channels'])
-        modalities_meta[mod_name]['input shape'] = ', '.join(str(i) for i in input_size)
+        # modalities_meta[mod_name]['input shape'] = ', '.join(str(i) for i in input_size)
         if data['mean'] is not None:
             modalities_meta[mod_name]['normalization means'] = ', '.join([str(i) for i in data['mean']])
             modalities_meta[mod_name]['normalization sd'] = ', '.join([str(i) for i in data['sd']])
@@ -653,10 +352,18 @@ def train_metadata(model_name, output_dir, seed, train_path, train_patches, val_
         json.dump(metadata, f, indent=4)
 
 
-    ##### write model summary to text file (model architecture, trainable parameters, kernel sizes)
-    arch_output_path = os.path.join(output_dir, 'architecture.txt')
+
+
+def architecture_to_json(output_dir, model, loader):
+
+    # input feature shape...
+    input_size = next(iter(loader))
+    input_size = {k: v for k, v in input_size.items() if k != "label"}
+    input_size = list(next(iter(input_size.values()))[:1].shape)
+
     architecture = torchinfo.summary(model, input_size=input_size, depth=4, verbose=0, col_names=["input_size", "kernel_size", "output_size", "num_params"])
-    with open(arch_output_path, 'w') as f:
+    output_path = os.path.join(output_dir, 'architecture.json')
+    with open(output_path, 'w') as f:
         f.write(str(architecture))
 
 
