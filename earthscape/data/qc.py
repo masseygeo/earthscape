@@ -198,6 +198,62 @@ def create_metadata(area_name, label_space, num_patches, num_imgs, img_meta, pat
 
 
 
+
+def create_release_metadata(dicts_by_name):
+    """
+    Recursively merge metadata from multiple subsets.
+
+    For each key across sources:
+    - If all present values are equal, the scalar value is retained.
+    - If values differ, a mapping of {source: value} is returned.
+    - Nested dictionaries are merged recursively.
+
+    Parameters
+    ----------
+    dicts_by_name : dict of str to dict
+        Mapping of source name to its metadata dictionary.
+
+    Returns
+    -------
+    dict
+        Merged dictionary with shared values collapsed and differing
+        values represented by source-keyed mappings.
+    """
+    MISSING = object()
+
+    all_keys = set()
+    for d in dicts_by_name.values():
+        if isinstance(d, dict):
+            all_keys |= set(d.keys())
+
+    merged = {}
+    for key in all_keys:
+        vals = {
+            src: (d.get(key, MISSING) if isinstance(d, dict) else MISSING)
+            for src, d in dicts_by_name.items()
+        }
+        present = {src: v for src, v in vals.items() if v is not MISSING}
+        if not present:
+            continue
+
+        # recurse if all present values are dicts...
+        if all(isinstance(v, dict) for v in present.values()):
+            merged[key] = create_release_metadata({src: v for src, v in present.items()})
+            continue
+
+        first = next(iter(present.values()))
+        all_equal_among_present = all(v == first for v in present.values())
+
+        if all_equal_among_present:
+            merged[key] = first    # collapse even if some sources are missing this key
+        else:
+            merged[key] = present  # provenance mapping at the leaf
+
+    return merged
+
+
+
+
 def plot_multi_terrain_features(mdhs_path, terrain_paths, bounds, cmap, title):
     """
     Plot multiple terrain feature images over a multi-directional hillshade 

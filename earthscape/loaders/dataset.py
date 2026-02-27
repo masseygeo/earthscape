@@ -1,7 +1,9 @@
 
 import os
+import glob
 import rasterio
 import numpy as np
+import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
@@ -21,21 +23,31 @@ class ESDataset_Classification(Dataset):
     patch_ids : sequence of str
         Patch identifiers.
 
-    data_dirs : sequence of str or os.PathLike
-        Directories containing "{patch_id}_labels.csv" and associated channel files (e.g., "{patch_id}_dem.tif").
+    patch_dirs : sequence of str or os.PathLike
+        Directories containing image files for sample patches in `patch_ids`.
 
-    modalities : dict
-        Mapping of informal modality name to input feature channel path suffixes, channel mean, channel standard deviations. 
+    input_features : dict
+        Mapping of informal input feature name to channel path suffixes, channel mean, channel standard deviations. 
         Expected format:
         
         {
-        "informal modality name": 
+        "informal name": 
             {
             "channels": [sequence of str], 
             "mean": [sequence of float or None], 
             "sd": [sequence of float or None]
             }
         }
+
+    areas_path : str or os.PathLike
+        Path to CSV containing patch ID and associated class-area 
+        proportions in the assocated patch.
+
+    label_threshold : float or None, default=None
+        Apply minimum class-area threshold for one-hot labels (float 0.0 - 1.0), where 
+        class presence is defined as area-proportion greater than given threshold. If
+        `None` is provided, the raw class-area proportions are used as targets, enabling 
+        regression or multilabel soft labels.
 
     normalize : bool, default=True
         Apply per-channel normalization.
@@ -45,17 +57,22 @@ class ESDataset_Classification(Dataset):
         consistently across modalities.
     """
 
-    def __init__(self, patch_ids, data_dirs, modalities, normalize=True, augment=False):
+    def __init__(self, patch_ids, patch_dirs, input_features, areas_path, label_threshold=None, normalize=True, augment=False):
         self.ids = list(patch_ids)
-        self.data_dirs = list(data_dirs)
-        self.modalities = modalities
+        self.patch_dirs = list(patch_dirs)
+        self.input_features = input_features
+        self.areas_path = areas_path
+        self.label_threshold = label_threshold
         self.normalize = normalize
         self.augment = augment
-        
-        # dict index for labels & modality paths for each patch -> {patch ID: {'label': torch.Tensor, 'modality_paths': sequence of str}}
-        self._index = self._build_index()
 
-        # dict for normalization using mean & standard deviation tensors for each modality
+        # keep only patch_ids that exist in the provided patch_dirs (really only for smoke set tests)
+        self.ids = [pid for pid in self.ids if self._resolve_dir(pid) is not None]
+
+        # index dict of {patch_id: {'areas': tensor of shape (K,), 'input_paths': sequence of str or os.PathLike}}
+        self._index = self._build_input_index()
+
+        # normalization dict of mean & standard deviation tensors for each input
         self._norm = self._build_normalizers()
 
 
@@ -64,31 +81,36 @@ class ESDataset_Classification(Dataset):
 
 
     def __getitem__(self, idx):
-        ##### get patch information...
+        
         patch_id = self.ids[idx]          # unique patch ID
         entry = self._index[patch_id]     # label & modality paths for patch
+        data = {}                         # initialize dict for return
 
         ##### get label tensor for patch...
-        data = {'label': entry['label']}
+        if self.label_threshold is None:                                        # use class-area proportions as targets
+            label = entry['areas'].to(torch.float32)
+        else:                                                                   # use one-hot labels as targets
+            label = (entry['areas'] > self.label_threshold).to(torch.float32)
+        data['label'] = label
+
 
         ##### get image tensor for patch...
-        for mod, paths in entry['modality_paths'].items():
+        for name, paths in entry['input_paths'].items():
 
             # stack modality channels & return tensor of shape (C, H, W)
             t = self.stack_images(paths)
 
-            # fill background NaN in categorical images to 0
-            # NOTE: should only affect osm, nhd, RGB+NIR, & mask
-            t = torch.nan_to_num(t, nan=0.0)
+            # # fill background NaN in categorical images to 0
+            # t = torch.nan_to_num(t, nan=0.0)
             
             # normalize per channel (optional)...
-            norm = self._norm[mod]
+            norm = self._norm[name]
             if norm is not None:
                 mean, sd = norm
                 t = (t - mean) / (sd + 1e-8)
 
             # final modality tenor
-            data[mod] = t
+            data[name] = t
 
         ##### apply random augmentations (optional)...
         if self.augment:
@@ -98,47 +120,64 @@ class ESDataset_Classification(Dataset):
         return data
 
 
-    def _get_patch_dir_and_label(self, patch_id):
+
+    def _build_areas_index(self):
+        """Build dict of patch_id and associated label class-area proportions. Dict of:
+        
+        {'patch_id': torch.Tensor of shape (K,)}
+        
         """
-        Resolve correct directory for `patch_id` and load its label tensor. 
+        index = {}
+        df = pd.read_csv(self.areas_path)
+        df = df.loc[df['patch_id'].isin(self.ids)]
+        df.set_index('patch_id', inplace=True, drop=True)
+        for pid, areas in df.iterrows():
+            index[pid] = torch.from_numpy(areas.to_numpy()).to(dtype=torch.float32)
+        return index
+    
+
+    def _resolve_dir(self, patch_id):
         """
-        for resolved_dir in self.data_dirs:
-            label_path = os.path.join(resolved_dir, f"{patch_id}_labels.csv")
-            if os.path.isfile(label_path):
-                label = np.loadtxt(label_path)
-                label = torch.from_numpy(label).type(torch.float32)
-                return resolved_dir, label
+        Resolve correct data directory for specific patch.
+        """
+        for resolved_dir in self.patch_dirs:
+            paths = glob.glob(os.path.join(resolved_dir, f"{patch_id}_*"))
+            if len(paths) > 0:
+                return resolved_dir
 
 
-    def _get_modality_paths(self, patch_id, resolved_dir):
+    def _get_input_paths(self, patch_id, resolved_dir):
         """
         Build per-modality list of channel file paths for a given patch.
         """
-        modality_paths = {}
-        for mod_name, data in self.modalities.items():
-            modality_paths[mod_name] = [os.path.join(resolved_dir, f"{patch_id}_{ext}") for ext in data['channels']]
-        return modality_paths
+        index = {}
+        for name, data in self.input_features.items():
+            index[name] = [os.path.join(resolved_dir, f"{patch_id}_{ext}") for ext in data['channels']]
+        return index
     
 
-    def _build_index(self):
+    def _build_input_index(self):
         """
-        Construct dict mapping of {`patch_id`: {`label`: torch.Tensor, `modality_paths`: sequence of str}}.
+        Build lookup index for patch sample areas and input channel paths. Dict of:
+
+        {patch_id: {'areas': torch.Tensor of shape (K,), 'input_paths': list of channel paths}} 
         """
         index = {}
+        areas = self._build_areas_index() 
         for patch_id in self.ids:
-            resolved_dir, label = self._get_patch_dir_and_label(patch_id)
-            modality_paths = self._get_modality_paths(patch_id, resolved_dir)
-            index[patch_id] = {'label': label, 'modality_paths': modality_paths}
+            class_areas = areas[patch_id]
+            resolved_dir = self._resolve_dir(patch_id)
+            input_paths = self._get_input_paths(patch_id, resolved_dir)
+            index[patch_id] = {'areas': class_areas, 'input_paths': input_paths}
         return index
 
 
     def _build_normalizers(self):
         """
-        Build (mean, sd) tensors shaped (C,1,1) per modality for continuous input features. Binary 
-        or categorical input feautres are treated as identity normalization.
+        Build (mean, sd) tensors shaped (C,1,1) per modality for continuous input features. Binary or categorical input feautres are treated as identity normalization.
         """
         norm = {}
-        for mod_name, data in self.modalities.items():
+        for name, data in self.input_features.items():
             means = data.get('mean')
             sds = data.get('sd')
 
@@ -148,9 +187,9 @@ class ESDataset_Classification(Dataset):
 
                 mean = torch.tensor(mean_vals, dtype=torch.float32)[:, None, None]
                 sd = torch.tensor(sd_vals, dtype=torch.float32)[:, None, None]
-                norm[mod_name] = (mean, sd)
+                norm[name] = (mean, sd)
             else:
-                norm[mod_name] = None
+                norm[name] = None
         return norm
     
 
@@ -168,7 +207,7 @@ class ESDataset_Classification(Dataset):
         """
         Apply spatial transforms consistently across all modalities (not label).
         """
-        for mod in self.modalities.keys():
+        for mod in self.input_features.keys():
             x = data[mod]
             if hflip:
                 x = torch.flip(x, dims=[2])  # W

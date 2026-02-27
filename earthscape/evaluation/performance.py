@@ -50,19 +50,19 @@ def get_global_metrics(targets, probabilities, thresholds):
     df['Precision (Macro)'] = precision_score(targs, binary_preds, average='macro', zero_division=0.0)
     df['Recall (Macro)'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
     df['F1 (Macro)'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
-    # df['AUC (Macro)'] = roc_auc_score(targs, probs, average="macro")
     df['mAP (Macro)'] = average_precision_score(targs, probs, average='macro')
     
     df['Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
     df['Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
     df['F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    # df['AUC (Wt.)'] = roc_auc_score(targs, probs, average='weighted')
     df['mAP (Wt.)'] = average_precision_score(targs, probs, average='weighted')
     df['Accuracy (Micro)'] = (binary_preds == targs).mean()
 
+    df = pd.DataFrame(df, index=[0])
+
     # calculate AUC over classes with at least one positive & one negative...
     # only keep classes (columns) with > 1 value
-    valid_cols = [k for k in range(targets.shape[1]) if len(np.unique(targets[:, k])) == 2]
+    valid_cols = [k for k in range(targs.shape[1]) if len(np.unique(targs[:, k])) == 2]
 
     if len(valid_cols) > 0:
         m = roc_auc_score(targs[:, valid_cols], probs[:, valid_cols], average="macro")
@@ -71,7 +71,6 @@ def get_global_metrics(targets, probabilities, thresholds):
         m = np.nan
         w = np.nan
 
-    df = pd.DataFrame(df, index=[0])
     df.insert(loc=3, column='AUC (Macro)', value=m)
     df.insert(loc=8, column='AUC (Wt.)', value=w)
 
@@ -133,17 +132,25 @@ def get_class_metrics(targets, probabilities, thresholds, classes):
         probs = probabilities[:, idx]
         preds = binary_preds[:, idx]
 
+        # handle potential no-variance cases for AUC and AP...
+        if targs.max() == targs.min():
+            auc = np.nan
+            ap = np.nan
+        else:
+            auc = roc_auc_score(targs, probs)
+            ap = average_precision_score(targs, probs)
+
         # calculate metrics
         df.loc[idx, 'Class'] = unit
-        df.loc[idx, 'Threshold'] = thresh
-        df.loc[idx, 'n True'] = targs.sum()
-        df.loc[idx, 'n Predicted'] = preds.sum()
+        df.loc[idx, 'Decision Threshold'] = thresh
+        df.loc[idx, 'num True'] = targs.sum()
+        df.loc[idx, 'num Predicted'] = preds.sum()
         df.loc[idx, 'Precision'] = precision_score(targs, preds, zero_division=0.0)
         df.loc[idx, 'Recall'] = recall_score(targs, preds, zero_division=0.0)
         df.loc[idx, 'Specificity'] = recall_score(1-targs, 1-preds, zero_division=0.0)
         df.loc[idx, 'F1'] = f1_score(targs, preds, zero_division=0.0)
-        df.loc[idx, 'AUC'] = roc_auc_score(targs, probs)
-        df.loc[idx, 'AP'] = average_precision_score(targs, probs)
+        df.loc[idx, 'AUC'] = auc
+        df.loc[idx, 'AP'] = ap
         df.loc[idx, 'Accuracy'] = accuracy_score(targs, preds)
 
     return df

@@ -1,4 +1,6 @@
 
+from earthscape.train.earlystopping import EarlyStopping
+
 import os
 import glob
 import json
@@ -166,7 +168,7 @@ def validate_epoch(model, val_loader, criterion, device, baseline=True):
 
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir, baseline=True):
+def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir, baseline=True, early_stop=None):
     """
     Train a model for multiple epochs and log training/validation metrics.
 
@@ -210,13 +212,18 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     val_acc = []                     # validation - list of epoch accuracies
     best_val_loss = float('inf')     # validation - best validation loss
 
+    # early stopping...
+    stopper = None
+    if early_stop is not None:
+        stopper = EarlyStopping(**early_stop)
+
     # iterate over epochs...
     for epoch in range(num_epochs):
 
         # training...
         print(f"Epoch {epoch+1}")
         t0 = datetime.now()
-        epoch_train_loss, epoch_train_acc = train_epoch(model, train_loader, criterion, optimizer, device, baseline=baseline)
+        epoch_train_loss, epoch_train_acc = train_epoch(model, train_loader, criterion, optimizer, device, baseline)
         t1 = datetime.now()
 
         train_loss.append(epoch_train_loss)
@@ -248,6 +255,14 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
                     os.remove(path)
             torch.save(model.state_dict(), f"{output_dir}/best_loss_epoch{epoch + 1}.pth")
             print(f"New best model saved!")
+
+
+        # early stopping...
+        if stopper is not None:
+            stop = stopper.step(epoch_val_loss, epoch+1)
+            if stop:
+                print(f"Early stopping triggered at epoch {epoch+1}!")
+                break
 
         print('\n')
 

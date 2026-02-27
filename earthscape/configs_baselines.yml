@@ -1,22 +1,17 @@
+
 experiment:
-  output_root: ../experiments/classification
-  description: Test run for training, validation, and inference using F1-optimized ResNet18 (modified for input & output sizes).
+  root: experiments/classification/tests
   seed: 111
 
+
 data:
-  name: earthscape
-  version: 1.1
-  patch_dirs: 
-    - ../data/warren/patches
-    - ../data/howevalley/patches
-    - ../data/sonora/patches
-  split_files:
-    train: train_id.geojson
-    val: val_id.geojson
-    test: test_id.geojson
-    cross_test: test_cd.geojson
-    norm_stats: train_stats.csv
-  input_features:
+  root: data
+  dirs: 
+    # - warren/patches
+    # - howevalley/patches
+    # - sonora/patches
+    - smoke/patches
+  input:
     dem:
       channels:
         - dem.tif
@@ -26,26 +21,54 @@ data:
     #     - aerialg.tif
     #     - aerialb.tif
 
+
+splits:
+  root: splits/esv1p1_splits
+  glob:
+    train: "*train_id.geojson"
+    val: "*val_id.geojson"
+    test: "*test_id.geojson"
+    cross: "*test_cd.geojson"
+
+
 model: 
   encoder: resnet18
   image_size: 256
   output_size: 7
-  compile: true
+  compile: false
+
+
+labels:
+  root: data
+  glob: "*areas.csv"
+  area_threshold: 0.0        # supervision labels - None: use area-proportions (need softmax), float: create one-hots of class presence by area proportion
+
+
+norm:
+  root: splits/esv1p1_splits
+  glob: "*train_stats.csv"
+  normalize: true
+
+
+dataloader:
+  base:
+    batch_size: 4
+    num_workers: 0
+    persistent_workers: false
+    prefetch_factor: null
+  train:
+    augment: true
+    shuffle: true
+    drop_last: true
+  eval:
+    augment: false
+    shuffle: false
+    drop_last: false
+
 
 training:
-  num_epochs: 5
-  default_params:
-    batch_size: 4
-    drop_last: true
-    num_workers: 8
-    persistent_workers: true
-    prefetch_factor: 4
-  train_augment: true
-  train_shuffle: true
-  ttv_augment: false
-  ttv_shuffle: false
-  normalize: true
-  optimize_thresholds: true
+  num_epochs: 5    
+
 
 optimizer:
   name: adam
@@ -56,6 +79,7 @@ optimizer:
       - 0.9
       - 0.999
 
+
 loss:
   name: bcefocal
   params:
@@ -64,3 +88,12 @@ loss:
     alpha: null
     reduction: 'mean'
   
+
+early_stop:
+  patience: 5
+  min_delta: 0.0
+  warmup_epochs: 5
+
+
+eval:
+  optimize_clf_thresholds: true

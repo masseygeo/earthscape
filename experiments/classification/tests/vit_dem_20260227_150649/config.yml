@@ -1,0 +1,94 @@
+data:
+  dirs:
+  - smoke/patches
+  input:
+    dem:
+      channels:
+      - dem.tif
+      mean:
+      - 578.66797
+      sd:
+      - 74.129265
+  root: data
+dataloader:
+  base:
+    batch_size: 4
+    num_workers: 0
+    persistent_workers: false
+    prefetch_factor: null
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 5
+  warmup_epochs: 5
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  model: /Users/matthew/GitHub/earthscape/experiments/classification/tests/vit_dem_20260227_150649/best_loss_epoch3.pth
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.22554819285869598
+  - 0.7753940224647522
+  - 0.20845715701580048
+  - 0.34729719161987305
+  - 0.5
+  - 0.6116326451301575
+  - 0.7896166443824768
+experiment:
+  end_training: 0.29171483333333337
+  output_dir: /Users/matthew/GitHub/earthscape/experiments/classification/tests/vit_dem_20260227_150649
+  root: experiments/classification/tests
+  seed: 111
+  start_training: 15:06 02/27/2026
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  name: bcefocal
+  params:
+    alpha: null
+    gamma: 0
+    pos_weight: null
+    reduction: mean
+model:
+  compile: false
+  encoder: vit
+  image_size: 256
+  in_channels: 1
+  output_size: 7
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  name: adam
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.001
+    weight_decay: 0.0
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cpu
+  num_epochs: 5
