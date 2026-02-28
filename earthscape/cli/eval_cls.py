@@ -21,11 +21,11 @@ from torch.utils.data import DataLoader
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Use a multilabel classification model for inference evaluation.")
+    parser = argparse.ArgumentParser(description="Use a multilabel classification model for evaluation.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to trained model config.yml file.")
     parser.add_argument("--mode", type=str, choices=('predict', 'evaluate'), required=True, help="Predict labels or evaluate performance with labels.")
     parser.add_argument("--sample_ids_path", type=str, required=True, help="Path to GeoJSON file with test patch IDs; must contain column 'patch_id'.")
-    parser.add_argument("--data_dir", type=str, nargs="+", required=True, help="Directory paths containing data; repeatable. Example: --data_dir ../data/dir1  ../data/dir2 ...")
+    parser.add_argument("--data_dir", type=str, nargs="+", required=True, help="Directory paths containing data. Example: --data_dir ../data/dir1  ../data/dir2 ...")
 
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override seed.")
@@ -129,7 +129,7 @@ def main():
 
 
     ##### output directory...
-    output_root = cfg['experiment']['root']
+    output_root = cfg['experiment']['output_dir']
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     dir_name = f"{timestamp}"
     output_dir = os.path.abspath(os.path.join(output_root, "inference", dir_name))
@@ -153,12 +153,13 @@ def main():
     probabilities, targets = test_model(model, test_loader, device, baseline=baseline)
     
 
-    predictions = pd.DataFrame(data=probabilities, cols=class_cols)
-    predictions.set_index(class_cols, drop=True, inplace=True)
+    ##### save individual sample predictions...
+    predictions = pd.DataFrame(data=test_dataset.ids, columns=['patch_id'])
+    predictions[class_cols] = probabilities.detach().cpu().numpy()
     predictions.to_csv(os.path.join(output_dir, 'predictions.csv'))
 
 
-
+    ##### optionally assess performance (if labels provided)...
     if args.mode == 'evaluate':
         df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
         output_path = os.path.abspath(os.path.join(output_dir, 'global.csv'))
@@ -173,11 +174,15 @@ def main():
         fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
 
 
+    ##### save updated config with evaluation parameters & finish...
     t1 = datetime.datetime.now() 
     cfg['eval']['end'] = t1.strftime("%H:%M %m/%d/%Y")
+    cfg_output_path = os.path.abspath(os.path.join(output_dir, 'config.yml'))
+    with open(cfg_output_path, "w") as f:
+        yaml.safe_dump(cfg, f)
     elapsed = (t1 - t0).total_seconds() / 60
-    print(f"Inference complete - Minutes: {elapsed:.2f}")
-
-
+    print(f"Inference complete - Minutes: {elapsed:.2f}")#
+    
+    
 if __name__ == "__main__":
     main()

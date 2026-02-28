@@ -1,6 +1,6 @@
 
 experiment:
-  root: experiments/classification/tests2
+  root: experiments/classification/tests
   seed: 111
 
 

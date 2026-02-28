@@ -18,7 +18,39 @@ COMMANDS = [
         "--mode", "train-test-cross",
         "--experiment_root", "experiments/test",
         "--encoder", "resnet18",
-        "--input", "slope:s.tif"
+        "--input", "multi:dem.tif,aerialr.tif,aerialg.tif,aerialb.tif"
+    ],
+    [
+        "train_cls",
+        "--config_path", "./earthscape/configs_template.yml",
+        "--mode", "train-test-cross",
+        "--experiment_root", "experiments/test",
+        "--encoder", "resnet50",
+        "--input", "dem:dem.tif"
+    ],
+    [
+        "train_cls",
+        "--config_path", "./earthscape/configs_template.yml",
+        "--mode", "train-test-cross",
+        "--experiment_root", "experiments/test",
+        "--encoder", "resnet50",
+        "--input", "multi:dem.tif,aerialr.tif,aerialg.tif,aerialb.tif"
+    ],
+    [
+        "train_cls",
+        "--config_path", "./earthscape/configs_template.yml",
+        "--mode", "train-test-cross",
+        "--experiment_root", "experiments/test",
+        "--encoder", "vit",
+        "--input", "dem:dem.tif"
+    ],
+    [
+        "train_cls",
+        "--config_path", "./earthscape/configs_template.yml",
+        "--mode", "train-test-cross",
+        "--experiment_root", "experiments/test",
+        "--encoder", "vit",
+        "--input", "multi:dem.tif,aerialr.tif,aerialg.tif,aerialb.tif"
     ],
 ]
 
@@ -32,4 +64,4 @@ for cmd in COMMANDS:
         print("Experiment failed! Stopping...")
         sys.exit(result.returncode)
 
-print("\nAll experiments finished successfully.")
+print("\nAll experiments finished successfully.\n")

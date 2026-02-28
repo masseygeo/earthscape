@@ -37,22 +37,22 @@ eval:
   - Qc
   - Qca
   - Qr
-  model: /Users/matthew/GitHub/earthscape/experiments/classification/tests/vit_dem_20260227_150649/best_loss_epoch3.pth
   optimize_clf_thresholds: true
   thresholds:
-  - 0.22554819285869598
-  - 0.7753940224647522
-  - 0.20845715701580048
-  - 0.34729719161987305
+  - 0.41743388772010803
+  - 0.8087679743766785
+  - 0.7189642786979675
+  - 2.9716382132782826e-11
   - 0.5
-  - 0.6116326451301575
-  - 0.7896166443824768
+  - 0.09396451711654663
+  - 0.757210910320282
 experiment:
-  end_training: 0.29171483333333337
-  output_dir: /Users/matthew/GitHub/earthscape/experiments/classification/tests/vit_dem_20260227_150649
-  root: experiments/classification/tests
+  best_model: /Users/matthew/GitHub/earthscape/experiments/test/resnet50_dem_20260228_173753/best_loss_epoch4.pth
+  end_training: 17:37 02/28/2026
+  output_dir: /Users/matthew/GitHub/earthscape/experiments/test/resnet50_dem_20260228_173753
+  root: experiments/test
   seed: 111
-  start_training: 15:06 02/27/2026
+  start_training: 17:37 02/28/2026
 labels:
   area_threshold: 0.0
   glob: '*areas.csv'
@@ -66,7 +66,7 @@ loss:
     reduction: mean
 model:
   compile: false
-  encoder: vit
+  encoder: resnet50
   image_size: 256
   in_channels: 1
   output_size: 7

@@ -12,6 +12,7 @@ import argparse
 import yaml
 import datetime
 import numpy as np
+import pandas as pd
 import geopandas as gpd
 import torch
 from torch.utils.data import DataLoader
@@ -245,6 +246,12 @@ def main():
 
         ##### testing (in-domain)...
         probabilities, targets = test_model(model, test_loader, device, baseline=baseline)
+
+        # save individual sample predictions...
+        predictions = pd.DataFrame(data=test_dataset.ids, columns=['patch_id'])
+        predictions[class_cols] = probabilities.detach().cpu().numpy()
+        predictions.to_csv(os.path.join(output_dir, 'predictions_id.csv'))
+        
         
         df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
         output_path = os.path.abspath(os.path.join(output_dir, 'id_global.csv'))
@@ -266,6 +273,12 @@ def main():
     ###### testing (cross-domain)...
     if args.mode == "train-test-cross":
         probabilities, targets = test_model(model, cross_loader, device)
+
+        # save individual sample predictions...
+        predictions = pd.DataFrame(data=cross_dataset.ids, columns=['patch_id'])
+        predictions[class_cols] = probabilities.detach().cpu().numpy()
+        predictions.to_csv(os.path.join(output_dir, 'predictions_cd.csv'))
+
 
         df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
         output_path = os.path.abspath(os.path.join(output_dir, 'cd_global.csv'))

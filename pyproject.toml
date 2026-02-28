@@ -12,7 +12,7 @@ dependencies = []
 
 [project.scripts]
 train_cls = "earthscape.cli.train_cls:main"
-inference_cls = "earthscape.cli.inference_cls:main"
+eval_cls = "earthscape.cli.eval_cls:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
