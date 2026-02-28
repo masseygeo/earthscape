@@ -11,32 +11,36 @@ def config_load(path):
 
 
 def config_update(cfg, args):
-    if args.seed is not None:
-        cfg['experiment']['seed'] = args.seed
-    if args.compile is not None:
-        cfg['model']['compile'] = args.compile == 'true'
-    if args.encoder is not None:
-        cfg['model']['encoder'] = args.encoder
-    if args.area_threshold is not None:
-        cfg['labels']['area_threshold'] = args.area_threshold
-    if args.batch_size is not None:
-        cfg['dataloader']['base']['batch_size'] = args.batch_size
-    if args.lr is not None:
-        cfg['optimizer']['params']['lr'] = args.lr
-    if args.weight_decay is not None:
-        cfg['optimizer']['params']['weight_decay'] = args.weight_decay
-    if args.pos_weight is not None:
-        cfg['loss']['params']['pos_weight'] = args.pos_weight
-    if args.gamma is not None:
-        cfg['loss']['params']['gamma'] = args.gamma
-    if args.alpha is not None:
-        cfg['loss']['params']['alpha'] = args.alpha
-    if args.reduction is not None:
-        cfg['loss']['params']['reduction'] = args.reduction
-    
-    if args.input:
-        cfg['data']['input'] = _parse_inputs(args.input)
 
+    def _opt(name, default=None):
+        return getattr(args, name, default)
+
+    if _opt("experiment_root") is not None:
+        cfg['experiment']['root'] = _opt("experiment_root")
+    if _opt("seed") is not None:
+        cfg['experiment']['seed'] = _opt("seed")
+    if _opt("compile") is not None:
+        cfg['model']['compile'] = args.compile == 'true'
+    if _opt("encoder") is not None:
+        cfg['model']['encoder'] = _opt("encoder")
+    if _opt("area_threshold") is not None:
+        cfg['labels']['area_threshold'] = _opt("area_threshold")
+    if _opt("batch_size") is not None:
+        cfg['dataloader']['base']['batch_size'] = _opt("batch_size")
+    if _opt("lr") is not None:
+        cfg['optimizer']['params']['lr'] = _opt("lr")
+    if _opt("weight_decay") is not None:
+        cfg['optimizer']['params']['weight_decay'] = _opt("weight_decay")
+    if _opt("pos_weight") is not None:
+        cfg['loss']['params']['pos_weight'] = _opt("pos_weight")
+    if _opt("gamma") is not None:
+        cfg['loss']['params']['gamma'] = _opt("gamma")
+    if _opt("alpha") is not None:
+        cfg['loss']['params']['alpha'] = _opt("alpha")
+    if _opt("reduction") is not None:
+        cfg['loss']['params']['reduction'] = _opt("reduction")
+    if _opt("input"):
+        cfg['data']['input'] = _parse_inputs(_opt("input"))
     return cfg
 
 

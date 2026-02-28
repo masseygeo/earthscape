@@ -1,10 +1,10 @@
 
-from earthscape.utils.constants import ES_VERSION_SPLIT_DIR, SG_MAPPING
-from earthscape.utils import set_seed, set_worker_seed
+from earthscape.utils.constants import ES_SPLIT_DIR, SG_MAPPING
+from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
 from earthscape.models import create_resnet_clf, create_vit_clf
-# from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
-from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
+from earthscape.evaluation import test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
+
 
 import os
 import glob
@@ -12,20 +12,25 @@ import argparse
 import yaml
 import datetime
 import numpy as np
+import pandas as pd
 import geopandas as gpd
 import torch
 from torch.utils.data import DataLoader
-import torch.optim as optim
 
 
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Test a multilabel classification model using a YAML config file.")
+    parser = argparse.ArgumentParser(description="Use a multilabel classification model for inference evaluation.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to trained model config.yml file.")
-    parser.add_argument("--sample_ids_path", type=str, required=True, help="Path to file with test patch IDs.")
-    parser.add_argument("--cls_thresholds", type=str, default=None, help="Customize classification thresholds (optional).")
-    parser.add_argument("--custom_output_dir", type=str, default=None, help="Customize output directory (optional).")
+    parser.add_argument("--mode", type=str, choices=('predict', 'evaluate'), required=True, help="Predict labels or evaluate performance with labels.")
+    parser.add_argument("--sample_ids_path", type=str, required=True, help="Path to GeoJSON file with test patch IDs; must contain column 'patch_id'.")
+    parser.add_argument("--data_dir", type=str, nargs="+", required=True, help="Directory paths containing data; repeatable. Example: --data_dir ../data/dir1  ../data/dir2 ...")
+
+    parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override output directory.")
+    parser.add_argument("--seed", type=int, default=None, help="(Optional) Override seed.")
+    parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override batch size.")
+
     return parser.parse_args()
 
 
@@ -34,13 +39,16 @@ def main():
 
     ##### open args & configs.yml...
     args = parse_args()
-    with open(os.path.abspath(args.config_path), "r") as f:
-        cfg = yaml.safe_load(f)
+    cfg = config_load(args.config_path)
 
 
     ##### record start time
     t0 = datetime.datetime.now()
-    cfg['testing']['start_time'] = t0.strftime("%H:%M %m/%d/%Y")
+    cfg['eval']['start'] = t0.strftime("%H:%M %m/%d/%Y")
+
+
+    ##### reconcile optional args with configs...
+    cfg = config_update(cfg, args)
 
 
     ##### set seeds...
@@ -52,48 +60,63 @@ def main():
 
     ##### set device & add to configs.yml
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    cfg['testing']['device'] = str(device)
+    cfg['eval']['device'] = str(device)
+
+    
+    ##### build input dict... 
+    # input features -> {'dem': {'channels': ['dem.tif']}, ...}
+    input_dict = cfg['data']['input']
+
+    # path to training split statistics for normalization
+    norm_stats_path = os.path.abspath(os.path.join(cfg['norm']['root'], cfg['norm']['glob']))
+    norm_stats_path = glob.glob(norm_stats_path)[0]
+
+    # final input features & noramlization stats for each channel
+    # -> {'dem': {'channels': ['dem.tif'], 'mean': [float], 'sd': [float]}, ...}
+    input_dict = get_norm_stats(norm_stats_path, input_dict)
 
 
-    ##### setup input feature dict...
-    input_configs = cfg['data']['input_features']
-    norm_stats_path = cfg['data']['split_files']['norm_stats']
-    norm_stats_path = os.path.abspath(os.path.join(ES_VERSION_SPLIT_DIR, norm_stats_path))
-    input_configs = get_norm_stats(norm_stats_path, input_configs)
+    ##### build dataset & dataloaders...
+    # dataset parameters...
+    patch_dirs = [os.path.abspath(d) for d in args.data_dir]
 
+    if args.mode == 'evaluate':
+        areas_path = os.path.abspath(glob.glob(os.path.join(cfg['labels']['root'], cfg['labels']['glob']))[0])
+    else:
+        areas_path = None
+    cfg['eval']['mode'] = args.mode
 
-    ##### pytorch dataset & dataloader...
-    patch_dirs = [os.path.abspath(p) for p in cfg['data']['patch_dirs']]
-    splits = cfg["data"]["split_files"]
-
-    # dataset parameters
-    dataset_params = {'patch_dirs': patch_dirs, 'modalities': input_configs, 'normalize': cfg['training']['normalize']}
+    ds_params = {
+        'patch_dirs': patch_dirs, 
+        'input_features': input_dict, 
+        'areas_path': areas_path,
+        'label_threshold': cfg['labels']['area_threshold'],
+        'normalize': cfg['norm']['normalize'],
+        'augment': False
+        }
 
     # dataloader parameters...
-    dl_default_params = cfg['training']['default_params']     # batch_size, drop_last, num_workers, persistent_workers, prefetch_factor 
-    dl_custom_params = {'pin_memory': (device.type == 'cuda'), 'generator': g, 'worker_init_fn': set_worker_seed}
-    # dl_train_params = {'shuffle': cfg['training']['train_shuffle'], **dl_default_params, **dl_custom_params}
-    dl_ttv_params = {'shuffle': cfg['training']['ttv_shuffle'], **dl_default_params, **dl_custom_params}
+    dl_params = {
+        **cfg['dataloader']['base'],
+        'pin_memory': (device.type == 'cuda'),
+        'generator': g, 
+        'worker_init_fn': set_worker_seed,
+        'shuffle': cfg['dataloader']['eval']['shuffle'], 
+        'drop_last': cfg['dataloader']['eval']['drop_last']
+        }
 
-    # test set (in-domain) (optional)
-    test_patch_path = os.path.abspath(os.path.join(ES_VERSION_SPLIT_DIR, splits['test']))
-    test_patches = gpd.read_file(test_patch_path)
-    test_patch_ids = test_patches['patch_id'].to_list()
-    test_dataset = ESDataset_Classification(test_patch_ids, augment=cfg['training']['ttv_augment'], **dataset_params)
-    test_loader = DataLoader(test_dataset, **dl_ttv_params)
+    # build evaluation set...
+    patches = gpd.read_file(args.sample_ids_path)
+    patch_ids = patches['patch_id'].to_list()
+    test_dataset = ESDataset_Classification(patch_ids, **ds_params)
+    test_loader = DataLoader(test_dataset, **dl_params)
 
 
     ##### build model...
-    # define encoder
     encoder = cfg['model']['encoder']
-
-    # define input channels (baselines use one list of channels & will be stacked in order)
-    inputs = cfg['data']['input_features']
-    in_channels = sum(len(m['channels']) for m in inputs.values())
-    cfg['model']['in_channels'] = in_channels
-
-    # output size
+    in_channels = cfg['model']['in_channels']
     output_size = cfg['model']['output_size']
+    image_size = cfg['model']['image_size']
 
     # instantiate model...
     if encoder == 'resnet18':
@@ -104,75 +127,56 @@ def main():
         image_size = cfg['model']['image_size']
         model = create_vit_clf(in_channels=in_channels, num_classes=output_size, image_size=image_size).to(device)
 
-    # compile model for optimal performance
-    if cfg['model']['compile']:
-        model = torch.compile(model)
-
-
 
     ##### output directory...
-    if args.custom_output_dir is None:
-        output_root = cfg['experiment']['output_root']
-        input_names = list(cfg['data']['input_features'].keys())
-        input_names = '_'.join(input_names)
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        dir_name = f"{encoder}_{input_names}_{timestamp}"
-        output_dir = os.path.abspath(os.path.join(output_root, dir_name))
-    else:
-        output_dir = os.path.abspath(args.custom_output_dir)
-    
+    output_root = cfg['experiment']['root']
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dir_name = f"{timestamp}"
+    output_dir = os.path.abspath(os.path.join(output_root, "inference", dir_name))
+
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     
-    cfg['experiment']['output_dir'] = output_dir
+    cfg['eval']['output_dir'] = output_dir
 
 
-
-    ##### load best model...
-    model_path = glob.glob(os.path.abspath(os.path.join(output_dir, '*best*.pth')))[0]
+    ##### load model...
+    model_path = os.path.abspath(cfg['experiment']['best_model'])
     state_dict = torch.load(model_path, map_location=device)
     model.load_state_dict(state_dict)
 
 
-    ##### optimize thresholds...
-    if cfg['training']['optimize_thresholds']:
-        optimal_thresholds = get_optimal_thresholds(model, val_loader, device)
-    else:
-        optimal_thresholds = np.full(shape=cfg['model']['output_size'], fill_value=0.5)
+    ##### inference...
+    baseline = len(input_dict.keys()) == 1
+    class_cols = cfg['eval']['labels']
+    optimal_thresholds = [float(t) for t in cfg['eval']['thresholds']]
+    probabilities, targets = test_model(model, test_loader, device, baseline=baseline)
+    
 
-    cfg['testing'] = {}
-    cfg['testing']['thresholds'] = list(optimal_thresholds)
-
-
-    ##### testing (in-domain)...
-    class_cols = list(SG_MAPPING.keys())
-    cfg['data']['labels'] = class_cols
-
-    probabilities, targets = test_model(model, test_loader, device)
-
-    df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
-    output_path = os.path.abspath(os.path.join(output_dir, 'id_global.csv'))
-    df_global.to_csv(output_path, index=False)
-
-    df_class = get_class_metrics(targets, probabilities, thresholds=optimal_thresholds, classes=class_cols)
-    output_path = os.path.abspath(os.path.join(output_dir, 'id_class.csv'))
-    df_class.to_csv(output_path, index=False)
-
-    fig = plot_pr_roc_curves(targets, probabilities, class_cols)
-    output_path = os.path.abspath(os.path.join(output_dir, 'id_pr_roc_curves.png'))
-    fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
-
-    t2 = datetime.datetime.now() 
-    elapsed = (t2 - t1).total_seconds() / 60
-    print(f"Testing (in-domain) complete - Minutes: {elapsed:.2f}")
+    predictions = pd.DataFrame(data=probabilities, cols=class_cols)
+    predictions.set_index(class_cols, drop=True, inplace=True)
+    predictions.to_csv(os.path.join(output_dir, 'predictions.csv'))
 
 
 
-    ##### save experiment metadata files...
-    # architecture_to_json(output_dir, model, val_loader)                          # model architecture file
-    cfg_output_path = os.path.abspath(os.path.join(output_dir, 'config.yml'))    # config file used for experiment
-    with open(cfg_output_path, "w") as f:
-        yaml.safe_dump(cfg, f)
+    if args.mode == 'evaluate':
+        df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
+        output_path = os.path.abspath(os.path.join(output_dir, 'global.csv'))
+        df_global.to_csv(output_path, index=False)
+
+        df_class = get_class_metrics(targets, probabilities, thresholds=optimal_thresholds, classes=class_cols)
+        output_path = os.path.abspath(os.path.join(output_dir, 'class.csv'))
+        df_class.to_csv(output_path, index=False)
+
+        fig = plot_pr_roc_curves(targets, probabilities, class_cols)
+        output_path = os.path.abspath(os.path.join(output_dir, 'idpr_roc_curves.png'))
+        fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
+
+
+    t1 = datetime.datetime.now() 
+    cfg['eval']['end'] = t1.strftime("%H:%M %m/%d/%Y")
+    elapsed = (t1 - t0).total_seconds() / 60
+    print(f"Inference complete - Minutes: {elapsed:.2f}")
 
 
 if __name__ == "__main__":

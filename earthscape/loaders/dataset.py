@@ -87,11 +87,13 @@ class ESDataset_Classification(Dataset):
         data = {}                         # initialize dict for return
 
         ##### get label tensor for patch...
-        if self.label_threshold is None:                                        # use class-area proportions as targets
-            label = entry['areas'].to(torch.float32)
-        else:                                                                   # use one-hot labels as targets
-            label = (entry['areas'] > self.label_threshold).to(torch.float32)
-        data['label'] = label
+        # if labels are provided (supervised) (if not, then image tensor returned only without label)
+        if self.areas_path is not None:
+            if self.label_threshold is None:                                        # use class-area proportions as targets
+                label = entry['areas'].to(torch.float32)
+            else:                                                                   # use one-hot labels as targets
+                label = (entry['areas'] > self.label_threshold).to(torch.float32)
+            data['label'] = label
 
 
         ##### get image tensor for patch...
@@ -99,9 +101,6 @@ class ESDataset_Classification(Dataset):
 
             # stack modality channels & return tensor of shape (C, H, W)
             t = self.stack_images(paths)
-
-            # # fill background NaN in categorical images to 0
-            # t = torch.nan_to_num(t, nan=0.0)
             
             # normalize per channel (optional)...
             norm = self._norm[name]
@@ -119,6 +118,29 @@ class ESDataset_Classification(Dataset):
 
         return data
 
+
+    def _build_input_index(self):
+        """
+        Build lookup index for patch sample areas and input channel paths. Dict of:
+
+        {patch_id: {'areas': torch.Tensor of shape (K,), 'input_paths': list of channel paths}} 
+        """
+        index = {}
+        areas = self._build_areas_index() if self.areas_path is not None else None
+        for patch_id in self.ids:
+            resolved_dir = self._resolve_dir(patch_id)
+            input_paths = self._get_input_paths(patch_id, resolved_dir)
+
+            # supervised with labels...
+            if self.areas_path is not None:
+                class_areas = areas[patch_id]
+                index[patch_id] = {'areas': class_areas, 'input_paths': input_paths}
+            
+            # prediction of unknowns (no labels)...
+            else:
+                index[patch_id] = {'input_paths': input_paths}
+        
+        return index
 
 
     def _build_areas_index(self):
@@ -155,22 +177,6 @@ class ESDataset_Classification(Dataset):
             index[name] = [os.path.join(resolved_dir, f"{patch_id}_{ext}") for ext in data['channels']]
         return index
     
-
-    def _build_input_index(self):
-        """
-        Build lookup index for patch sample areas and input channel paths. Dict of:
-
-        {patch_id: {'areas': torch.Tensor of shape (K,), 'input_paths': list of channel paths}} 
-        """
-        index = {}
-        areas = self._build_areas_index() 
-        for patch_id in self.ids:
-            class_areas = areas[patch_id]
-            resolved_dir = self._resolve_dir(patch_id)
-            input_paths = self._get_input_paths(patch_id, resolved_dir)
-            index[patch_id] = {'areas': class_areas, 'input_paths': input_paths}
-        return index
-
 
     def _build_normalizers(self):
         """

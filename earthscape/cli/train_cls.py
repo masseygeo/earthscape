@@ -23,8 +23,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Train and test a multilabel classification model using config.yml file.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to config.yml; copy will be saved to the experiment output directory for reproducibility.")
     parser.add_argument("--mode", type=str, choices=("train", "train-test", "train-test-cross"), required=True, help="Execution mode: train, training with validation set model selection; train-test, training & validation plus in-domain test; train-test-cross, training & validation plus in- and cross-domain tests.")
-    parser.add_argument("--custom_output_dir", type=str, default=None, help="(Optional) Override with custom output directory. Default output directory will be ../experiments/classification/{encoder name}_{input feature names}_{date and time}.")
 
+    parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override with experiment output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override with custom seed.")
     parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override enable/disable torch.compile(model).")
     parser.add_argument("--encoder", type=str, choices=('resnet18', 'resnet50', 'vit'), default=None, help="(Optional) Override model.")
@@ -39,7 +39,6 @@ def parse_args():
     parser.add_argument("--input", action="append", default=None, help="(Optional) Override inputs. Example: --input dem:dem.tif --input aerial:aerialr.tif,aerialg.tif,aerialb.tif")
 
     return parser.parse_args()
-
 
 
 
@@ -191,15 +190,12 @@ def main():
     
 
     ##### output directory...
-    if args.custom_output_dir is None:
-        output_root = cfg['experiment']['root']
-        input_names = list(cfg['data']['input'].keys())
-        input_names = '_'.join(input_names)
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        dir_name = f"{encoder}_{input_names}_{timestamp}"
-        output_dir = os.path.abspath(os.path.join(output_root, dir_name))
-    else:
-        output_dir = os.path.abspath(args.custom_output_dir)
+    output_root = cfg['experiment']['root']
+    input_names = list(cfg['data']['input'].keys())
+    input_names = '_'.join(input_names)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    dir_name = f"{encoder}_{input_names}_{timestamp}"
+    output_dir = os.path.abspath(os.path.join(output_root, dir_name))
     
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
@@ -220,8 +216,8 @@ def main():
 
     # record & display training time
     t1 = datetime.datetime.now() 
+    cfg['experiment']['end_training'] = t1.strftime("%H:%M %m/%d/%Y")
     elapsed = (t1 - t0).total_seconds() / 60
-    cfg['experiment']['end_training'] = elapsed
     print(f"Training complete - Minutes: {elapsed:.2f}")
 
 
@@ -233,7 +229,7 @@ def main():
         state_dict = torch.load(model_path, map_location=device)
         model.load_state_dict(state_dict)
 
-        cfg['eval']['model'] = model_path
+        cfg['experiment']['best_model'] = model_path
 
         class_cols = list(SG_MAPPING.keys())
         cfg['eval']['labels'] = class_cols

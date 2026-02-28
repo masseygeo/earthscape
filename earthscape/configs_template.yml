@@ -1,6 +1,6 @@
 
 experiment:
-  root: experiments/classification/tests
+  root: experiments/classification/tests2
   seed: 111
 
 
@@ -31,19 +31,6 @@ splits:
     cross: "*test_cd.geojson"
 
 
-model: 
-  encoder: resnet18
-  image_size: 256
-  output_size: 7
-  compile: false
-
-
-labels:
-  root: data
-  glob: "*areas.csv"
-  area_threshold: 0.0        # supervision labels - None: use area-proportions (need softmax), float: create one-hots of class presence by area proportion
-
-
 norm:
   root: splits/esv1p1_splits
   glob: "*train_stats.csv"
@@ -64,6 +51,19 @@ dataloader:
     augment: false
     shuffle: false
     drop_last: false
+
+
+model: 
+  encoder: resnet18
+  image_size: 256
+  output_size: 7
+  compile: false
+
+
+labels:
+  root: data
+  glob: "*areas.csv"
+  area_threshold: 0.0        # supervision labels - None: use area-proportions (need softmax), float: create one-hots of class presence by area proportion
 
 
 training:

@@ -43,7 +43,9 @@ def test_model(model, test_loader, device, baseline=True):
         for batch in test_loader:
             
             # get labels & images from batch...
-            labels = batch['label'].to(device, non_blocking=True)
+            labels = None
+            if "label" in batch:
+                labels = batch['label'].to(device, non_blocking=True)
             
             # dict of modality tensors to pass to model (SGMap-Net)
             modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
@@ -60,10 +62,16 @@ def test_model(model, test_loader, device, baseline=True):
 
             # append model probabilities & true class labels for batch...
             probs.append(p.cpu())
-            targs.append(labels.cpu())
+
+            if labels is not None:
+                targs.append(labels.cpu())
     
     # get array of probabilities & targets...
     probabilities = torch.cat(probs, dim=0)
-    targets = torch.cat(targs, dim=0)
+
+    if len(targs) > 0:
+        targets = torch.cat(targs, dim=0)
+    else:
+        targets = None
 
     return probabilities, targets

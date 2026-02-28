@@ -1,24 +1,25 @@
 name: earthscape
 channels:
   - conda-forge
+  - defaults
+channel_priority: strict
 dependencies:
   - python
-  - geopandas
-  - fiona
-  - pyproj
-  - proj
-  - gdal
-  - pyogrio
-  - rasterio
+  - pip
   - numpy
+  - pandas
+  - geopandas
+  - rasterio
+  - whitebox
+  - seaborn
+  - fiona
   - matplotlib
+  - ipywidgets
   - tqdm
   - ipykernel
-  - ipywidgets
   - jupyterlab
-  - whitebox
-  - pip
+  - torchinfo
   - pip:
     - torch
     - torchvision
-    - --index-url https://download.pytorch.org/whl/cu126
+    - -e .
