@@ -41,6 +41,14 @@ def config_update(cfg, args):
         cfg['loss']['params']['reduction'] = _opt("reduction")
     if _opt("input"):
         cfg['data']['input'] = _parse_inputs(_opt("input"))
+
+    if _opt("patience") is not None:
+        cfg['early_stop']['patience'] = _opt("patience")
+    if _opt("min_delta") is not None:
+        cfg['early_stop']['min_delta'] = _opt("min_delta")
+    if _opt("warmup_epochs") is not None:
+        cfg['early_stop']['warmup_epochs'] = _opt("warmup_epochs")
+
     return cfg
 
 

@@ -38,6 +38,9 @@ def parse_args():
     parser.add_argument("--alpha", type=float, default=None, help="(Optional) Override focal loss alpha.")
     parser.add_argument("--reduction", type=str, choices=('mean', 'sum', 'none'), default=None, help="(Optional) Override reduction for loss.")
     parser.add_argument("--input", action="append", default=None, help="(Optional) Override inputs. Example: --input dem:dem.tif --input aerial:aerialr.tif,aerialg.tif,aerialb.tif")
+    parser.add_argument("--patience", type=int, default=None, help='(Optional) Override for early stopping epoch patience.')
+    parser.add_argument("--min_delta", type=float, default=None, help='(Optional) Override for early stopping min_delta.')
+    parser.add_argument("--warmup_epochs", type=int, default=None, help='(Optional) Override for number of early stopping warmup epochs.')
 
     return parser.parse_args()
 
@@ -182,9 +185,9 @@ def main():
 
     ##### optimizer...
     optimizer_name = cfg['optimizer']['name']
-    if optimizer_name == 'adam':
+    if optimizer_name == 'AdamW':
         optim_params = cfg['optimizer']['params']
-        optimizer = optim.Adam(model.parameters(), **optim_params)
+        optimizer = optim.AdamW(model.parameters(), **optim_params)
     
 
     ##### output directory...

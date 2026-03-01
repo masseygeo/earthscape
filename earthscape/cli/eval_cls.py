@@ -1,5 +1,5 @@
 
-from earthscape.utils.constants import ES_SPLIT_DIR, SG_MAPPING
+# from earthscape.utils.constants import ES_SPLIT_DIR, SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
 from earthscape.models import create_resnet_clf, create_vit_clf
@@ -11,7 +11,7 @@ import glob
 import argparse
 import yaml
 import datetime
-import numpy as np
+# import numpy as np
 import pandas as pd
 import geopandas as gpd
 import torch
@@ -23,8 +23,8 @@ from torch.utils.data import DataLoader
 def parse_args():
     parser = argparse.ArgumentParser(description="Use a multilabel classification model for evaluation.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to trained model config.yml file.")
-    parser.add_argument("--mode", type=str, choices=('predict', 'evaluate'), required=True, help="Predict labels or evaluate performance with labels.")
-    parser.add_argument("--sample_ids_path", type=str, required=True, help="Path to GeoJSON file with test patch IDs; must contain column 'patch_id'.")
+    # parser.add_argument("--mode", type=str, choices=('predict', 'evaluate'), required=True, help="Predict labels or evaluate performance with labels.")
+    parser.add_argument("--patch_ids_path", type=str, required=True, help="Path to GeoJSON file with test patch IDs; must contain column 'patch_id'.")
     parser.add_argument("--data_dir", type=str, nargs="+", required=True, help="Directory paths containing data. Example: --data_dir ../data/dir1  ../data/dir2 ...")
 
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override output directory.")
@@ -80,11 +80,11 @@ def main():
     # dataset parameters...
     patch_dirs = [os.path.abspath(d) for d in args.data_dir]
 
-    if args.mode == 'evaluate':
-        areas_path = os.path.abspath(glob.glob(os.path.join(cfg['labels']['root'], cfg['labels']['glob']))[0])
-    else:
-        areas_path = None
-    cfg['eval']['mode'] = args.mode
+    # if args.mode == 'evaluate':
+    areas_path = os.path.abspath(glob.glob(os.path.join(cfg['labels']['root'], cfg['labels']['glob']))[0])
+    # else:
+    #     areas_path = None
+    # cfg['eval']['mode'] = args.mode
 
     ds_params = {
         'patch_dirs': patch_dirs, 
@@ -106,7 +106,7 @@ def main():
         }
 
     # build evaluation set...
-    patches = gpd.read_file(args.sample_ids_path)
+    patches = gpd.read_file(args.patch_ids_path)
     patch_ids = patches['patch_id'].to_list()
     test_dataset = ESDataset_Classification(patch_ids, **ds_params)
     test_loader = DataLoader(test_dataset, **dl_params)
@@ -160,18 +160,18 @@ def main():
 
 
     ##### optionally assess performance (if labels provided)...
-    if args.mode == 'evaluate':
-        df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
-        output_path = os.path.abspath(os.path.join(output_dir, 'global.csv'))
-        df_global.to_csv(output_path, index=False)
+    # if args.mode == 'evaluate':
+    df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
+    output_path = os.path.abspath(os.path.join(output_dir, 'global.csv'))
+    df_global.to_csv(output_path, index=False)
 
-        df_class = get_class_metrics(targets, probabilities, thresholds=optimal_thresholds, classes=class_cols)
-        output_path = os.path.abspath(os.path.join(output_dir, 'class.csv'))
-        df_class.to_csv(output_path, index=False)
+    df_class = get_class_metrics(targets, probabilities, thresholds=optimal_thresholds, classes=class_cols)
+    output_path = os.path.abspath(os.path.join(output_dir, 'class.csv'))
+    df_class.to_csv(output_path, index=False)
 
-        fig = plot_pr_roc_curves(targets, probabilities, class_cols)
-        output_path = os.path.abspath(os.path.join(output_dir, 'idpr_roc_curves.png'))
-        fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
+    fig = plot_pr_roc_curves(targets, probabilities, class_cols)
+    output_path = os.path.abspath(os.path.join(output_dir, 'idpr_roc_curves.png'))
+    fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
 
 
     ##### save updated config with evaluation parameters & finish...
