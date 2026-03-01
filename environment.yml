@@ -2,7 +2,6 @@ name: earthscape
 channels:
   - conda-forge
   - defaults
-channel_priority: strict
 dependencies:
   - python
   - pip
