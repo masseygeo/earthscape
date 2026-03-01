@@ -6,51 +6,27 @@ import sys
 COMMANDS = [
     [
         "train_cls",
-        "--config_path", "./earthscape/configs_template.yml",
+        "--config_path", "earthscape/configs_template.yml",
         "--mode", "train-test-cross",
-        "--experiment_root", "experiments/test",
+        "--experiment_root", "experiments/classification/single",
         "--encoder", "resnet18",
         "--input", "dem:dem.tif"
     ],
     [
         "train_cls",
-        "--config_path", "./earthscape/configs_template.yml",
+        "--config_path", "earthscape/configs_template.yml",
         "--mode", "train-test-cross",
-        "--experiment_root", "experiments/test",
-        "--encoder", "resnet18",
-        "--input", "multi:dem.tif,aerialr.tif,aerialg.tif,aerialb.tif"
-    ],
-    [
-        "train_cls",
-        "--config_path", "./earthscape/configs_template.yml",
-        "--mode", "train-test-cross",
-        "--experiment_root", "experiments/test",
+        "--experiment_root", "experiments/classification/single",
         "--encoder", "resnet50",
         "--input", "dem:dem.tif"
     ],
     [
         "train_cls",
-        "--config_path", "./earthscape/configs_template.yml",
+        "--config_path", "earthscape/configs_template.yml",
         "--mode", "train-test-cross",
-        "--experiment_root", "experiments/test",
-        "--encoder", "resnet50",
-        "--input", "multi:dem.tif,aerialr.tif,aerialg.tif,aerialb.tif"
-    ],
-    [
-        "train_cls",
-        "--config_path", "./earthscape/configs_template.yml",
-        "--mode", "train-test-cross",
-        "--experiment_root", "experiments/test",
+        "--experiment_root", "experiments/classification/single",
         "--encoder", "vit",
         "--input", "dem:dem.tif"
-    ],
-    [
-        "train_cls",
-        "--config_path", "./earthscape/configs_template.yml",
-        "--mode", "train-test-cross",
-        "--experiment_root", "experiments/test",
-        "--encoder", "vit",
-        "--input", "multi:dem.tif,aerialr.tif,aerialg.tif,aerialb.tif"
     ],
 ]
 
@@ -58,7 +34,7 @@ COMMANDS = [
 ##### iterate & run experiments...
 for cmd in COMMANDS:
     print("\n>>> Running:\n", " ".join(cmd))
-    result = subprocess.run(cmd)
+    result = subprocess.run(cmd, shell=True)
 
     if result.returncode != 0:
         print("Experiment failed! Stopping...")

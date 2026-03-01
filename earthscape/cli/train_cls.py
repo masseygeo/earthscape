@@ -89,7 +89,7 @@ def main():
     input_dict = get_norm_stats(norm_stats_path, input_dict)
 
 
-    # dataset parameters...
+    ##### dataset parameters...
     patch_dirs = [os.path.abspath(os.path.join(cfg['data']['root'], d)) for d in cfg['data']['dirs']]
     areas_path = os.path.abspath(glob.glob(os.path.join(cfg['labels']['root'], cfg['labels']['glob']))[0])
     ds_params = {
@@ -150,7 +150,6 @@ def main():
         cross_dataset = ESDataset_Classification(cross_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
         cross_loader = DataLoader(cross_dataset, **dl_eval_params)
 
-
     ##### build model...
     # define encoder
     encoder = cfg['model']['encoder']
@@ -175,13 +174,11 @@ def main():
     if cfg['model']['compile']:
         model = torch.compile(model)
 
-
     ##### loss...
     loss_name = cfg['loss']['name']
     if loss_name == 'bcefocal':
         loss_params = cfg['loss']['params']
         criterion = BCEFocalLogits(**loss_params).to(device)
-
 
     ##### optimizer...
     optimizer_name = cfg['optimizer']['name']
@@ -202,7 +199,6 @@ def main():
         os.makedirs(output_dir)
     
     cfg['experiment']['output_dir'] = output_dir
-
 
     ##### training...
     # define epochs and train/validate model
@@ -294,7 +290,7 @@ def main():
 
         t3 = datetime.datetime.now() 
         elapsed = (t3 - t2).total_seconds() / 60
-        print(f"Testing (cross-domain) complete - Minutes: {elapsed:.2f}")
+        print(f"Testing (cross-domain) complete - Minutes: {elapsed:.2f}\n")
 
 
     ##### save experiment metadata files...

@@ -1,0 +1,96 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    dem:
+      channels:
+      - dem.tif
+      mean:
+      - 578.66797
+      sd:
+      - 74.129265
+  root: data
+dataloader:
+  base:
+    batch_size: 32
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 5
+  warmup_epochs: 5
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.22046294808387756
+  - 0.4751937687397003
+  - 0.07737679034471512
+  - 0.08120163530111313
+  - 0.29559755325317383
+  - 0.3891671299934387
+  - 0.4076365828514099
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\classification\single\resnet50_dem_20260301_104946\best_loss_epoch13.pth
+  end_training: 10:54 03/01/2026
+  output_dir: E:\GitHub\earthscape\experiments\classification\single\resnet50_dem_20260301_104946
+  root: experiments/classification/single
+  seed: 111
+  start_training: 10:49 03/01/2026
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  name: bcefocal
+  params:
+    alpha: null
+    gamma: 0
+    pos_weight: null
+    reduction: mean
+model:
+  compile: false
+  encoder: resnet50
+  image_size: 256
+  in_channels: 1
+  output_size: 7
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  name: adam
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.001
+    weight_decay: 0.0
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 50

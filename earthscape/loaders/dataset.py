@@ -61,6 +61,7 @@ class ESDataset_Classification(Dataset):
         self.ids = list(patch_ids)
         self.patch_dirs = list(patch_dirs)
         self.input_features = input_features
+        # self.channels = input_features['channels']
         self.areas_path = areas_path
         self.label_threshold = label_threshold
         self.normalize = normalize
@@ -162,10 +163,15 @@ class ESDataset_Classification(Dataset):
         """
         Resolve correct data directory for specific patch.
         """
+        first_mod = next(iter(self.input_features.values()))
+        sentinel_ext = first_mod["channels"][0]
+        fname = f"{patch_id}_{sentinel_ext}"
         for resolved_dir in self.patch_dirs:
-            paths = glob.glob(os.path.join(resolved_dir, f"{patch_id}_*"))
-            if len(paths) > 0:
+            if os.path.exists(os.path.join(resolved_dir, fname)):
                 return resolved_dir
+            # paths = glob.glob(os.path.join(resolved_dir, f"{patch_id}_*"))
+            # if len(paths) > 0:
+            #     return resolved_dir
 
 
     def _get_input_paths(self, patch_id, resolved_dir):

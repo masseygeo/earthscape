@@ -1,16 +1,16 @@
 
 experiment:
-  root: experiments/classification/tests
+  root: experiments/classification/single
   seed: 111
 
 
 data:
   root: data
   dirs: 
-    # - warren/patches
-    # - howevalley/patches
-    # - sonora/patches
-    - smoke/patches
+    - warren/patches
+    - howevalley/patches
+    - sonora/patches
+    # - smoke/patches
   input:
     dem:
       channels:
@@ -39,10 +39,10 @@ norm:
 
 dataloader:
   base:
-    batch_size: 4
-    num_workers: 0
-    persistent_workers: false
-    prefetch_factor: null
+    batch_size: 32
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
   train:
     augment: true
     shuffle: true
@@ -67,7 +67,7 @@ labels:
 
 
 training:
-  num_epochs: 5    
+  num_epochs: 50    
 
 
 optimizer:
@@ -86,7 +86,7 @@ loss:
     pos_weight: null
     gamma: 0
     alpha: null
-    reduction: 'mean'
+    reduction: "mean"
   
 
 early_stop:
