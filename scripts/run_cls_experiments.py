@@ -8,26 +8,26 @@ COMMANDS = [
         "train_cls",
         "--config_path", "earthscape/configs_template.yml",
         "--mode", "train-test-cross",
-        "--experiment_root", "experiments/classification/single",
+        "--experiment_root", "experiments/test2",
         "--encoder", "resnet18",
         "--input", "dem:dem.tif"
     ],
-    [
-        "train_cls",
-        "--config_path", "earthscape/configs_template.yml",
-        "--mode", "train-test-cross",
-        "--experiment_root", "experiments/classification/single",
-        "--encoder", "resnet50",
-        "--input", "dem:dem.tif"
-    ],
-    [
-        "train_cls",
-        "--config_path", "earthscape/configs_template.yml",
-        "--mode", "train-test-cross",
-        "--experiment_root", "experiments/classification/single",
-        "--encoder", "vit",
-        "--input", "dem:dem.tif"
-    ],
+    # [
+    #     "train_cls",
+    #     "--config_path", "earthscape/configs_template.yml",
+    #     "--mode", "train-test-cross",
+    #     "--experiment_root", "experiments/classification/single",
+    #     "--encoder", "resnet50",
+    #     "--input", "dem:dem.tif"
+    # ],
+    # [
+    #     "train_cls",
+    #     "--config_path", "earthscape/configs_template.yml",
+    #     "--mode", "train-test-cross",
+    #     "--experiment_root", "experiments/classification/single",
+    #     "--encoder", "vit",
+    #     "--input", "dem:dem.tif"
+    # ],
 ]
 
 
