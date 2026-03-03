@@ -1,6 +1,6 @@
 
 experiment:
-  root: experiments/classification/baseline_settings
+  root: experiments/classification/baselines/multiscale
   seed: 111
 
 
@@ -39,7 +39,7 @@ norm:
 
 dataloader:
   base:
-    batch_size: 32
+    batch_size: 64
     num_workers: 8
     persistent_workers: true
     prefetch_factor: 2
@@ -101,7 +101,7 @@ loss:
 early_stop:
   patience: 10
   min_delta: 0.0
-  warmup_epochs: 25
+  warmup_epochs: 20
 
 
 eval:

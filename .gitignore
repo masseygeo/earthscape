@@ -28,9 +28,12 @@ __pycache__/
 
 
 # -----------------------------------------
-# Model Weights
+# Experiments
 # -----------------------------------------
 /experiments/**/*.pth
+/experiments/**/*.csv
+/experiments/**/*.json
+/experiments/**/*.png
 
 
 # -----------------------------------------
