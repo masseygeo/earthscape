@@ -1,5 +1,4 @@
 
-# from earthscape.utils.constants import ES_SPLIT_DIR, SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
 from earthscape.models import create_resnet_clf, create_vit_clf
@@ -11,7 +10,6 @@ import glob
 import argparse
 import yaml
 import datetime
-# import numpy as np
 import pandas as pd
 import geopandas as gpd
 import torch
@@ -23,10 +21,8 @@ from torch.utils.data import DataLoader
 def parse_args():
     parser = argparse.ArgumentParser(description="Use a multilabel classification model for evaluation.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to trained model config.yml file.")
-    # parser.add_argument("--mode", type=str, choices=('predict', 'evaluate'), required=True, help="Predict labels or evaluate performance with labels.")
     parser.add_argument("--patch_ids_path", type=str, required=True, help="Path to GeoJSON file with test patch IDs; must contain column 'patch_id'.")
     parser.add_argument("--data_dir", type=str, nargs="+", required=True, help="Directory paths containing data. Example: --data_dir ../data/dir1  ../data/dir2 ...")
-
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override seed.")
     parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override batch size.")

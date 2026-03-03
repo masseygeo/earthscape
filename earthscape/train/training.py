@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 
 
-def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True):
+def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True, scheduler=None):
     """
     Train a model for a single training epoch.
 
@@ -44,7 +44,6 @@ def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True
         Micro-averaged classification accuracy (percentage), computed across all
         batches by thresholding sigmoid outputs at 0.5.
     """
-
     # set model for training
     model.train()
 
@@ -67,6 +66,8 @@ def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True
         if baseline:
             modalities = next(iter(modalities.values()))            
 
+        
+
         # zero optimizer...
         optimizer.zero_grad(set_to_none=True)
 
@@ -75,6 +76,11 @@ def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True
         loss = criterion(logits, labels)          # calculate loss
         loss.backward()                           # back propagation
         optimizer.step()                          # update parameters
+
+        # set lr using scheduler...
+        if scheduler is not None:
+            scheduler.step()
+        
 
         # update running totals for batch...
         running_loss += loss.detach()                  # running loss for batch
@@ -168,7 +174,7 @@ def validate_epoch(model, val_loader, criterion, device, baseline=True):
 
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir, baseline=True, early_stop=None):
+def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir, baseline=True, early_stop=None, warmup=True, cosine_decay=True):
     """
     Train a model for multiple epochs and log training/validation metrics.
 
@@ -217,13 +223,37 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     if early_stop is not None:
         stopper = EarlyStopping(**early_stop)
 
+
+    # scheduler...
+    scheduler = None
+    steps_per_epoch = len(train_loader)
+    total_steps = num_epochs * steps_per_epoch
+
+    if warmup and cosine_decay:
+        warmup_epochs = 5
+        warmup_steps = warmup_epochs * steps_per_epoch
+        cosine_steps = total_steps - warmup_steps
+
+        scheduler1 = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1e-3, end_factor=1.0, total_iters=warmup_steps)
+        scheduler2 = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=cosine_steps, eta_min=1e-6)
+        scheduler = torch.optim.lr_scheduler.SequentialLR(optimizer, schedulers=[scheduler1, scheduler2], milestones=[warmup_steps])
+
+    elif warmup:
+        warmup_epochs = 5
+        warmup_steps = warmup_epochs * steps_per_epoch
+        scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1e-3, end_factor=1.0, total_iters=warmup_steps)
+
+    elif cosine_decay:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_steps, eta_min=1e-6)
+
+
     # iterate over epochs...
     for epoch in range(num_epochs):
 
         # training...
         print(f"Epoch {epoch+1}")
         t0 = datetime.now()
-        epoch_train_loss, epoch_train_acc = train_epoch(model, train_loader, criterion, optimizer, device, baseline)
+        epoch_train_loss, epoch_train_acc = train_epoch(model, train_loader, criterion, optimizer, device, baseline, scheduler)
         t1 = datetime.now()
 
         train_loss.append(epoch_train_loss)

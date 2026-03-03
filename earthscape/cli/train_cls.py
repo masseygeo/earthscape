@@ -25,22 +25,26 @@ def parse_args():
     parser.add_argument("--config_path", type=str, required=True, help="Path to config.yml; copy will be saved to the experiment output directory for reproducibility.")
     parser.add_argument("--mode", type=str, choices=("train", "train-test", "train-test-cross"), required=True, help="Execution mode: train, training with validation set model selection; train-test, training & validation plus in-domain test; train-test-cross, training & validation plus in- and cross-domain tests.")
 
-    parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override with experiment output directory.")
-    parser.add_argument("--seed", type=int, default=None, help="(Optional) Override with custom seed.")
-    parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override enable/disable torch.compile(model).")
-    parser.add_argument("--encoder", type=str, choices=('resnet18', 'resnet50', 'vit'), default=None, help="(Optional) Override model.")
-    parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override class-area proportion threshold for target labels.")
-    parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override batch size.")
-    parser.add_argument("--lr", type=float, default=None, help="(Optional) Override learning rate for Adam.")
-    parser.add_argument("--weight_decay", type=float, default=None, help="(Optional) Override weight decay for Adam.")
-    parser.add_argument("--pos_weight", type=float, default=None, help="(Optional) Override pos_weight for BCE loss.")
-    parser.add_argument("--gamma", type=float, default=None, help="(Optional) Override focal loss gamma.")
-    parser.add_argument("--alpha", type=float, default=None, help="(Optional) Override focal loss alpha.")
-    parser.add_argument("--reduction", type=str, choices=('mean', 'sum', 'none'), default=None, help="(Optional) Override reduction for loss.")
-    parser.add_argument("--input", action="append", default=None, help="(Optional) Override inputs. Example: --input dem:dem.tif --input aerial:aerialr.tif,aerialg.tif,aerialb.tif")
-    parser.add_argument("--patience", type=int, default=None, help='(Optional) Override for early stopping epoch patience.')
-    parser.add_argument("--min_delta", type=float, default=None, help='(Optional) Override for early stopping min_delta.')
-    parser.add_argument("--warmup_epochs", type=int, default=None, help='(Optional) Override for number of early stopping warmup epochs.')
+    parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
+    parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
+    parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override config torch.compile(model) setting.")
+    parser.add_argument("--encoder", type=str, choices=('resnet18', 'resnet50', 'vit'), default=None, help="(Optional) Override config model.")
+    parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override config lass-area proportion threshold for target labels.")
+    parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override config batch size.")
+    parser.add_argument("--lr", type=float, default=None, help="(Optional) Override config learning rate.")
+    parser.add_argument("--weight_decay", type=float, default=None, help="(Optional) Override config weight decay.")
+    parser.add_argument("--pos_weight", type=float, default=None, help="(Optional) Override config pos_weight for BCE loss.")
+    parser.add_argument("--gamma", type=float, default=None, help="(Optional) Override config focal loss gamma.")
+    parser.add_argument("--alpha", type=float, default=None, help="(Optional) Override config focal loss alpha.")
+    parser.add_argument("--reduction", type=str, choices=('mean', 'sum', 'none'), default=None, help="(Optional) Override config reduction for loss.")
+
+    # parser.add_argument("--input", action="append", default=None, help="(Optional) Override config inputs. Example: --input dem:dem.tif --input aerial:aerialr.tif,aerialg.tif,aerialb.tif")
+
+    parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
+
+    parser.add_argument("--patience", type=int, default=None, help='(Optional) Override config early stopping epoch patience.')
+    parser.add_argument("--min_delta", type=float, default=None, help='(Optional) Override config early stopping min_delta.')
+    parser.add_argument("--warmup_epochs", type=int, default=None, help='(Optional) Override config early stopping warmup epochs.')
 
     return parser.parse_args()
 
@@ -207,7 +211,10 @@ def main():
     # define epochs and train/validate model
     epochs = cfg['training']['num_epochs']
     baseline = len(input_dict.keys()) == 1
-    df_train = train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs, output_dir, baseline=baseline, early_stop=cfg['early_stop'])
+    early_stop = cfg['early_stop']
+    warmup = cfg['optimizer']['warmup']
+    cosine_decay = cfg['optimizer']['cosine_decay']
+    df_train = train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs, output_dir, baseline=baseline, early_stop=early_stop, warmup=warmup, cosine_decay=cosine_decay)
 
     # plot train/val loss & accuracy curves
     fig = plot_training_curves(df_train)
