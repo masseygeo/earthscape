@@ -1,11 +1,11 @@
 
 import torch
-from torchvision.models import resnet18, resnet50, vit_b_16
+from torchvision.models import resnet18, resnet50, vit_b_16, swin_t
 
 
 
 
-def create_resnet_clf(architecture: str, in_channels: int, out_features: int):
+def create_resnet_clf(architecture, in_channels, out_features):
     """
     Instantiate a ResNet classifier with modified input and output layers.
 
@@ -110,4 +110,53 @@ def create_vit_clf(in_channels, num_classes, image_size):
         padding_mode=old.padding_mode,
     )
 
+    return model
+
+
+
+def create_swin_clf(in_channels, num_classes):
+    """
+    Construct a Swin-Tiny classification model with custom input channels.
+
+    The patch embedding layer is modified to accept `in_channels` and the
+    classifier head is replaced to produce `num_classes` outputs.
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of channels in the input images.
+    num_classes : int
+        Number of classes in the classification task.
+
+    Returns
+    -------
+    torch.nn.Module
+        Modified Swin-Tiny model.
+    """
+
+    # instantiate model
+    model = swin_t(weights=None)
+
+    # modify first convolution in patch embedding layer...
+    old = model.features[0][0]
+    model.features[0][0] = torch.nn.Conv2d(
+        in_channels=in_channels, 
+        out_channels=old.out_channels, 
+        kernel_size=old.kernel_size, 
+        stride=old.stride,
+        padding=old.padding,
+        dilation=old.dilation,
+        groups=old.groups,
+        bias=(old.bias is not None),
+        padding_mode=old.padding_mode,
+        )
+    
+    # modify classifier head...
+    old_head = model.head
+    model.head = torch.nn.Linear(
+        in_features=old_head.in_features, 
+        out_features=num_classes, 
+        bias=(old_head.bias is not None)
+        )
+    
     return model

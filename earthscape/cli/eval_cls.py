@@ -1,9 +1,12 @@
 
+# set global matplotlib backend...suppress potential windows opening when saving various plots...
+import matplotlib
+matplotlib.use("Agg")
+
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
-from earthscape.models import create_resnet_clf, create_vit_clf
+from earthscape.models import create_resnet_clf, create_vit_clf, create_swin_clf
 from earthscape.evaluation import test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
-
 
 import os
 import glob
@@ -117,11 +120,16 @@ def main():
     # instantiate model...
     if encoder == 'resnet18':
         model = create_resnet_clf(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
+    
     elif encoder == 'resnet50':
         model = create_resnet_clf(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
+    
     elif encoder == 'vit':
         image_size = cfg['model']['image_size']
         model = create_vit_clf(in_channels=in_channels, num_classes=output_size, image_size=image_size).to(device)
+    
+    elif encoder == 'swin':
+        model = create_swin_clf(in_channels=in_channels, num_classes=output_size)
 
 
     ##### output directory...
@@ -152,7 +160,7 @@ def main():
     ##### save individual sample predictions...
     predictions = pd.DataFrame(data=test_dataset.ids, columns=['patch_id'])
     predictions[class_cols] = probabilities.detach().cpu().numpy()
-    predictions.to_csv(os.path.join(output_dir, 'predictions.csv'))
+    predictions.to_csv(os.path.join(output_dir, 'predictions.csv'), index=False)
 
 
     ##### optionally assess performance (if labels provided)...

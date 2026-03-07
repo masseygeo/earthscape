@@ -17,8 +17,7 @@ dependencies:
   - tqdm
   - ipykernel
   - jupyterlab
-  - torchinfo
   - pip:
     - torch
     - torchvision
-    - -e .
+    - torchinfo

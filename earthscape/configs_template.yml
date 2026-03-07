@@ -1,6 +1,6 @@
 
 experiment:
-  root: experiments/classification/baselines/multiscale
+  root: experiments/classification/baselines/single
   seed: 111
 
 

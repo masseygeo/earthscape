@@ -1,0 +1,123 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    dem_prc:
+      channels:
+      - dem.tif
+      - prc.tif
+      - prc_10.tif
+      - prc_20.tif
+      - prc_50.tif
+      - prc_100.tif
+      - prc_200.tif
+      mean:
+      - 578.66797
+      - 0.036541183
+      - 0.10695917
+      - 0.056374535
+      - -0.016703786
+      - -0.14705871
+      - -0.14074461
+      sd:
+      - 74.129265
+      - 0.55064213
+      - 1.6511495
+      - 1.4133822
+      - 0.98491603
+      - 1.9288739
+      - 1.3290366
+  root: data
+dataloader:
+  base:
+    batch_size: 64
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 10
+  warmup_epochs: 20
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.29558250308036804
+  - 0.3754644989967346
+  - 0.04814423248171806
+  - 0.15924301743507385
+  - 0.6099334955215454
+  - 0.2574727237224579
+  - 0.17277462780475616
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\classification\baselines\multimodal\swin_dem_prc_20260305_173340\best_loss_epoch50.pth
+  end_training: 18:11 03/05/2026
+  output_dir: E:\GitHub\earthscape\experiments\classification\baselines\multimodal\swin_dem_prc_20260305_173340
+  root: experiments/classification/baselines/multimodal
+  seed: 111
+  start_training: 17:33 03/05/2026
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  name: bcefocal
+  params:
+    alpha: null
+    gamma: 0
+    pos_weight: null
+    reduction: mean
+model:
+  compile: false
+  encoder: swin
+  image_size: 256
+  in_channels: 7
+  output_size: 7
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: true
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150
