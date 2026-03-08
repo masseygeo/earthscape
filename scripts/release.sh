@@ -83,3 +83,6 @@ ls -1 "$OUT_DIR"
 
 
 # zip -r -X esv1p1_smokeset.zip esv1p1_smoke -x "*.DS_Store"
+# find data -maxdepth 1 -type f ! -name "*.DS_Store" | zip -X esv1p1_usa_ky_data.zip -@
+# shasum -a 256 *.zip *.md > esv1p1_256SUMS.txt
+# shasum -a 256 -c esv1p1_256SUMS.txt

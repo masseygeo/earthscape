@@ -22,7 +22,7 @@ MODALITIES = {
     "ep": ['ep_5x5.tif', 'ep_11x11.tif', 'ep_21x21.tif', 'ep_51x51.tif', 'ep_101x101.tif', 'ep_201x201.tif'],
     "plc": ['plc.tif', 'plc_10.tif', 'plc_20.tif', 'plc_50.tif', 'plc_100.tif', 'plc_200.tif'],
     "prc": ['prc.tif', 'prc_10.tif', 'prc_20.tif', 'prc_50.tif', 'prc_100.tif', 'prc_200.tif'],
-    "slope": ['s.tif', 's_10.tif', 's_20.tif', 's_50.tif', 's_100.tif', 's_200.tif'],
+    "s": ['s.tif', 's_10.tif', 's_20.tif', 's_50.tif', 's_100.tif', 's_200.tif'],
     "sds": ['sds_5x5.tif', 'sds_11x11.tif', 'sds_21x21.tif', 'sds_51x51.tif', 'sds_101x101.tif', 'sds_201x201.tif'],
     }
 
