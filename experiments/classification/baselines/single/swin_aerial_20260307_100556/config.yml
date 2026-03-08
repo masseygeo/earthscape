@@ -1,0 +1,114 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    aerial:
+      channels:
+      - aerialr.tif
+      - aerialg.tif
+      - aerialb.tif
+      - aerialnir.tif
+      mean:
+      - 81.96619
+      - 81.83767
+      - 74.148636
+      - 104.60315
+      sd:
+      - 36.90098
+      - 31.398926
+      - 27.555475
+      - 34.788418
+  root: data
+dataloader:
+  base:
+    batch_size: 64
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 10
+  warmup_epochs: 20
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.3021857440471649
+  - 0.3527817726135254
+  - 0.0565309040248394
+  - 0.39809149503707886
+  - 0.4078177511692047
+  - 0.3464367985725403
+  - 0.3774851858615875
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\classification\baselines\single\swin_aerial_20260307_100556\best_loss_epoch34.pth
+  end_training: 10:30 03/07/2026
+  output_dir: E:\GitHub\earthscape\experiments\classification\baselines\single\swin_aerial_20260307_100556
+  root: experiments/classification/baselines/single
+  seed: 111
+  start_training: 10:05 03/07/2026
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  name: bcefocal
+  params:
+    alpha: null
+    gamma: 0
+    pos_weight: null
+    reduction: mean
+model:
+  compile: false
+  encoder: swin
+  image_size: 256
+  in_channels: 4
+  output_size: 7
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: true
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150

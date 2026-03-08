@@ -1,0 +1,105 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    plc10:
+      channels:
+      - plc_10.tif
+      mean:
+      - 0.04538878
+      sd:
+      - 3.6387227
+  root: data
+dataloader:
+  base:
+    batch_size: 64
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 10
+  warmup_epochs: 20
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.3553078770637512
+  - 0.42064210772514343
+  - 0.03765104338526726
+  - 0.09216413646936417
+  - 0.3758954703807831
+  - 0.4147881269454956
+  - 0.48488694429397583
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\classification\baselines\single\swin_plc10_20260307_163518\best_loss_epoch21.pth
+  end_training: 16:51 03/07/2026
+  output_dir: E:\GitHub\earthscape\experiments\classification\baselines\single\swin_plc10_20260307_163518
+  root: experiments/classification/baselines/single
+  seed: 111
+  start_training: 16:35 03/07/2026
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  name: bcefocal
+  params:
+    alpha: null
+    gamma: 0
+    pos_weight: null
+    reduction: mean
+model:
+  compile: false
+  encoder: swin
+  image_size: 256
+  in_channels: 1
+  output_size: 7
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: true
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150
