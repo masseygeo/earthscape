@@ -64,6 +64,10 @@ SRC_DIR = r'../earthscape'
 DATASET_DIR = r'../data'
 
 
+##### assets directory (figures, csv files, etc)
+ASSETS_DIR = r'../assets'
+
+
 ##### training/validation/testing split directories
 SPLIT_DIR = r'../splits'
 ES_SPLIT_DIR = f"{SPLIT_DIR}/{STR_VERSION}_splits"

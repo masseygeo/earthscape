@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - python
+  - python=3.11
   - pip
   - numpy
   - pandas
@@ -21,3 +21,5 @@ dependencies:
     - torch
     - torchvision
     - torchinfo
+    - hyppo
+    - segmentation-models-pytorch
