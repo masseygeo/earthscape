@@ -1,12 +1,13 @@
 
-# set global matplotlib backend...suppress potential windows opening when saving various plots...
+##### set global matplotlib backend
+# NOTE: suppress potential windows opening when saving various plots
 import matplotlib
 matplotlib.use("Agg")
 
 from earthscape.utils.constants import SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
-from earthscape.models import create_resnet_clf, create_vit_clf, create_swin_clf
+from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls
 from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
 from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 
@@ -28,7 +29,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Train and test a multilabel classification model using config.yml file.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to config.yml; copy will be saved to the experiment output directory for reproducibility.")
     parser.add_argument("--mode", type=str, choices=("train", "train-test", "train-test-cross"), required=True, help="Execution mode: train, training with validation set model selection; train-test, training & validation plus in-domain test; train-test-cross, training & validation plus in- and cross-domain tests.")
-
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
     parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override config torch.compile(model) setting.")
@@ -41,17 +41,11 @@ def parse_args():
     parser.add_argument("--gamma", type=float, default=None, help="(Optional) Override config focal loss gamma.")
     parser.add_argument("--alpha", type=float, default=None, help="(Optional) Override config focal loss alpha.")
     parser.add_argument("--reduction", type=str, choices=('mean', 'sum', 'none'), default=None, help="(Optional) Override config reduction for loss.")
-
-    # parser.add_argument("--input", action="append", default=None, help="(Optional) Override config inputs. Example: --input dem:dem.tif --input aerial:aerialr.tif,aerialg.tif,aerialb.tif")
-
     parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
-
     parser.add_argument("--patience", type=int, default=None, help='(Optional) Override config early stopping epoch patience.')
     parser.add_argument("--min_delta", type=float, default=None, help='(Optional) Override config early stopping min_delta.')
     parser.add_argument("--warmup_epochs", type=int, default=None, help='(Optional) Override config early stopping warmup epochs.')
-
     return parser.parse_args()
-
 
 
 
@@ -60,8 +54,6 @@ def main():
     ##### open args & configs.yml...
     args = parse_args()
     cfg = config_load(args.config_path)
-    # with open(os.path.abspath(args.config_path), "r") as f:
-    #     cfg = yaml.safe_load(f)
 
 
     ##### record start time
@@ -88,7 +80,7 @@ def main():
     ##### setup input feature dict, datasets, & dataloaders...
     
     # build input dict... 
-    # input features -> {'dem': {'channels': ['dem.tif']}, ...}
+    # NOTE: input dict -> {'dem': {'channels': ['dem.tif']}, ...}
     input_dict = cfg['data']['input']
 
     # path to training split statistics for normalization
@@ -96,7 +88,7 @@ def main():
     norm_stats_path = glob.glob(norm_stats_path)[0]
 
     # final input features & noramlization stats for each channel
-    # -> {'dem': {'channels': ['dem.tif'], 'mean': [float], 'sd': [float]}, ...}
+    # NOTE: modified input dict -> {'dem': {'channels': ['dem.tif'], 'mean': [float], 'sd': [float]}, ...}
     input_dict = get_norm_stats(norm_stats_path, input_dict)
 
 
@@ -174,17 +166,17 @@ def main():
 
     # instantiate model...
     if encoder == 'resnet18':
-        model = create_resnet_clf(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
+        model = create_resnet_cls(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
     
     elif encoder == 'resnet50':
-        model = create_resnet_clf(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
+        model = create_resnet_cls(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
     
     elif encoder == 'vit':
         image_size = cfg['model']['image_size']
-        model = create_vit_clf(in_channels=in_channels, num_classes=output_size, image_size=image_size).to(device)
+        model = create_vit_cls(in_channels=in_channels, num_classes=output_size, image_size=image_size).to(device)
     
     elif encoder == 'swin':
-        model = create_swin_clf(in_channels=in_channels, num_classes=output_size).to(device)
+        model = create_swin_cls(in_channels=in_channels, num_classes=output_size).to(device)
 
     # compile model for optimal performance
     if cfg['model']['compile']:
@@ -243,7 +235,7 @@ def main():
         ##### load best model...
         model_path = glob.glob(os.path.abspath(os.path.join(output_dir, '*best*.pth')))[0]
         state_dict = torch.load(model_path, map_location=device)
-        model.load_state_dict(state_dict)
+        model.load_state_dict(state_dict)    # loads state dict into existing model object (restores best weights)
 
         cfg['experiment']['best_model'] = model_path
 
@@ -266,7 +258,6 @@ def main():
         predictions = pd.DataFrame(data=test_dataset.ids, columns=['patch_id'])
         predictions[class_cols] = probabilities.detach().cpu().numpy()
         predictions.to_csv(os.path.join(output_dir, 'predictions_id.csv'), index=False)
-        
         
         df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
         output_path = os.path.abspath(os.path.join(output_dir, 'id_global.csv'))
@@ -293,7 +284,6 @@ def main():
         predictions = pd.DataFrame(data=cross_dataset.ids, columns=['patch_id'])
         predictions[class_cols] = probabilities.detach().cpu().numpy()
         predictions.to_csv(os.path.join(output_dir, 'predictions_cd.csv'), index=False)
-
 
         df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
         output_path = os.path.abspath(os.path.join(output_dir, 'cd_global.csv'))

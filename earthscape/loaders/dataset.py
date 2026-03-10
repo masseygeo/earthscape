@@ -15,8 +15,10 @@ class ESDataset_Classification(Dataset):
     Patch-based multi-modal classification dataset.
 
     Each sample is a dict with:
-        - `label`: `torch.Tensor` of shape (K,)
-        - one key per input modality feature: `torch.Tensor` of shape (C, H, W)
+
+        - one key per input modality feature with value `torch.Tensor` of shape (C, H, W)
+        - `label` with value `torch.Tensor` of shape (K,) for classification
+        - `mask` with value `torch.Tensor` of shape (H, W) for segmentation
 
     Parameters
     ----------
@@ -29,7 +31,7 @@ class ESDataset_Classification(Dataset):
     input_features : dict
         Mapping of informal input feature name to channel path suffixes, channel mean, channel standard deviations. 
         Expected format:
-        
+            
         {
         "informal name": 
             {
@@ -55,17 +57,21 @@ class ESDataset_Classification(Dataset):
     augment : bool, default=False
         Apply random horizontal/vertical flips and 90 degree rotations
         consistently across modalities.
+
+    task : str, default=classification
+        Flag for returned target logic; `classification` returns a vector label, 
+        `segmentation` returns mask tensor.
     """
 
-    def __init__(self, patch_ids, patch_dirs, input_features, areas_path, label_threshold=None, normalize=True, augment=False):
+    def __init__(self, patch_ids, patch_dirs, input_features, areas_path, label_threshold=0, normalize=True, augment=False, task='classification'):
         self.ids = list(patch_ids)
         self.patch_dirs = list(patch_dirs)
         self.input_features = input_features
-        # self.channels = input_features['channels']
         self.areas_path = areas_path
         self.label_threshold = label_threshold
         self.normalize = normalize
         self.augment = augment
+        self.task = task
 
         # keep only patch_ids that exist in the provided patch_dirs (really only for smoke set tests)
         self.ids = [pid for pid in self.ids if self._resolve_dir(pid) is not None]
@@ -87,14 +93,21 @@ class ESDataset_Classification(Dataset):
         entry = self._index[patch_id]     # label & modality paths for patch
         data = {}                         # initialize dict for return
 
-        ##### get label tensor for patch...
-        # if labels are provided (supervised) (if not, then image tensor returned only without label)
-        if self.areas_path is not None:
-            if self.label_threshold is None:                                        # use class-area proportions as targets
-                label = entry['areas'].to(torch.float32)
-            else:                                                                   # use one-hot labels as targets
-                label = (entry['areas'] > self.label_threshold).to(torch.float32)
-            data['label'] = label
+        ##### get target tensor for patch...
+        if self.task == 'classification':
+            # if labels are provided (supervised) (if not, then image tensor returned only without label)
+            if self.areas_path is not None:
+                if self.label_threshold is None:                                        # use class-area proportions as targets
+                    label = entry['areas'].to(torch.float32)
+                else:                                                                   # use one-hot labels as targets
+                    label = (entry['areas'] > self.label_threshold).to(torch.float32)
+                data['label'] = label
+
+        elif self.task == 'segmentation':
+            mask = self.load_mask(entry['mask_path'])   # (H, W), long
+            mask = mask - 1                             # if stored as 1..7
+            data['mask'] = mask
+
 
 
         ##### get image tensor for patch...
@@ -127,35 +140,44 @@ class ESDataset_Classification(Dataset):
         {patch_id: {'areas': torch.Tensor of shape (K,), 'input_paths': list of channel paths}} 
         """
         index = {}
-        areas = self._build_areas_index() if self.areas_path is not None else None
+        areas = self._build_areas_index() if (self.task == "classification" and self.areas_path is not None) else None
         for patch_id in self.ids:
             resolved_dir = self._resolve_dir(patch_id)
             input_paths = self._get_input_paths(patch_id, resolved_dir)
 
+            item = {'input_paths': input_paths}
+
             # supervised with labels...
-            if self.areas_path is not None:
-                class_areas = areas[patch_id]
-                index[patch_id] = {'areas': class_areas, 'input_paths': input_paths}
+            if self.task == 'classification' and self.areas_path is not None:
+                # class_areas = areas[patch_id]
+                # index[patch_id] = {'areas': class_areas, 'input_paths': input_paths}
+                item['areas'] = areas[patch_id]
+
+            elif self.task == 'segmentation':
+                item['mask_path'] = os.path.join(resolved_dir, f"{patch_id}_mask.tif")
             
-            # prediction of unknowns (no labels)...
-            else:
-                index[patch_id] = {'input_paths': input_paths}
+            # # prediction of unknowns (no labels)...
+            # else:
+            #     index[patch_id] = {'input_paths': input_paths}
+            index[patch_id] = item
         
         return index
 
 
     def _build_areas_index(self):
-        """Build dict of patch_id and associated label class-area proportions. Dict of:
+        """
+        Build dict of patch_id and associated label class-area proportions. 
+        
+        Dict of:
         
         {'patch_id': torch.Tensor of shape (K,)}
-        
         """
         index = {}
         df = pd.read_csv(self.areas_path)
         df = df.loc[df['patch_id'].isin(self.ids)]
         df.set_index('patch_id', inplace=True, drop=True)
         for pid, areas in df.iterrows():
-            index[pid] = torch.from_numpy(areas.to_numpy()).to(dtype=torch.float32)
+            index[pid] = torch.from_numpy(areas.to_numpy().copy()).to(dtype=torch.float32)
         return index
     
 
@@ -169,9 +191,7 @@ class ESDataset_Classification(Dataset):
         for resolved_dir in self.patch_dirs:
             if os.path.exists(os.path.join(resolved_dir, fname)):
                 return resolved_dir
-            # paths = glob.glob(os.path.join(resolved_dir, f"{patch_id}_*"))
-            # if len(paths) > 0:
-            #     return resolved_dir
+
 
 
     def _get_input_paths(self, patch_id, resolved_dir):
@@ -228,6 +248,17 @@ class ESDataset_Classification(Dataset):
             if k:
                 x = torch.rot90(x, k=k, dims=(1, 2))
             data[mod] = x
+
+        if self.task == 'segmentation' and 'mask' in data:
+            y = data['mask']
+            if hflip:
+                y = torch.flip(y, dims=[1])
+            if vflip:
+                y = torch.flip(y, dims=[0])
+            if k:
+                y = torch.rot90(y, k=k, dims=(0, 1))
+            data["mask"] = y
+
         return data
 
 
@@ -251,3 +282,11 @@ class ESDataset_Classification(Dataset):
         # return tensor with shape [C, H, W]
         return torch.from_numpy(stacked).to(torch.float32).contiguous()
     
+
+
+    @staticmethod
+    def load_mask(path):
+        with rasterio.open(path) as src:
+            mask = src.read(1)
+        mask = torch.from_numpy(mask).to(torch.long).contiguous()
+        return mask

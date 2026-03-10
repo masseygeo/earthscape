@@ -1,4 +1,4 @@
 
-from .baselines import create_resnet_clf, create_vit_clf, create_swin_clf
+from .baselines import create_resnet_cls, create_vit_cls, create_swin_cls, create_unet_seg, create_deeplabv3p_seg, create_segformer_seg
 
-__all__ = ['create_resnet_clf', 'create_vit_clf', 'create_swin_clf']
+__all__ = ['create_resnet_cls', 'create_vit_cls', 'create_swin_cls', 'create_unet_seg', 'create_deeplabv3p_seg', 'create_segformer_seg']

@@ -1,13 +1,14 @@
 
 import torch
 from torchvision.models import resnet18, resnet50, vit_b_16, swin_t
+import segmentation_models_pytorch as smp
 
 
 
 
-def create_resnet_clf(architecture, in_channels, out_features):
+def create_resnet_cls(architecture, in_channels, out_features):
     """
-    Instantiate a ResNet classifier with modified input and output layers.
+    Instantiate a ResNet classification model with modified input and output layers.
 
     A torchvision ResNet backbone is created without pretrained weights.
     The first convolutional layer is replaced to accept ``in_channels``
@@ -69,9 +70,9 @@ def create_resnet_clf(architecture, in_channels, out_features):
 
 
 
-def create_vit_clf(in_channels, num_classes, image_size):
+def create_vit_cls(in_channels, num_classes, image_size):
     """
-    Instantiate a ViT-B/16 classifier with modified input layers and output size.
+    Instantiate a ViT-B/16 classification model with modified input layers and output size.
 
     A torchvision ViT-B/16 model is created without pretrained weights. The patch
     embedding projection (``conv_proj``) is replaced to accept ``in_channels`` input
@@ -114,7 +115,7 @@ def create_vit_clf(in_channels, num_classes, image_size):
 
 
 
-def create_swin_clf(in_channels, num_classes):
+def create_swin_cls(in_channels, num_classes):
     """
     Construct a Swin-Tiny classification model with custom input channels.
 
@@ -157,6 +158,99 @@ def create_swin_clf(in_channels, num_classes):
         in_features=old_head.in_features, 
         out_features=num_classes, 
         bias=(old_head.bias is not None)
+        )
+    
+    return model
+
+
+
+
+def create_unet_seg(in_channels, num_classes, encoder_name='resnet50'):
+    """
+    Construct a Unet segmentation model with custom input channels and predicted classes.
+    
+    Parameters
+    -----------
+    in_channels : int
+        Number of channels in the input images.
+    num_classes : int
+        Number of classes in the segmentation task.
+    encoder_name : str, default=resnet50
+        Encoder name used as the backbone; names listed in `segmentation-models-pytorch`.
+
+    Returns
+    --------
+    torch.nn.Module
+        Customized Unet model.    
+    """
+
+    model = smp.Unet(
+        encoder_name=encoder_name, 
+        encoder_weights=None, 
+        in_channels=in_channels, 
+        classes=num_classes
+        )
+    
+    return model
+
+
+
+
+def create_deeplabv3p_seg(in_channels, num_classes, encoder_name='resnet50'):
+    """
+    Construct a DeeplabV3+ segmentation model with custom input channels and predicted classes.
+    
+    Parameters
+    -----------
+    in_channels : int
+        Number of channels in the input images.
+    num_classes : int
+        Number of classes in the segmentation task.
+    encoder_name : str, default=resnet50
+        Encoder name used as the backbone; names listed in `segmentation-models-pytorch`.
+
+    Returns
+    --------
+    torch.nn.Module
+        Customized DeeplabV3+ model.    
+    """
+
+    model = smp.DeepLabV3Plus(
+        encoder_name=encoder_name, 
+        encoder_weights=None, 
+        in_channels=in_channels, 
+        classes=num_classes
+        )
+
+    return model
+
+
+
+
+def create_segformer_seg(in_channels, num_classes, encoder_name='resnet50'):
+    """
+    Construct a Segformer segmentation model with custom input channels and predicted classes.
+    
+    Parameters
+    -----------
+    in_channels : int
+        Number of channels in the input images.
+    num_classes : int
+        Number of classes in the segmentation task.
+    encoder_name : str, default=resnet50
+        Encoder name used as the backbone; names listed in `segmentation-models-pytorch`.
+
+    Returns
+    --------
+    torch.nn.Module
+        Customized Segformer model.    
+    """
+
+    model = smp.Segformer(
+        encoder_name=encoder_name, 
+        encoder_weights=None, 
+        in_channels=in_channels, 
+        classes=num_classes
         )
     
     return model

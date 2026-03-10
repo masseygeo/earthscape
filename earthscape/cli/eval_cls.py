@@ -3,9 +3,10 @@
 import matplotlib
 matplotlib.use("Agg")
 
+# normal imports
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
-from earthscape.models import create_resnet_clf, create_vit_clf, create_swin_clf
+from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls
 from earthscape.evaluation import test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 
 import os
@@ -63,7 +64,7 @@ def main():
 
     
     ##### build input dict... 
-    # input features -> {'dem': {'channels': ['dem.tif']}, ...}
+    # NOTE: input features dict -> {'dem': {'channels': ['dem.tif']}, ...}
     input_dict = cfg['data']['input']
 
     # path to training split statistics for normalization
@@ -71,19 +72,14 @@ def main():
     norm_stats_path = glob.glob(norm_stats_path)[0]
 
     # final input features & noramlization stats for each channel
-    # -> {'dem': {'channels': ['dem.tif'], 'mean': [float], 'sd': [float]}, ...}
+    # NOTE: input features dict -> {'dem': {'channels': ['dem.tif'], 'mean': [float], 'sd': [float]}, ...}
     input_dict = get_norm_stats(norm_stats_path, input_dict)
 
 
     ##### build dataset & dataloaders...
     # dataset parameters...
     patch_dirs = [os.path.abspath(d) for d in args.data_dir]
-
-    # if args.mode == 'evaluate':
     areas_path = os.path.abspath(glob.glob(os.path.join(cfg['labels']['root'], cfg['labels']['glob']))[0])
-    # else:
-    #     areas_path = None
-    # cfg['eval']['mode'] = args.mode
 
     ds_params = {
         'patch_dirs': patch_dirs, 
@@ -119,17 +115,17 @@ def main():
 
     # instantiate model...
     if encoder == 'resnet18':
-        model = create_resnet_clf(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
+        model = create_resnet_cls(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
     
     elif encoder == 'resnet50':
-        model = create_resnet_clf(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
+        model = create_resnet_cls(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
     
     elif encoder == 'vit':
         image_size = cfg['model']['image_size']
-        model = create_vit_clf(in_channels=in_channels, num_classes=output_size, image_size=image_size).to(device)
+        model = create_vit_cls(in_channels=in_channels, num_classes=output_size, image_size=image_size).to(device)
     
     elif encoder == 'swin':
-        model = create_swin_clf(in_channels=in_channels, num_classes=output_size)
+        model = create_swin_cls(in_channels=in_channels, num_classes=output_size)
 
 
     ##### output directory...
@@ -164,7 +160,6 @@ def main():
 
 
     ##### optionally assess performance (if labels provided)...
-    # if args.mode == 'evaluate':
     df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
     output_path = os.path.abspath(os.path.join(output_dir, 'global.csv'))
     df_global.to_csv(output_path, index=False)

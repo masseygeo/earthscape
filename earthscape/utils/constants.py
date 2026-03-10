@@ -62,6 +62,7 @@ SRC_DIR = r'../earthscape'
 
 ##### dataset directory
 DATASET_DIR = r'../data'
+SMOKE_DIR = f"{DATASET_DIR}/smoke"
 
 
 ##### assets directory (figures, csv files, etc)
