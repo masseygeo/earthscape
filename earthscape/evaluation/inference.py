@@ -3,7 +3,6 @@ import torch
 
 
 
-
 def test_model(model, test_loader, device, baseline=True):
     """
     Run inference on a test set and return probabilities and targets.
@@ -75,3 +74,29 @@ def test_model(model, test_loader, device, baseline=True):
         targets = None
 
     return probabilities, targets
+
+
+
+
+def test_model_seg(model, test_loader, device):
+    model.eval()
+
+    predictions = []
+    target_masks = []
+
+    with torch.no_grad():
+        for batch in test_loader:
+            masks = batch["mask"].to(device, non_blocking=True).long()
+            inputs = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != "mask"}
+
+            logits = model(inputs)                 # [B, C, H, W]
+            preds = torch.argmax(logits, dim=1)    # [B, H, W]
+
+            predictions.append(preds.cpu())
+            target_masks.append(masks.cpu())
+
+    predictions = torch.cat(predictions, dim=0)     # [N, H, W]
+    target_masks = torch.cat(target_masks, dim=0)   # [N, H, W]
+
+    return predictions, target_masks
+

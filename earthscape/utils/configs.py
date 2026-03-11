@@ -21,8 +21,10 @@ def config_update(cfg, args):
         cfg['experiment']['seed'] = _opt("seed")
     if _opt("compile") is not None:
         cfg['model']['compile'] = args.compile == 'true'
-    if _opt("encoder") is not None:
-        cfg['model']['encoder'] = _opt("encoder")
+    if _opt("model_name") is not None:
+        cfg['model']['model_name'] = _opt("model_name")
+    if _opt("encoder_name") is not None:
+        cfg['model']['encoder_name'] = _opt("encoder_name")
     if _opt("area_threshold") is not None:
         cfg['labels']['area_threshold'] = _opt("area_threshold")
     if _opt("batch_size") is not None:
@@ -41,7 +43,6 @@ def config_update(cfg, args):
         cfg['loss']['params']['reduction'] = _opt("reduction")
     if _opt("input"):
         cfg['data']['input'] = _parse_inputs(_opt("input"))
-
     if _opt("patience") is not None:
         cfg['early_stop']['patience'] = _opt("patience")
     if _opt("min_delta") is not None:

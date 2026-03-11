@@ -1,6 +1,6 @@
 
 experiment:
-  root: experiments/classification/baselines/single
+  root: experiments/segmentation/baselines/baseline_settings
   seed: 111
 
 
@@ -54,7 +54,8 @@ dataloader:
 
 
 model: 
-  encoder: resnet18
+  model_name: unet         # model name (resnet18, resnet50, vit, swin) for classification; (unet, deeplabv3p, segformer) for segmentation
+  encoder_name: resnet50   # encoder used for segmentation model baselines (see segmentation-models-pytorch docs; default is resnet50)
   image_size: 256
   output_size: 7
   compile: false
@@ -90,11 +91,15 @@ optimizer:
 
 
 loss:
-  name: bcefocal
+  # name: bcefocal
+  # params:
+  #   pos_weight: null
+  #   gamma: 0
+  #   alpha: null
+  #   reduction: "mean"
+  name: crossentropyloss
   params:
-    pos_weight: null
-    gamma: 0
-    alpha: null
+    weight: null
     reduction: "mean"
   
 

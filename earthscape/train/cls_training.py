@@ -3,13 +3,9 @@ from earthscape.train.earlystopping import EarlyStopping
 
 import os
 import glob
-import json
 from datetime import datetime
 import pandas as pd
 import torch
-import torchinfo
-import matplotlib.pyplot as plt
-
 
 
 
@@ -66,8 +62,6 @@ def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True
         if baseline:
             modalities = next(iter(modalities.values()))            
 
-        
-
         # zero optimizer...
         optimizer.zero_grad(set_to_none=True)
 
@@ -81,7 +75,6 @@ def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True
         if scheduler is not None:
             scheduler.step()
         
-
         # update running totals for batch...
         running_loss += loss.detach()                  # running loss for batch
         total_batches += 1                             # running count of batches
@@ -302,163 +295,3 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     df.to_csv(output_path, index=False)
 
     return df
-
-
-
-
-def train_metadata(model_name, output_dir, seed, train_path, train_patches, val_path, val_patches, test_path, test_patches, cross_path, cross_patches, modality_configs, batch_size, num_epochs, optimizer, criterion, model, input_size):
-    """
-    Write experiment metadata and a model architecture summary to disk.
-
-    Parameters
-    ----------
-    model_name : str
-        Experiment/model identifier.
-    output_dir : str or pathlib.Path
-        Directory where `metadata.json` and `architecture.txt` are written.
-    seed : int
-        Random seed used for the experiment.
-    train_patches, val_patches, test_patches, cross_patches : int or str
-        Patch counts/identifiers to record.
-    modality_configs : dict
-        Modality configuration mapping (e.g., channels and optional normalization stats).
-    batch_size : int
-        Training batch size.
-    num_epochs : int
-        Number of training epochs.
-    optimizer : torch.optim.Optimizer
-        Optimizer instance (name and selected hyperparameters are logged).
-    criterion : torch.nn.Module
-        Loss function instance name; alpha and gamma also recorded if focal loss.
-    model : torch.nn.Module
-        Model whose architecture is summarized with torchinfo.
-
-    Returns
-    --------
-    None
-    """
-
-    ##### collect setup info
-    metadata = {
-        'NAME': model_name,
-        'DIRECTORY': str(output_dir),
-        'SEED': seed
-        }
-
-
-    ##### collect modalitiy info
-    modalities_meta = {}
-    for mod_name, data in modality_configs.items():
-        modalities_meta[mod_name] = {}
-        modalities_meta[mod_name]['modalities'] = ', '.join(data['channels'])
-        # modalities_meta[mod_name]['input shape'] = ', '.join(str(i) for i in input_size)
-        if data['mean'] is not None:
-            modalities_meta[mod_name]['normalization means'] = ', '.join([str(i) for i in data['mean']])
-            modalities_meta[mod_name]['normalization sd'] = ', '.join([str(i) for i in data['sd']])
-    metadata['INPUTS'] = modalities_meta
-
-
-    ##### collect hyperparameters info
-    hyper_meta = {
-        'batch size': batch_size,
-        'epochs': num_epochs, 
-        'optimizer': type(optimizer).__name__,
-        'learning rate': optimizer.param_groups[0]['lr'],
-        'weight decay': optimizer.param_groups[0].get('weight_decay', None),
-        'momentum': optimizer.param_groups[0].get('momentum', None),
-        'loss': type(criterion).__name__
-        }
-    if 'Focal' in hyper_meta['loss']:
-        # alpha = ', '.join(str(v.item()) for v in criterion.alpha)
-        hyper_meta['alpha'] = criterion.alpha
-        hyper_meta['gamma'] = criterion.gamma
-        hyper_meta['reduction'] = criterion.reduction
-        hyper_meta['pos_weight'] = criterion.pos_weight
-    metadata['HYPERPARAMETERS'] = hyper_meta
-
-
-    ##### collect patches info
-    patches_meta = {
-        'training set': train_path,
-        'training n': len(train_patches),
-        'validation set': val_path,
-        'validation n': len(val_patches),
-        'test set': test_path,
-        'test n': len(test_patches),
-        'cross test set': cross_path,
-        'cross test n': len(cross_patches),
-        }
-    metadata['PATCHES'] = patches_meta
-
-
-    ##### write log to json
-    meta_output_path = os.path.join(output_dir, 'metadata.json')
-    with open(meta_output_path, 'w') as f:
-        json.dump(metadata, f, indent=4)
-
-
-
-
-def architecture_to_json(output_dir, model, loader):
-
-    # input feature shape...
-    input_size = next(iter(loader))
-    input_size = {k: v for k, v in input_size.items() if k != "label"}
-    input_size = list(next(iter(input_size.values()))[:1].shape)
-
-    architecture = torchinfo.summary(model, input_size=input_size, depth=4, verbose=0, col_names=["input_size", "kernel_size", "output_size", "num_params"])
-    output_path = os.path.join(output_dir, 'architecture.json')
-    with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(str(architecture))
-
-
-
-
-def plot_training_curves(df):
-    """
-    Plot training and validation loss and accuracy over 
-    epochs. 
-    
-    Generates a two-panel figure showing loss and micro-accuracy 
-    for training and validation sets across epochs. The epoch with the
-    minimum validation loss is marked with a vertical dashed line.
-
-    Parameters
-    ----------
-    df : pandas.DataFrame
-        DataFrame ordered by epoch containing columns for ``train loss``, 
-        ``val loss``, ``train accuracy``, and ``val accuracy``.
-
-    Returns
-    -------
-    matplotlib.figure.Figure
-        Figure containing the loss and accuracy subplots.
-    """
-
-    # setup figure and axes for two subplots
-    fig, ax = plt.subplots(ncols=2, figsize=(10,6))
-
-    # create generator for epochs
-    epochs = range(1, len(df)+1)
-
-    # plot loss subplot...
-    ax[0].plot(epochs, df['train loss'], lw=0.75, label='Train',)
-    ax[0].plot(epochs, df['val loss'], lw=0.75, label='Validation')
-    ax[0].set_ylabel('Loss')
-
-    # plot micro-averaged accuracy
-    ax[1].plot(epochs, df['train accuracy'], lw=0.75, label='Train')
-    ax[1].plot(epochs, df['val accuracy'], lw=0.75, label='Validation')
-    ax[1].set_ylabel('Accuracy (%)')
-
-    # plot selected model at correct epoch
-    for axes in ax:
-        axes.axvline(x=df['val loss'].values.argmin()+1, linestyle='--', color='darkred', label='Selected')
-        axes.legend(frameon=False)
-        axes.set_xticks(epochs)
-        axes.set_xticklabels([str(x) if x%5==0 else '' for x in epochs])
-        axes.set_xlabel('Epochs')
-
-    plt.suptitle(f"Training and Validation Curves", y=0.92)
-
-    return fig

@@ -1,4 +1,5 @@
 
+
 ##### set global matplotlib backend
 # NOTE: suppress potential windows opening when saving various plots
 import matplotlib
@@ -7,9 +8,9 @@ matplotlib.use("Agg")
 from earthscape.utils.constants import SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
-from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls
-from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
-from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
+from earthscape.models import create_unet_seg, create_deeplabv3p_seg, create_segformer_seg
+from earthscape.train import seg_train_model, architecture_to_json, plot_training_curves
+from earthscape.evaluation import test_model_seg, image_class_metrics_seg, image_overall_metrics_seg, overall_metrics_seg, overall_class_metrics_seg, plot_cm_seg
 
 import os
 import glob
@@ -21,30 +22,29 @@ import pandas as pd
 import geopandas as gpd
 import torch
 from torch.utils.data import DataLoader
+from torch.nn import CrossEntropyLoss
 import torch.optim as optim
 
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Train and test a multilabel classification model using config.yml file.")
+    parser = argparse.ArgumentParser(description="Train and test a semantic segmentation model using config.yml file.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to config.yml; copy will be saved to the experiment output directory for reproducibility.")
     parser.add_argument("--mode", type=str, choices=("train", "train-test", "train-test-cross"), required=True, help="Execution mode: train, training with validation set model selection; train-test, training & validation plus in-domain test; train-test-cross, training & validation plus in- and cross-domain tests.")
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
     parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override config torch.compile(model) setting.")
-    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin'), default=None, help="(Optional) Override config model.")
-    parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override config lass-area proportion threshold for target labels.")
+    parser.add_argument("--model_name", type=str, choices=('unet', 'deeplabv3p', 'segformer'), default=None, help="(Optional) Override config model.")
+    parser.add_argument("--encoder_name", type=str, choices=('resnet18', 'resnet34', 'resnet50'), default=None, help="(Optional) Override config backbone.")
     parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override config batch size.")
     parser.add_argument("--lr", type=float, default=None, help="(Optional) Override config learning rate.")
-    parser.add_argument("--weight_decay", type=float, default=None, help="(Optional) Override config weight decay.")
-    parser.add_argument("--pos_weight", type=float, default=None, help="(Optional) Override config pos_weight for BCE loss.")
-    parser.add_argument("--gamma", type=float, default=None, help="(Optional) Override config focal loss gamma.")
-    parser.add_argument("--alpha", type=float, default=None, help="(Optional) Override config focal loss alpha.")
+    parser.add_argument("--weight", type=float, default=None, help="(Optional) Override config weight decay.")
     parser.add_argument("--reduction", type=str, choices=('mean', 'sum', 'none'), default=None, help="(Optional) Override config reduction for loss.")
     parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
     parser.add_argument("--patience", type=int, default=None, help='(Optional) Override config early stopping epoch patience.')
     parser.add_argument("--min_delta", type=float, default=None, help='(Optional) Override config early stopping min_delta.')
     parser.add_argument("--warmup_epochs", type=int, default=None, help='(Optional) Override config early stopping warmup epochs.')
+
     return parser.parse_args()
 
 
@@ -153,9 +153,11 @@ def main():
         cross_dataset = ESDataset_Classification(cross_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
         cross_loader = DataLoader(cross_dataset, **dl_eval_params)
 
+
     ##### build model...
-    # define encoder
+    # model name
     model_name = cfg['model']['model_name']
+    encoder_name = cfg['model']['encoder_name']
 
     # define input channels (baselines use one list of channels & will be stacked in order)
     in_channels = sum(len(m['channels']) for m in input_dict.values())
@@ -165,28 +167,26 @@ def main():
     output_size = cfg['model']['output_size']
 
     # instantiate model...
-    if model_name == 'resnet18':
-        model = create_resnet_cls(architecture=model_name, in_channels=in_channels, out_features=output_size).to(device)
+    if model_name == 'unet':
+        model = create_unet_seg(in_channels=in_channels, num_classes=output_size, encoder_name=encoder_name).to(device)
     
-    elif model_name == 'resnet50':
-        model = create_resnet_cls(architecture=model_name, in_channels=in_channels, out_features=output_size).to(device)
-    
-    elif model_name == 'vit':
-        image_size = cfg['model']['image_size']
-        model = create_vit_cls(in_channels=in_channels, num_classes=output_size, image_size=image_size).to(device)
-    
-    elif model_name == 'swin':
-        model = create_swin_cls(in_channels=in_channels, num_classes=output_size).to(device)
+    elif model_name == 'deeplabv3p':
+        model = create_deeplabv3p_seg(in_channels=in_channels, num_classes=output_size, encoder_name=encoder_name).to(device)
+
+    elif model_name == 'deeplabv3p':
+        model = create_segformer_seg(in_channels=in_channels, num_classes=output_size, encoder_name=encoder_name).to(device)
 
     # compile model for optimal performance
     if cfg['model']['compile']:
         model = torch.compile(model)
 
+
     ##### loss...
     loss_name = cfg['loss']['name']
-    if loss_name == 'bcefocal':
+    if loss_name == 'crossentropyloss':
         loss_params = cfg['loss']['params']
-        criterion = BCEFocalLogits(**loss_params).to(device)
+        criterion = CrossEntropyLoss(**loss_params).to(device)
+
 
     ##### optimizer...
     optimizer_name = cfg['optimizer']['name']
@@ -215,7 +215,7 @@ def main():
     early_stop = cfg['early_stop']
     warmup = cfg['optimizer']['warmup']
     cosine_decay = cfg['optimizer']['cosine_decay']
-    df_train = train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs, output_dir, baseline=baseline, early_stop=early_stop, warmup=warmup, cosine_decay=cosine_decay)
+    df_train = seg_train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs, output_dir, early_stop=early_stop, warmup=warmup, cosine_decay=cosine_decay)
 
     # plot train/val loss & accuracy curves
     fig = plot_training_curves(df_train)
@@ -236,41 +236,34 @@ def main():
         model_path = glob.glob(os.path.abspath(os.path.join(output_dir, '*best*.pth')))[0]
         state_dict = torch.load(model_path, map_location=device)
         model.load_state_dict(state_dict)    # loads state dict into existing model object (restores best weights)
-
         cfg['experiment']['best_model'] = model_path
 
         class_cols = list(SG_MAPPING.keys())
         cfg['eval']['labels'] = class_cols
 
 
-        ##### optimize thresholds...
-        if cfg['eval']['optimize_clf_thresholds']:
-            optimal_thresholds = get_optimal_thresholds(model, val_loader, device)
-        else:
-            optimal_thresholds = np.full(shape=cfg['model']['output_size'], fill_value=0.5)
-        cfg['eval']['thresholds'] = optimal_thresholds.tolist()
-
-
         ##### testing (in-domain)...
-        probabilities, targets = test_model(model, test_loader, device, baseline=baseline)
+        # test evaluation
+        predictions, masks = test_model_seg(model, test_loader, device)
 
-        # save individual sample predictions...
-        predictions = pd.DataFrame(data=test_dataset.ids, columns=['patch_id'])
-        predictions[class_cols] = probabilities.detach().cpu().numpy()
-        predictions.to_csv(os.path.join(output_dir, 'predictions_id.csv'), index=False)
-        
-        df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
-        output_path = os.path.abspath(os.path.join(output_dir, 'id_global.csv'))
-        df_global.to_csv(output_path, index=False)
+        # calculate metrics & plots...
+        patch_ids = test_dataset.ids
+        df_image_class = image_class_metrics_seg(preds=predictions, masks=masks, patch_ids=patch_ids, class_cols=class_cols)
+        df_image_overall = image_overall_metrics_seg(df_image_class)
+        df_overall = overall_metrics_seg(df_image_class)
+        df_overall_class = overall_class_metrics_seg(df_image_class)
+        fig_raw = plot_cm_seg(predictions, masks, class_cols, mode='raw')
+        fig_norm = plot_cm_seg(predictions, masks, class_cols, mode='raw_norm')
 
-        df_class = get_class_metrics(targets, probabilities, thresholds=optimal_thresholds, classes=class_cols)
-        output_path = os.path.abspath(os.path.join(output_dir, 'id_class.csv'))
-        df_class.to_csv(output_path, index=False)
+        # save metrics & plots...
+        df_image_class.to_csv(os.path.join(output_dir, 'id_img_class.csv'), index=False)
+        df_image_overall.to_csv(os.path.join(output_dir, 'id_img_overall.csv'), index=False)
+        df_overall.to_csv(os.path.join(output_dir, 'id_overall.csv'), index=False)
+        df_overall_class.to_csv(os.path.join(output_dir, 'id_class.csv'), index=False)
+        fig_raw.savefig(os.path.join(output_dir, 'id_cm_raw.png'), dpi=300, bbox_inches='tight', pad_inches=0)
+        fig_norm.savefig(os.path.join(output_dir, 'id_cm_norm.png'), dpi=300, bbox_inches='tight', pad_inches=0)
 
-        fig = plot_pr_roc_curves(targets, probabilities, class_cols)
-        output_path = os.path.abspath(os.path.join(output_dir, 'id_pr_roc_curves.png'))
-        fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
-
+        # print testing elapsed time...
         t2 = datetime.datetime.now() 
         elapsed = (t2 - t1).total_seconds() / 60
         print(f"Testing (in-domain) complete - Minutes: {elapsed:.2f}")
@@ -278,25 +271,27 @@ def main():
 
     ###### testing (cross-domain)...
     if args.mode == "train-test-cross":
-        probabilities, targets = test_model(model, cross_loader, device)
+        # test evaluation
+        predictions, masks = test_model_seg(model, cross_loader, device)
 
-        # save individual sample predictions...
-        predictions = pd.DataFrame(data=cross_dataset.ids, columns=['patch_id'])
-        predictions[class_cols] = probabilities.detach().cpu().numpy()
-        predictions.to_csv(os.path.join(output_dir, 'predictions_cd.csv'), index=False)
+        # calculate metrics & plots...
+        patch_ids = cross_dataset.ids
+        df_image_class = image_class_metrics_seg(preds=predictions, masks=masks, patch_ids=patch_ids, class_cols=class_cols)
+        df_image_overall = image_overall_metrics_seg(df_image_class)
+        df_overall = overall_metrics_seg(df_image_class)
+        df_overall_class = overall_class_metrics_seg(df_image_class)
+        fig_raw = plot_cm_seg(predictions, masks, class_cols, mode='raw')
+        fig_norm = plot_cm_seg(predictions, masks, class_cols, mode='raw_norm')
 
-        df_global = get_global_metrics(targets, probabilities, thresholds=optimal_thresholds)
-        output_path = os.path.abspath(os.path.join(output_dir, 'cd_global.csv'))
-        df_global.to_csv(output_path, index=False)
-
-        df_class = get_class_metrics(targets, probabilities, thresholds=optimal_thresholds, classes=class_cols)
-        output_path = os.path.abspath(os.path.join(output_dir, 'cd_class.csv'))
-        df_class.to_csv(output_path, index=False)
-
-        fig = plot_pr_roc_curves(targets, probabilities, class_cols)
-        output_path = os.path.abspath(os.path.join(output_dir, 'cd_pr_roc_curves.png'))
-        fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)
-
+        # save metrics & plots...
+        df_image_class.to_csv(os.path.join(output_dir, 'cd_img_class.csv'), index=False)
+        df_image_overall.to_csv(os.path.join(output_dir, 'cd_img_overall.csv'), index=False)
+        df_overall.to_csv(os.path.join(output_dir, 'cd_overall.csv'), index=False)
+        df_overall_class.to_csv(os.path.join(output_dir, 'cd_class.csv'), index=False)
+        fig_raw.savefig(os.path.join(output_dir, 'cd_cm_raw.png'), dpi=300, bbox_inches='tight', pad_inches=0)
+        fig_norm.savefig(os.path.join(output_dir, 'cd_cm_norm.png'), dpi=300, bbox_inches='tight', pad_inches=0)
+        
+        # print testing elapsed time...
         t3 = datetime.datetime.now() 
         elapsed = (t3 - t2).total_seconds() / 60
         print(f"Testing (cross-domain) complete - Minutes: {elapsed:.2f}\n")
