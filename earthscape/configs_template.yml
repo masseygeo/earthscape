@@ -7,10 +7,10 @@ experiment:
 data:
   root: data
   dirs: 
-    - warren/patches
-    - howevalley/patches
-    - sonora/patches
-    # - smoke/patches
+    #- warren/patches
+    #- howevalley/patches
+    #- sonora/patches
+    - smoke/patches
   input:
     dem:
       channels:
