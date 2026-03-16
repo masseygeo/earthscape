@@ -17,8 +17,8 @@ dependencies:
   - matplotlib
   - seaborn
   - pytorch
-  - torchvision
   - pytorch-gpu
+  - torchvision
   - torchinfo
   - segmentation-models-pytorch
   - monai
