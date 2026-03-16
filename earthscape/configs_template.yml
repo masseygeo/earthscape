@@ -1,6 +1,6 @@
 
 experiment:
-  root: experiments/segmentation/baselines/baseline_settings
+  root: experiments/segmentation/tests
   seed: 111
 
 
@@ -39,7 +39,7 @@ norm:
 
 dataloader:
   base:
-    batch_size: 64
+    batch_size: 4
     num_workers: 8
     persistent_workers: true
     prefetch_factor: 2
@@ -68,7 +68,7 @@ labels:
 
 
 training:
-  num_epochs: 150    
+  num_epochs: 5    
 
 
 optimizer:
@@ -106,7 +106,7 @@ loss:
 early_stop:
   patience: 10
   min_delta: 0.0
-  warmup_epochs: 20
+  warmup_epochs: 3
 
 
 eval:

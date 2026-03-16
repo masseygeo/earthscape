@@ -1,11 +1,9 @@
 name: earthscape
 channels:
   - conda-forge
-  - nodefaults
+  - defaults
 dependencies:
-  - python=3.11
-  - pip
-  - blas=*=openblas
+  - python=3.12
   - jupyterlab
   - ipykernel
   - ipywidgets
@@ -18,3 +16,10 @@ dependencies:
   - whitebox
   - matplotlib
   - seaborn
+  - pytorch
+  - torchvision
+  - pytorch-gpu
+  - torchinfo
+  - segmentation-models-pytorch
+  - monai
+  - hyppo
