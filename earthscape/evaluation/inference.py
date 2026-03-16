@@ -78,7 +78,7 @@ def test_model(model, test_loader, device, baseline=True):
 
 
 
-def test_model_seg(model, test_loader, device):
+def test_model_seg(model, test_loader, device, baseline=True):
     model.eval()
 
     predictions = []
@@ -88,6 +88,10 @@ def test_model_seg(model, test_loader, device):
         for batch in test_loader:
             masks = batch["mask"].to(device, non_blocking=True).long()
             inputs = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != "mask"}
+
+            # single tensor to pass to model (baseline tests)
+            if baseline:
+                inputs = next(iter(inputs.values()))
 
             logits = model(inputs)                 # [B, C, H, W]
             preds = torch.argmax(logits, dim=1)    # [B, H, W]

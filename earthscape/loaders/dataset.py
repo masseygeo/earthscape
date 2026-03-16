@@ -109,7 +109,6 @@ class ESDataset_Classification(Dataset):
             data['mask'] = mask
 
 
-
         ##### get image tensor for patch...
         for name, paths in entry['input_paths'].items():
 
@@ -125,12 +124,14 @@ class ESDataset_Classification(Dataset):
             # final modality tenor
             data[name] = t
 
+
         ##### apply random augmentations (optional)...
         if self.augment:
             params = self._sample_aug_params()
             data = self._apply_aug(data, *params)
 
         return data
+
 
 
     def _build_input_index(self):

@@ -41,9 +41,9 @@ def plot_training_curves(df, metric_col='accuracy'):
     if metric_col == 'accuracy':
         ax[1].plot(epochs, df['train accuracy'], lw=0.75, label='Train')
         ax[1].plot(epochs, df['val accuracy'], lw=0.75, label='Validation')
-        ax[1].set_ylabel('Accuracy (%)')
+        ax[1].set_ylabel('Accuracy')
 
-    if metric_col == 'dice score':
+    if metric_col == 'dice':
         ax[1].plot(epochs, df['train dice score'], lw=0.75, label='Train')
         ax[1].plot(epochs, df['val dice score'], lw=0.75, label='Validation')
         ax[1].set_ylabel('Dice Score')

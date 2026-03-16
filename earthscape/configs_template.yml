@@ -2,6 +2,7 @@
 experiment:
   root: experiments/segmentation/tests
   seed: 111
+  task: segmentation
 
 
 data:
@@ -39,10 +40,14 @@ norm:
 
 dataloader:
   base:
+<<<<<<< Updated upstream
     batch_size: 4
+=======
+    batch_size: 2
+>>>>>>> Stashed changes
     num_workers: 8
-    persistent_workers: true
-    prefetch_factor: 2
+    persistent_workers: null
+    prefetch_factor: null
   train:
     augment: true
     shuffle: true
@@ -79,12 +84,12 @@ optimizer:
     betas: 
       - 0.9
       - 0.999
-  warmup: true
+  warmup: false
   warmup_params:
     start_factor: 0.001
     end_factor: 1.0
     total_iters: "5 epochs converted to steps"
-  cosine_decay: true
+  cosine_decay: false
   cd_params:
     T_max: "starts at 5 epochs"
     eta_min: 0.00001

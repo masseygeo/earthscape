@@ -12,13 +12,13 @@ from earthscape.models import create_unet_seg, create_deeplabv3p_seg, create_seg
 from earthscape.train import seg_train_model, architecture_to_json, plot_training_curves
 from earthscape.evaluation import test_model_seg, image_class_metrics_seg, image_overall_metrics_seg, overall_metrics_seg, overall_class_metrics_seg, plot_cm_seg
 
+import argparse
 import os
 import glob
-import argparse
 import yaml
 import datetime
-import numpy as np
-import pandas as pd
+# import numpy as np
+# import pandas as pd
 import geopandas as gpd
 import torch
 from torch.utils.data import DataLoader
@@ -101,6 +101,7 @@ def main():
         'areas_path': areas_path,
         'label_threshold': cfg['labels']['area_threshold'],
         'normalize': cfg['norm']['normalize'],
+        'task': cfg['experiment']['task']
         }
 
     # dataloader parameters...
@@ -208,6 +209,7 @@ def main():
     
     cfg['experiment']['output_dir'] = output_dir
 
+
     ##### training...
     # define epochs and train/validate model
     epochs = cfg['training']['num_epochs']
@@ -215,10 +217,10 @@ def main():
     early_stop = cfg['early_stop']
     warmup = cfg['optimizer']['warmup']
     cosine_decay = cfg['optimizer']['cosine_decay']
-    df_train = seg_train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs, output_dir, early_stop=early_stop, warmup=warmup, cosine_decay=cosine_decay)
+    df_train = seg_train_model(model, train_loader, val_loader, criterion, optimizer, device, epochs, output_dir, early_stop=early_stop, warmup=warmup, cosine_decay=cosine_decay, baseline=baseline)
 
     # plot train/val loss & accuracy curves
-    fig = plot_training_curves(df_train)
+    fig = plot_training_curves(df_train, metric_col='dice')
     output_path = os.path.abspath(os.path.join(output_dir, 'training_curves.png'))
     fig.savefig(output_path, dpi=300, bbox_inches='tight', pad_inches=0)   
 
@@ -244,7 +246,7 @@ def main():
 
         ##### testing (in-domain)...
         # test evaluation
-        predictions, masks = test_model_seg(model, test_loader, device)
+        predictions, masks = test_model_seg(model, test_loader, device, baseline)
 
         # calculate metrics & plots...
         patch_ids = test_dataset.ids
@@ -272,7 +274,7 @@ def main():
     ###### testing (cross-domain)...
     if args.mode == "train-test-cross":
         # test evaluation
-        predictions, masks = test_model_seg(model, cross_loader, device)
+        predictions, masks = test_model_seg(model, cross_loader, device, baseline)
 
         # calculate metrics & plots...
         patch_ids = cross_dataset.ids
@@ -298,7 +300,9 @@ def main():
 
 
     ##### save experiment metadata files...
+
     architecture_to_json(output_dir, model, val_loader)                          # model architecture file
+
     cfg_output_path = os.path.abspath(os.path.join(output_dir, 'config.yml'))    # config file used for experiment
     with open(cfg_output_path, "w") as f:
         yaml.safe_dump(cfg, f)

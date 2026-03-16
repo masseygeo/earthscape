@@ -15,7 +15,7 @@ import torch
 
 
 
-def train_epoch_seg(model, train_loader, criterion, optimizer, device, scheduler=None,):
+def train_epoch_seg(model, train_loader, criterion, optimizer, device, baseline=True, scheduler=None,):
     
     model.train()
 
@@ -30,6 +30,10 @@ def train_epoch_seg(model, train_loader, criterion, optimizer, device, scheduler
         # get masks & features...
         masks = batch['mask'].to(device, non_blocking=True).long()
         inputs = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'mask'}
+
+        # single tensor to pass to model (baseline tests)
+        if baseline:
+            inputs = next(iter(inputs.values()))    
 
         # train one step...
         optimizer.zero_grad(set_to_none=True)      # zero the gradients
@@ -60,7 +64,7 @@ def train_epoch_seg(model, train_loader, criterion, optimizer, device, scheduler
 
 
 
-def validate_epoch_seg(model, val_loader, criterion, device):
+def validate_epoch_seg(model, val_loader, criterion, device, baseline=True):
 
     model.eval()
 
@@ -76,6 +80,10 @@ def validate_epoch_seg(model, val_loader, criterion, device):
             # get masks & features...
             masks = batch['mask'].to(device, non_blocking=True).long()
             inputs = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'mask'}
+
+            # single tensor to pass to model (baseline tests)
+            if baseline:
+                inputs = next(iter(inputs.values()))
 
             # calculate model logits & loss...
             logits = model(inputs)            # [B, C, H, W]
@@ -98,7 +106,7 @@ def validate_epoch_seg(model, val_loader, criterion, device):
 
 
 
-def seg_train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir, early_stop=None, warmup=True, cosine_decay=True):
+def seg_train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir, early_stop=None, warmup=True, cosine_decay=True, baseline=True):
 
     # initialize variables...
     train_loss = []                   # training - list of epoch losses
@@ -144,7 +152,7 @@ def seg_train_model(model, train_loader, val_loader, criterion, optimizer, devic
         # training...
         print(f"Epoch {epoch+1}")
         t0 = datetime.now()
-        epoch_train_loss, epoch_train_dice = train_epoch_seg(model, train_loader, criterion, optimizer, device, scheduler)
+        epoch_train_loss, epoch_train_dice = train_epoch_seg(model, train_loader, criterion, optimizer, device, baseline, scheduler)
         t1 = datetime.now()
 
         train_loss.append(epoch_train_loss)
@@ -157,7 +165,7 @@ def seg_train_model(model, train_loader, val_loader, criterion, optimizer, devic
 
         # validation...
         t2 = datetime.now()
-        epoch_val_loss, epoch_val_dice = validate_epoch_seg(model, val_loader, criterion, device)
+        epoch_val_loss, epoch_val_dice = validate_epoch_seg(model, val_loader, criterion, device, baseline)
         t3 = datetime.now()
 
         val_loss.append(epoch_val_loss)
