@@ -1,30 +1,6 @@
 
 
-##### set global matplotlib backend
-# NOTE: suppress potential windows opening when saving various plots
-import matplotlib
-matplotlib.use("Agg")
-
-from earthscape.utils.constants import SG_MAPPING
-from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
-from earthscape.loaders import ESDataset_Classification, get_norm_stats
-from earthscape.models import create_unet_seg, create_deeplabv3p_seg, create_segformer_seg
-from earthscape.train import seg_train_model, architecture_to_json, plot_training_curves
-from earthscape.evaluation import test_model_seg, image_class_metrics_seg, image_overall_metrics_seg, overall_metrics_seg, overall_class_metrics_seg, plot_cm_seg
-
 import argparse
-import os
-import glob
-import yaml
-import datetime
-# import numpy as np
-# import pandas as pd
-import geopandas as gpd
-import torch
-from torch.utils.data import DataLoader
-from torch.nn import CrossEntropyLoss
-import torch.optim as optim
-
 
 
 def parse_args():
@@ -50,6 +26,29 @@ def parse_args():
 
 
 def main():
+
+    ##### imports...
+    # NOTE: suppress potential windows opening when saving various plots
+    import matplotlib
+    matplotlib.use("Agg")
+
+    # regular imports...
+    from earthscape.utils.constants import SG_MAPPING
+    from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
+    from earthscape.loaders import ESDataset_Classification, get_norm_stats
+    from earthscape.models import create_unet_seg, create_deeplabv3p_seg, create_segformer_seg
+    from earthscape.train import seg_train_model, architecture_to_json, plot_training_curves
+    from earthscape.evaluation import test_model_seg, image_class_metrics_seg, image_overall_metrics_seg, overall_metrics_seg, overall_class_metrics_seg, plot_cm_seg
+    import os
+    import glob
+    import yaml
+    import datetime
+    import geopandas as gpd
+    import torch
+    from torch.utils.data import DataLoader
+    from torch.nn import CrossEntropyLoss
+    import torch.optim as optim
+
 
     ##### open args & configs.yml...
     args = parse_args()
@@ -255,13 +254,13 @@ def main():
         df_overall = overall_metrics_seg(df_image_class)
         df_overall_class = overall_class_metrics_seg(df_image_class)
         fig_raw = plot_cm_seg(predictions, masks, class_cols, mode='raw')
-        fig_norm = plot_cm_seg(predictions, masks, class_cols, mode='raw_norm')
+        fig_norm = plot_cm_seg(predictions, masks, class_cols, mode='row_norm')
 
         # save metrics & plots...
         df_image_class.to_csv(os.path.join(output_dir, 'id_img_class.csv'), index=False)
-        df_image_overall.to_csv(os.path.join(output_dir, 'id_img_overall.csv'), index=False)
+        df_image_overall.to_csv(os.path.join(output_dir, 'id_img.csv'), index=False)
         df_overall.to_csv(os.path.join(output_dir, 'id_overall.csv'), index=False)
-        df_overall_class.to_csv(os.path.join(output_dir, 'id_class.csv'), index=False)
+        df_overall_class.to_csv(os.path.join(output_dir, 'id_overall_class.csv'), index=False)
         fig_raw.savefig(os.path.join(output_dir, 'id_cm_raw.png'), dpi=300, bbox_inches='tight', pad_inches=0)
         fig_norm.savefig(os.path.join(output_dir, 'id_cm_norm.png'), dpi=300, bbox_inches='tight', pad_inches=0)
 
@@ -283,13 +282,13 @@ def main():
         df_overall = overall_metrics_seg(df_image_class)
         df_overall_class = overall_class_metrics_seg(df_image_class)
         fig_raw = plot_cm_seg(predictions, masks, class_cols, mode='raw')
-        fig_norm = plot_cm_seg(predictions, masks, class_cols, mode='raw_norm')
+        fig_norm = plot_cm_seg(predictions, masks, class_cols, mode='row_norm')
 
         # save metrics & plots...
         df_image_class.to_csv(os.path.join(output_dir, 'cd_img_class.csv'), index=False)
-        df_image_overall.to_csv(os.path.join(output_dir, 'cd_img_overall.csv'), index=False)
+        df_image_overall.to_csv(os.path.join(output_dir, 'cd_img.csv'), index=False)
         df_overall.to_csv(os.path.join(output_dir, 'cd_overall.csv'), index=False)
-        df_overall_class.to_csv(os.path.join(output_dir, 'cd_class.csv'), index=False)
+        df_overall_class.to_csv(os.path.join(output_dir, 'cd_overall_class.csv'), index=False)
         fig_raw.savefig(os.path.join(output_dir, 'cd_cm_raw.png'), dpi=300, bbox_inches='tight', pad_inches=0)
         fig_norm.savefig(os.path.join(output_dir, 'cd_cm_norm.png'), dpi=300, bbox_inches='tight', pad_inches=0)
         
@@ -300,9 +299,7 @@ def main():
 
 
     ##### save experiment metadata files...
-
     architecture_to_json(output_dir, model, val_loader)                          # model architecture file
-
     cfg_output_path = os.path.abspath(os.path.join(output_dir, 'config.yml'))    # config file used for experiment
     with open(cfg_output_path, "w") as f:
         yaml.safe_dump(cfg, f)

@@ -1,6 +1,6 @@
 
 experiment:
-  root: experiments/segmentation/tests
+  root: experiments/segmentation/baselines
   seed: 111
   task: segmentation
 
@@ -8,10 +8,10 @@ experiment:
 data:
   root: data
   dirs: 
-    #- warren/patches
-    #- howevalley/patches
-    #- sonora/patches
-    - smoke/patches
+    - warren/patches
+    - howevalley/patches
+    - sonora/patches
+    # - smoke/patches
   input:
     dem:
       channels:
@@ -40,11 +40,7 @@ norm:
 
 dataloader:
   base:
-<<<<<<< Updated upstream
-    batch_size: 4
-=======
     batch_size: 2
->>>>>>> Stashed changes
     num_workers: 8
     persistent_workers: null
     prefetch_factor: null

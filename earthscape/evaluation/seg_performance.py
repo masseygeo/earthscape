@@ -8,9 +8,14 @@ from monai.metrics import hausdorff_distance
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# turn off all the monai warnings...
+import warnings
+warnings.filterwarnings("ignore")
+
 
 
 def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
+    """Calculates segmentation performance metrics for each class in each image."""
 
     num_classes = len(class_cols)
 
@@ -19,24 +24,31 @@ def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
     y_true = F.one_hot(masks.long(), num_classes=num_classes).permute(0, 3, 1, 2).float()
     y_pred = F.one_hot(preds.long(), num_classes=num_classes).permute(0, 3, 1, 2).float()
 
-    hd = hausdorff_distance(y_pred=y_pred, y=y_true, include_background=True,percentile=None)      # [N, C]
-    hd95 = hausdorff_distance(y_pred=y_pred, y=y_true, include_background=True, percentile=95.0,)  # [N, C]
-    iou = smp.metrics.iou_score(tp, fp, fn, tn, reduction="none")                                          # [N, C]
-    dice = smp.metrics.f1_score(tp, fp, fn, tn, reduction="none")                                          # [N, C]
-    precision = smp.metrics.precision(tp, fp, fn, tn, reduction="none")                                    # [N, C]
-    recall = smp.metrics.recall(tp, fp, fn, tn, reduction="none")                                          # [N, C]
-    accuracy = smp.metrics.accuracy(tp, fp, fn, tn, reduction="none")                                      # [N, C]
     support = tp + fn
     predicted_support = tp + fp
-    gt_present = (support > 0).long()
-    pred_present = (predicted_support > 0).long()
+    gt_present = support > 0
+    pred_present = predicted_support > 0
+    hd_valid = gt_present & pred_present
 
+    hd = hausdorff_distance.compute_hausdorff_distance(y_pred=y_pred, y=y_true, include_background=True, percentile=None)
+    hd95 = hausdorff_distance.compute_hausdorff_distance(y_pred=y_pred, y=y_true, include_background=True, percentile=95.0)
+
+    hd = hd.masked_fill(~hd_valid, float("nan"))
+    hd95 = hd95.masked_fill(~hd_valid, float("nan"))
+
+    iou = smp.metrics.iou_score(tp, fp, fn, tn, reduction="none")
+    dice = smp.metrics.f1_score(tp, fp, fn, tn, reduction="none")
+    precision = smp.metrics.precision(tp, fp, fn, tn, reduction="none")
+    recall = smp.metrics.recall(tp, fp, fn, tn, reduction="none")
+    
     rows = []
     for i, patch_id in enumerate(patch_ids):
         for c, class_name in enumerate(class_cols):
             rows.append({
                 "patch_id": patch_id,
                 "class": class_name,
+                "gt_support": support[i, c].item(),
+                "pred_support": predicted_support[i, c].item(),
                 "tp": tp[i, c].item(),
                 "fp": fp[i, c].item(),
                 "fn": fn[i, c].item(),
@@ -45,13 +57,10 @@ def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
                 "dice": dice[i, c].item(),
                 "precision": precision[i, c].item(),
                 "recall": recall[i, c].item(),
-                "accuracy": accuracy[i, c].item(),
                 "hd": hd[i, c].item(),
                 "hd95": hd95[i, c].item(),
-                "support": support[i, c].item(),
-                "predicted_support": predicted_support[i, c].item(),
-                "targets_present": gt_present[i, c].item(),
-                "preds_present": pred_present[i, c].item(),
+                "gt_present": gt_present[i, c].item(),
+                "pred_present": pred_present[i, c].item(),
                 })
 
     return pd.DataFrame(rows)
@@ -59,40 +68,66 @@ def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
 
 
 
-def image_overall_metrics_seg(df_image):
+def image_overall_metrics_seg(df_image_class):
+    """Calculates overall segmentation performance metrics across each image."""
     df = (
-        df_image.groupby("patch_id", as_index=False)
+        df_image_class.groupby("patch_id", as_index=False)
         .agg(
             mean_iou=("iou", "mean"),
             mean_dice=("dice", "mean"),
             macro_precision=("precision", "mean"),
             macro_recall=("recall", "mean"),
-            macro_accuracy=("accuracy", "mean"),
             mean_hd=("hd", "mean"),
             mean_hd95=("hd95", "mean"),
-            total_support=("support", "sum"),
-            total_predicted_support=("predicted_support", "sum"),
-            target_classes_present=("targets_present", "sum"),
-            pred_classes_present=("preds_present", "sum"),
+            img_gt_support=("gt_support", "sum"),
+            img_pred_support=("pred_support", "sum"),
+            img_gt_classes_present=("gt_present", "sum"),
+            img_pred_classes_present=("pred_present", "sum"),
         ).copy())
 
     return df
 
 
 
-def overall_metrics_seg(df_class):
+
+def overall_metrics_seg(df_image_class):
+    """Calculates global segementation performance across images and pixels."""
+
+    tp = df_image_class["tp"].sum()
+    fp = df_image_class["fp"].sum()
+    fn = df_image_class["fn"].sum()
+
     df = pd.DataFrame({
-        "metric": ["miou", "mean_dice", "macro_precision", "macro_recall", "macro_acc", "hd", "hd95", "pixel_accuracy"], 
-        "value": [df_class["iou"].mean(), df_class["dice"].mean(), df_class["precision"].mean(), df_class["recall"].mean(), df_class["accuracy"].mean(), df_class["hd"].mean(), df_class["hd95"].mean(), df_class["tp"].sum() / df_class["support"].sum()]
-        })
+        "metric": [
+            "miou",
+            "mean_dice",
+            "micro_iou",
+            "micro_dice",
+            "micro_precision",
+            "micro_recall",
+            "mean_hd",
+            "mean_hd95",
+        ],
+        "value": [
+            df_image_class["iou"].mean(),
+            df_image_class["dice"].mean(),
+            tp / (tp + fp + fn),
+            2 * tp / (2 * tp + fp + fn),
+            tp / (tp + fp),
+            tp / (tp + fn),
+            df_image_class["hd"].mean(),
+            df_image_class["hd95"].mean(),
+        ]
+    })
 
     return df
 
 
 
-def overall_class_metrics_seg(df_image):
+def overall_class_metrics_seg(df_image_class):
+    """Calculates per-class segmentation micro metrics (pooled over images)."""
     df_class = (
-        df_image.groupby("class", as_index=False)
+        df_image_class.groupby("class", as_index=False)
         .agg(
             tp=("tp", "sum"),
             fp=("fp", "sum"),
@@ -100,19 +135,19 @@ def overall_class_metrics_seg(df_image):
             tn=("tn", "sum"),
             hd=("hd", "mean"),
             hd95=("hd95", "mean"),
-            support=("support", "sum"),
-            predicted_support=("predicted_support", "sum"),
-            image_support=("targets_present", "sum"),
-            predicted_image_support=("preds_present", "sum"),
+            gt_support=("gt_support", "sum"),
+            pred_support=("pred_support", "sum"),
+            gt_class_support=("gt_present", "sum"),
+            pred_class_support=("pred_present", "sum"),
         ).copy())
 
     df_class["iou"] = df_class["tp"] / (df_class["tp"] + df_class["fp"] + df_class["fn"])
     df_class["dice"] = 2 * df_class["tp"] / (2 * df_class["tp"] + df_class["fp"] + df_class["fn"])
     df_class["precision"] = df_class["tp"] / (df_class["tp"] + df_class["fp"])
     df_class["recall"] = df_class["tp"] / (df_class["tp"] + df_class["fn"])
-    df_class["accuracy"] = (df_class["tp"] + df_class["tn"]) / (df_class["tp"] + df_class["fp"] + df_class["fn"] + df_class["tn"])
 
-    return df_class[["class","iou","dice","precision","recall","accuracy","hd","hd95","support","predicted_support","image_support","predicted_image_support","tp","fp","fn","tn"]]
+    return df_class[["class","iou","dice","precision","recall","hd","hd95","gt_support","pred_support","gt_class_support","pred_class_support","tp","fp","fn","tn"]]
+
 
 
 
