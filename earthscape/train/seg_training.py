@@ -4,14 +4,9 @@ from earthscape.evaluation import calculate_dice_score
 
 import os
 import glob
-# import json
 from datetime import datetime
 import pandas as pd
 import torch
-# import torch.nn.functional as F
-# import torchinfo
-# import matplotlib.pyplot as plt
-
 
 
 
@@ -150,7 +145,7 @@ def seg_train_model(model, train_loader, val_loader, criterion, optimizer, devic
     for epoch in range(num_epochs):
 
         # training...
-        print(f"Epoch {epoch+1}")
+        print(f"\nEpoch {epoch+1}")
         t0 = datetime.now()
         epoch_train_loss, epoch_train_dice = train_epoch_seg(model, train_loader, criterion, optimizer, device, baseline, scheduler)
         t1 = datetime.now()
@@ -192,8 +187,6 @@ def seg_train_model(model, train_loader, val_loader, criterion, optimizer, devic
             if stop:
                 print(f"Early stopping triggered at epoch {epoch+1}!")
                 break
-
-        print('\n')
 
     # save loss, accuracy, time to training log
     df = pd.DataFrame({'train loss': train_loss, 'train dice score': train_dice, 'train time': train_time, 'val loss': val_loss, 'val dice score': val_dice})

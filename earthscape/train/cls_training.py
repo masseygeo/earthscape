@@ -244,7 +244,7 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     for epoch in range(num_epochs):
 
         # training...
-        print(f"Epoch {epoch+1}")
+        print(f"\nEpoch {epoch+1}")
         t0 = datetime.now()
         epoch_train_loss, epoch_train_acc = train_epoch(model, train_loader, criterion, optimizer, device, baseline, scheduler)
         t1 = datetime.now()
@@ -286,8 +286,6 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
             if stop:
                 print(f"Early stopping triggered at epoch {epoch+1}!")
                 break
-
-        print('\n')
 
     # save loss, accuracy, time to training log
     df = pd.DataFrame({'train loss': train_loss, 'train accuracy': train_acc, 'train time': train_time, 'val loss': val_loss, 'val accuracy': val_acc})

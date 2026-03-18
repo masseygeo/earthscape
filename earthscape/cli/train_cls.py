@@ -9,9 +9,11 @@ def parse_args():
     parser.add_argument("--mode", type=str, choices=("train", "train-test", "train-test-cross"), required=True, help="Execution mode: train, training with validation set model selection; train-test, training & validation plus in-domain test; train-test-cross, training & validation plus in- and cross-domain tests.")
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
-    parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override config torch.compile(model) setting.")
+    # parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override config torch.compile(model) setting.")
     parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin'), default=None, help="(Optional) Override config model.")
-    parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override config lass-area proportion threshold for target labels.")
+    parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
+
+    parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override config class-area proportion threshold for target labels.")
     parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override config batch size.")
     parser.add_argument("--lr", type=float, default=None, help="(Optional) Override config learning rate.")
     parser.add_argument("--weight_decay", type=float, default=None, help="(Optional) Override config weight decay.")
@@ -19,7 +21,6 @@ def parse_args():
     parser.add_argument("--gamma", type=float, default=None, help="(Optional) Override config focal loss gamma.")
     parser.add_argument("--alpha", type=float, default=None, help="(Optional) Override config focal loss alpha.")
     parser.add_argument("--reduction", type=str, choices=('mean', 'sum', 'none'), default=None, help="(Optional) Override config reduction for loss.")
-    parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
     parser.add_argument("--patience", type=int, default=None, help='(Optional) Override config early stopping epoch patience.')
     parser.add_argument("--min_delta", type=float, default=None, help='(Optional) Override config early stopping min_delta.')
     parser.add_argument("--warmup_epochs", type=int, default=None, help='(Optional) Override config early stopping warmup epochs.')
@@ -130,6 +131,7 @@ def main():
     train_patch_ids = train_patches['patch_id'].to_list()
     train_dataset = ESDataset_Classification(train_patch_ids, augment=cfg['dataloader']['train']['augment'], **ds_params)
     train_loader = DataLoader(train_dataset, **dl_train_params)
+    print('Training samples: ', len(train_loader.dataset))
 
     # build validation set...
     val_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['val']))[0])
@@ -137,6 +139,7 @@ def main():
     val_patch_ids = val_patches['patch_id'].to_list()
     val_dataset = ESDataset_Classification(val_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
     val_loader = DataLoader(val_dataset, **dl_eval_params)
+    print('Validation samples: ', len(val_loader.dataset))
 
     # test set (in-domain) (optional)
     if args.mode == "train-test" or args.mode == "train-test-cross":
@@ -145,6 +148,7 @@ def main():
         test_patch_ids = test_patches['patch_id'].to_list()
         test_dataset = ESDataset_Classification(test_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
         test_loader = DataLoader(test_dataset, **dl_eval_params)
+        print('Test samples (in-domain): ', len(test_loader.dataset))
 
     # test set (cross-domain) (optional)
     if args.mode == "train-test-cross":
@@ -153,6 +157,9 @@ def main():
         cross_patch_ids = cross_patches['patch_id'].to_list()
         cross_dataset = ESDataset_Classification(cross_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
         cross_loader = DataLoader(cross_dataset, **dl_eval_params)
+        print('Test samples (cross-domain): ', len(cross_loader.dataset))
+
+
 
     ##### build model...
     # define encoder
@@ -179,15 +186,17 @@ def main():
     elif model_name == 'swin':
         model = create_swin_cls(in_channels=in_channels, num_classes=output_size).to(device)
 
-    # compile model for optimal performance
-    if cfg['model']['compile']:
-        model = torch.compile(model)
+    # # compile model for optimal performance
+    # if cfg['model']['compile']:
+    #     model = torch.compile(model)
+
 
     ##### loss...
     loss_name = cfg['loss']['name']
     if loss_name == 'bcefocal':
         loss_params = cfg['loss']['params']
         criterion = BCEFocalLogits(**loss_params).to(device)
+
 
     ##### optimizer...
     optimizer_name = cfg['optimizer']['name']
@@ -208,6 +217,7 @@ def main():
         os.makedirs(output_dir)
     
     cfg['experiment']['output_dir'] = output_dir
+
 
     ##### training...
     # define epochs and train/validate model

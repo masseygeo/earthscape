@@ -227,7 +227,7 @@ def create_deeplabv3p_seg(in_channels, num_classes, encoder_name='resnet50'):
 
 
 
-def create_segformer_seg(in_channels, num_classes, encoder_name='resnet50'):
+def create_segformer_seg(in_channels, num_classes, encoder_name='mit_b0'):
     """
     Construct a Segformer segmentation model with custom input channels and predicted classes.
     
