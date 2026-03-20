@@ -127,12 +127,8 @@ Although geographically limited, the represented surface processes are broadly a
 
 ### *What are the main characteristics of the dataset?*
 
-#### Overview
-EarthScape v1.1 comprises 31,066 georeferenced patches from two geographic regions. Each patch is 256x256 pixels with 50% overlap and contains 38 co-registered channels, including the mask, RGB+NIR imagery, DEM, multi-scale terrain derivatives, and binary hydrography and infrastructure layers. Each patch covers ~1,280 square feet, which is suitable in capturing the geologic classes discussed above.
-
-  
 #### Class Imbalance
-EarthScape exhibits a pronounced long-tailed distribution across its seven classes. Qr appears in 94.4% of patches, whereas the rarest units occur in only 4.6% (Qat) and 0.9% (Qaf) of patches. Effective number of samples ranges from 9,464 (Qr) to 266 (Qaf), and the imbalance ratio per label spans more than two orders of magnitude (1.0-108.4), reflecting strong label-level complexity driven by frequency skew. 
+EarthScape exhibits a pronounced long-tailed distribution across its seven classes. Qr appears in 94.4% of patches, whereas the rarest units occur in only 4.6% (Qat) and 0.9% (Qaf) of patches. Effective number of samples ranges from 9,464 (Qr) to 266 (Qaf), and the imbalance ratio per label spans more than two orders of magnitude (1.0-108.4), reflecting strong label-level complexity driven by frequency skew. Beyond global frequencies, EarthScape exhibits marked intra-patch complexity. Mean and standard-deviation class-area proportions show that most patches contain multiple SG units with uneven contributions, and the majority-area rate indicates that Qr dominates more than 70\% of patches while rare units almost never occupy the largest fraction. Patch-level class counts vary widely across the regions, reflecting strong geospatial complexity in how classes co-occur and mix spatially.
 
 | Class | Freq. (n) | Freq. (%) | IRLbl | N_Eff. | Mean Patch Area | SD Patch Area | Dominant Class Rate
 | :--- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
@@ -144,34 +140,14 @@ EarthScape exhibits a pronounced long-tailed distribution across its seven class
 | Qat | - | - | - | - | - | - | - |
 | Qaf | - | - | - | - | - | - | - |
 
-
-Beyond global frequencies, EarthScape exhibits marked intra-patch complexity. Mean and standard-deviation class-area proportions show that most patches contain multiple SG units with uneven contributions, and the majority-area rate indicates that Qr dominates more than 70\% of patches while rare units almost never occupy the largest fraction. Patch-level class counts vary widely across the regions, reflecting strong geospatial complexity in how classes co-occur and mix spatially.
-
-![class_dist]()
-
+![class_dist](https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/class_dist.png)
 
 #### Domain Shift
 EarthScape spans two disjoint regions in Kentucky, USA, consisting of 23,566 patches from Warren County and 7,452 patches from Hardin County, separated by ~77 km. This structure provides a natural geographic partition for analyzing cross-region variation. Maximum mean discrepancy (MMD) is used to quantify distributional differences between patch-level feature summaries (P5, P10, P25, P50, P75, P90, P95) of selected input modalities from each region. We observe measurable domain shift, including MMD values of 0.365 for RGB, 0.832 for DEM, and 0.164 for a multi-scale terrain stack (EP+S+SDS). Although both regions share the same label set, their input feature distributions differ, reflecting geographic variation and providing a clean, geographically partitioned setting for studying domain shift in multimodal geospatial learning.
 
-
-
-### *How to explore?*
-
-#### Dataset compilation notebooks
-Check out the dataset compilation pipeline notebooks to see how each area was compiled:
-- [](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_hardin_howevalley.ipynb)
-
-
-#### Self-exploration
-Individual images are in GeoTIFF format, and can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend [Rasterio](https://rasterio.readthedocs.io/en/stable/).
-
-  ```Python
-  import rasterio
-  from rasterio.plot import show
-  
-  with rasterio.open("PATH TO GEOTIFF") as src:
-    show(src)
-  ```
+| Modality | MMD |
+| :-- | :--|
+| - | - |
 
 
 ## Baseline Benchmarks
