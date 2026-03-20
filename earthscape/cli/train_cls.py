@@ -1,6 +1,26 @@
 
+##### set global matplotlib backend
+# NOTE: suppress potential windows opening when saving various plots
+import matplotlib
+matplotlib.use("Agg")
 
+from earthscape.utils.constants import SG_MAPPING
+from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
+from earthscape.loaders import ESDataset_Classification, get_norm_stats
+from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls
+from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
+from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 import argparse
+import os
+import glob
+import yaml
+import datetime
+import numpy as np
+import pandas as pd
+import geopandas as gpd
+import torch
+from torch.utils.data import DataLoader
+import torch.optim as optim  
 
 
 def parse_args():
@@ -27,31 +47,7 @@ def parse_args():
     return parser.parse_args()
 
 
-
-def main():
-
-    ##### set global matplotlib backend
-    # NOTE: suppress potential windows opening when saving various plots
-    import matplotlib
-    matplotlib.use("Agg")
-
-    from earthscape.utils.constants import SG_MAPPING
-    from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
-    from earthscape.loaders import ESDataset_Classification, get_norm_stats
-    from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls
-    from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
-    from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
-    import os
-    import glob
-    import yaml
-    import datetime
-    import numpy as np
-    import pandas as pd
-    import geopandas as gpd
-    import torch
-    from torch.utils.data import DataLoader
-    import torch.optim as optim         
-
+def main(): 
 
     ##### open args & configs.yml...
     args = parse_args()
