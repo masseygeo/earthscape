@@ -24,6 +24,7 @@ EarthScape is a living, open-source, AI-ready geospatial dataset for surficial g
 - [Intallation and Quickstart](#installation-and-quickstart)
 - [Navigating the Repository](#navigating-the-repository)
 - [Exploring the Dataset](#exploring-the-dataset)
+- [Baseline Benchmarks](#baseline-benchmarks)
 - [Roadmap](#roadmap)
 - [Citations](#citations)
 
@@ -55,7 +56,7 @@ You can now use EarthScape to reproduce the dataset, train and evaluate models, 
 - :file_folder: [assets](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
 - :file_folder: [data](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset and associated metadata; frozen for each minor version (v1.1.x)
 - :file_folder: [earthscape](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Core source code.
-- :file_folder: [experiments](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments with configurations for reproducible workflows.
+- :file_folder: [experiments](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments with configurations for reproducibility.
 - :file_folder: [notebooks](https://github.com/masseygeo/earthscape/tree/main/notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
 - :file_folder: [scripts](https://github.com/masseygeo/earthscape/tree/main/scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
 - :file_folder: [splits](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits; frozen for each major version (v1.x).
@@ -65,12 +66,12 @@ You can now use EarthScape to reproduce the dataset, train and evaluate models, 
 
 
 ## Exploring the Dataset
-[![Version](https://img.shields.io/badge/Version-1.1-BB3E00)](#)
-[![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-FFA55D)](#)
-[![Patch Size](https://img.shields.io/badge/Patch%20Size-256x256-FFDF88)](#)
-[![Patch Overlap](https://img.shields.io/badge/Patch%20Overlap-50%25-5E936C)](#)
-[![Modalities](https://img.shields.io/badge/Channels-38-BBD8A3)](#)
-[![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
+[![Version](https://img.shields.io/badge/Current%20Version-1.1-BB3E00)](#)
+[![Patches](https://img.shields.io/badge/Available%20Patches-31%2c066-FFA55D)](#)
+[![Size](https://img.shields.io/badge/Patch%20Size-256x256-FFDF88)](#)
+[![Modalities](https://img.shields.io/badge/Channels-38-5E936C)](#)
+[![Classes](https://img.shields.io/badge/Classes-7-BBD8A3)](#)
+[![EPSG](https://img.shields.io/badge/CRS-EPSG:3089-F0F1C5)](#)
 
 
 ### *Where to get it?*
@@ -78,28 +79,20 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
 
 
 ### *What's included?*
+
 #### Image Patches
-- Overview
-  - 31,066 patches (256 x 256 pixels)
-  - Each patch covers ~1,280 x 1,280 ft at 5 ft (~1.5 m) GSD
-  - 50% overlap between adjacent patches
-- Geospatial
-  - Coordinate reference system: EPSG:3089
-  - Two study areas separated by ~77 km
-- Data Layers
-  - Segmentation masks
-  - Aerial optical imagery (RGB+NIR)
-  - LiDAR DEM
-  - OpenStreetMap road and railway centerlines
-  - U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons
-  - DEM-derived terrain features calculated at six spatial resolutions:
+- Segmentation masks
+- Aerial optical imagery (RGB+NIR)
+- LiDAR DEM
+- OpenStreetMap road and railway centerlines
+- U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons
+- DEM-derived terrain features calculated at six spatial resolutions:
     - Elevation Percentile
     - Planform Curvature
     - Profile Curvature
     - Slope
     - Standard Deviation of Slope
-  - Filenames that use a unique patch ID and modality/scale
-    - *{patch_id}_{modality/scale}.tif*
+- Filenames that use a unique patch ID and modality/scale: *{patch_id}_{modality/scale}.tif*
 
 #### Metadata Files
 - [areas.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_areas.csv) - Per-patch class area proportions.
@@ -112,11 +105,53 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
 
 ### *How was the dataset prepared?*
 
+EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated to lie entirely within mapped surficial geologic units, resulting in no background class and no nodata pixels. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
 
-Check out the dataset compilation pipeline notebooks to see how each area was compiled:
+![pipeline](https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/pipeline.png)
+
+Check out these notebooks to see how each map area was compiled and processed:
 - [Hardin County, Howe Valley Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_hardin_howevalley.ipynb)
 - [Hardin County, Sonora Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_hardin_sonora.ipynb)
 - [Warren County quadrangles](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_warren.ipynb)
+
+
+### *What do the class labels represent?*
+EarthScape defines seven surficial geologic (SG) units that form a mutually exclusive representation of surface cover within each study area. These units correspond to five process-based environments:
+- Fluvial deposits — Qal (alluvium), Qat (terrace deposits)
+- Debris-flow deposits — Qaf (alluvial fans)
+- Hillslope materials — Qc (colluvium), Qca (colluvial aprons)
+- In situ weathering products — Qr (residuum)
+- Anthropogenic modification — af1 (artificial fill)
+Although geographically limited, the represented surface processes are broadly applicable across many landscapes.
+
+
+### *What are the main characteristics of the dataset?*
+
+#### Overview
+EarthScape v1.1 comprises 31,066 georeferenced patches from two geographic regions. Each patch is 256x256 pixels with 50% overlap and contains 38 co-registered channels, including the mask, RGB+NIR imagery, DEM, multi-scale terrain derivatives, and binary hydrography and infrastructure layers. Each patch covers ~1,280 square feet, which is suitable in capturing the geologic classes discussed above.
+
+  
+#### Class Imbalance
+EarthScape exhibits a pronounced long-tailed distribution across its seven classes. Qr appears in 94.4% of patches, whereas the rarest units occur in only 4.6% (Qat) and 0.9% (Qaf) of patches. Effective number of samples ranges from 9,464 (Qr) to 266 (Qaf), and the imbalance ratio per label spans more than two orders of magnitude (1.0-108.4), reflecting strong label-level complexity driven by frequency skew. 
+
+| Class | Freq. (n) | Freq. (%) | IRLbl | N_Eff. | Mean Patch Area | SD Patch Area | Dominant Class Rate
+| :--- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
+| Qr | - | - | - | - | - | - | - |
+| Qal | - | - | - | - | - | - | - |
+| Qc | - | - | - | - | - | - | - |
+| af1 | - | - | - | - | - | - | - |
+| Qca | - | - | - | - | - | - | - |
+| Qat | - | - | - | - | - | - | - |
+| Qaf | - | - | - | - | - | - | - |
+
+
+Beyond global frequencies, EarthScape exhibits marked intra-patch complexity. Mean and standard-deviation class-area proportions show that most patches contain multiple SG units with uneven contributions, and the majority-area rate indicates that Qr dominates more than 70\% of patches while rare units almost never occupy the largest fraction. Patch-level class counts vary widely across the regions, reflecting strong geospatial complexity in how classes co-occur and mix spatially.
+
+![class_dist]()
+
+
+#### Domain Shift
+EarthScape spans two disjoint regions in Kentucky, USA, consisting of 23,566 patches from Warren County and 7,452 patches from Hardin County, separated by ~77 km. This structure provides a natural geographic partition for analyzing cross-region variation. Maximum mean discrepancy (MMD) is used to quantify distributional differences between patch-level feature summaries (P5, P10, P25, P50, P75, P90, P95) of selected input modalities from each region. We observe measurable domain shift, including MMD values of 0.365 for RGB, 0.832 for DEM, and 0.164 for a multi-scale terrain stack (EP+S+SDS). Although both regions share the same label set, their input feature distributions differ, reflecting geographic variation and providing a clean, geographically partitioned setting for studying domain shift in multimodal geospatial learning.
 
 
 
@@ -139,7 +174,11 @@ Individual images are in GeoTIFF format, and can easily be inspected with GIS so
   ```
 
 
+## Baseline Benchmarks
 
+### *Multilabel Classification*
+
+### *Semantic Segmentation*
 
 
 ## Roadmap
@@ -148,7 +187,6 @@ Individual images are in GeoTIFF format, and can easily be inspected with GIS so
 - Additional modalities
   - New terrain features
   - Datasets with broader coverage (e.g., 1/3-arc-second DEM, Sentinel-1, Sentinel-2, etc.)
-
 
 
 ## Citations
