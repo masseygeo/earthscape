@@ -47,16 +47,16 @@ def get_global_metrics(targets, probabilities, thresholds):
     df = {}
 
     # calculate global performance metrics (macro- and weighted-)...
-    df['Precision (Macro)'] = precision_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df['Recall (Macro)'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df['F1 (Macro)'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
-    df['mAP (Macro)'] = average_precision_score(targs, probs, average='macro')
+    df['macro_precision'] = precision_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df['macro_recall'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df['macro_f1'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
+    df['macro_map'] = average_precision_score(targs, probs, average='macro')
     
-    df['Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df['Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df['F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    df['mAP (Wt.)'] = average_precision_score(targs, probs, average='weighted')
-    df['Accuracy (Micro)'] = (binary_preds == targs).mean()
+    # df['Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    # df['Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    # df['F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
+    # df['mAP (Wt.)'] = average_precision_score(targs, probs, average='weighted')
+    df['micro_accuracy'] = (binary_preds == targs).mean()
 
     df = pd.DataFrame(df, index=[0])
 
@@ -66,13 +66,13 @@ def get_global_metrics(targets, probabilities, thresholds):
 
     if len(valid_cols) > 0:
         m = roc_auc_score(targs[:, valid_cols], probs[:, valid_cols], average="macro")
-        w = roc_auc_score(targs[:, valid_cols], probs[:, valid_cols], average='weighted')
+        # w = roc_auc_score(targs[:, valid_cols], probs[:, valid_cols], average='weighted')
     else:
         m = np.nan
-        w = np.nan
+        # w = np.nan
 
-    df.insert(loc=3, column='AUC (Macro)', value=m)
-    df.insert(loc=8, column='AUC (Wt.)', value=w)
+    df.insert(loc=3, column='auroc', value=m)
+    # df.insert(loc=8, column='AUC (Wt.)', value=w)
 
     return df
 
@@ -141,17 +141,17 @@ def get_class_metrics(targets, probabilities, thresholds, classes):
             ap = average_precision_score(targs, probs)
 
         # calculate metrics
-        df.loc[idx, 'Class'] = unit
-        df.loc[idx, 'Decision Threshold'] = thresh
-        df.loc[idx, 'num True'] = targs.sum()
-        df.loc[idx, 'num Predicted'] = preds.sum()
-        df.loc[idx, 'Precision'] = precision_score(targs, preds, zero_division=0.0)
-        df.loc[idx, 'Recall'] = recall_score(targs, preds, zero_division=0.0)
-        df.loc[idx, 'Specificity'] = recall_score(1-targs, 1-preds, zero_division=0.0)
-        df.loc[idx, 'F1'] = f1_score(targs, preds, zero_division=0.0)
-        df.loc[idx, 'AUC'] = auc
-        df.loc[idx, 'AP'] = ap
-        df.loc[idx, 'Accuracy'] = accuracy_score(targs, preds)
+        df.loc[idx, 'class'] = unit
+        df.loc[idx, 'decision threshold'] = thresh
+        df.loc[idx, 'ground truth'] = targs.sum()
+        df.loc[idx, 'predicted'] = preds.sum()
+        df.loc[idx, 'precision'] = precision_score(targs, preds, zero_division=0.0)
+        df.loc[idx, 'recall'] = recall_score(targs, preds, zero_division=0.0)
+        df.loc[idx, 'specificity'] = recall_score(1-targs, 1-preds, zero_division=0.0)
+        df.loc[idx, 'f1'] = f1_score(targs, preds, zero_division=0.0)
+        df.loc[idx, 'auroc'] = auc
+        df.loc[idx, 'ap'] = ap
+        df.loc[idx, 'accuracy'] = accuracy_score(targs, preds)
 
     return df
 

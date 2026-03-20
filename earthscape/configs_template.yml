@@ -1,8 +1,8 @@
 
 experiment:
-  root: experiments/baselines/segmentation
+  root: experiments/baselines/classification/single
   seed: 111
-  task: segmentation
+  task: classification
 
 
 data:
@@ -56,7 +56,7 @@ dataloader:
 
 model: 
   model_name: resnet18         # model name (resnet18, resnet50, vit, swin) for classification; (unet, deeplabv3p, segformer) for segmentation
-  encoder_name: resnet50   # encoder used for segmentation model baselines (see segmentation-models-pytorch docs; default is resnet50)
+  encoder_name: null   # encoder used for segmentation model baselines (see segmentation-models-pytorch docs; default is resnet50)
   image_size: 256
   output_size: 7
 
@@ -91,16 +91,16 @@ optimizer:
 
 
 loss:
-  # name: bcefocal            # multilabel classification - BCE with optional class weights & focal loss
-  # params:
-  #   pos_weight: null
-  #   gamma: 0
-  #   alpha: null
-  #   reduction: "mean"
-  name: crossentropyloss      # segmentation - 
+  name: bcefocal            # multilabel classification - BCE with optional class weights & focal loss
   params:
-    weight: null
+    pos_weight: null
+    gamma: 0
+    alpha: null
     reduction: "mean"
+  # name: crossentropyloss      # segmentation - 
+  # params:
+  #   weight: null
+  #   reduction: "mean"
   
 
 early_stop:
