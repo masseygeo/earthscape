@@ -1,119 +1,134 @@
-# EarthScape
+# EarthScape: A Multimodal Dataset and Benchmark for Surficial Geologic Mapping and Earth Surface Analysis
 
+![logo](https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/esv1p1_warren_modalities.png)
+
+
+## Introduction
 [![Paper](https://img.shields.io/badge/Paper-10.48550%2FarXiv.2503.15625-BB3E00)](https://doi.org/10.48550/arXiv.2503.15625)
 [![Dataset](https://img.shields.io/badge/Dataset-10.13023%2Fkgs.data.05.01.2025-FFA55D)](https://uknowledge.uky.edu/kgs_data/16/)
-[![Python](https://img.shields.io/badge/Python-3.10+-FFDF88)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.12+-FFDF88)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-***EarthScape*** is a living, open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis, and includes:
+EarthScape is a living, open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis. It includes:
 
-- Expert-labeled surficial geologic masks and labels
-- LiDAR-derived DEMs and geomorphometric terrain features at multiple spatial resolutions  
-- High-resolution aerial RGB+NIR imagery  
-- Hydrography and infrastructure vector overlays  
-- Baseline models for multilabel classification
+- Expert-labeled surficial geology masks and annotations
+- DEM-derived terrain features computed across multiple spatial resolutions
+- High-resolution optical imagery (RGB + NIR)
+- Hydrography and infrastructure vector layers
+- Seven classes that represent common geomorphic processes and capturing long-tail distribution and spatial complexity.
+- Multiple geographic areas within the same label space intentionally designed to support covariate shift studies
+- Baseline benchmarks for multilabel classification and semantic segmentation
 
-![logo](https://github.com/masseygeo/earthscape/blob/v1.1/data/warren_256_50_21983_modalities.jpg)
+
+## Table of Contents
+- [Intallation and Quickstart](#installation-and-quickstart)
+- [Navigating the Repository](#navigating-the-repository)
+- [Exploring the Dataset](#exploring-the-dataset)
+- [Roadmap](#roadmap)
+- [Citations](#citations)
+
+
+## Installation and Quickstart
+
+1. **Install [Conda](https://anaconda.org/channels/anaconda/packages/conda/overview) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main).**
+2. **Create the environment.**
+    - *If using a CPU-only machine, remove 'pytorch-gpu' from environment.yml.*
+```Bash
+conda env create -f environment.yml
+```
+3. **Activate the environment.**
+```Bash
+conda activate earthscape
+```
+4. **Install the earthscape package.**
+```Bash
+pip install -e .
+```
+
+You can now use EarthScape to reproduce the dataset, train and evaluate models, and run analyses. While the full data pipeline is available, most users will prefer downloading the precompiled dataset.
+
+5. **Download the [dataset and metadata](https://uknowledge.uky.edu/kgs_data/16/).**
+6. **Extract all archives into the [data](https://github.com/masseygeo/earthscape/tree/v1.1/data) directory.**
 
 
 ## Navigating the Repository
-- 📁 **[../code](https://github.com/masseygeo/earthscape/tree/main/code) – Directory containing all code used for dataset curation pipeline, dataloaders, and models.**
-  
-  - *Dataset preparation (notebooks and utility functions for source downloads, data manipulation, GIS, and visualizations.)*
-    - [**../code/data_prep_howe_valley.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
-    - [**../code/data_prep_sonora.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
-    - [**../code/data_prep_warren.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
-    - [**../code/utils_data.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_data.py)
-      
-  - *Modeling (notebooks, utility functions, and scripts for patch selection, dataloader, focal loss, visualizations, and training.)*
-    - [**../code/model_dataselection.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/model_dataselection.ipynb)
-    - [**../code/utils_model_dataloader.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_model_dataloader.py)
-    - [**../code/utils_model_training.py**](https://github.com/masseygeo/earthscape/blob/main/code/utils_model_training.py)
-    - [**../code/model_classification.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/model_classification.ipynb)
-    - [**../code/run.bat**](https://github.com/masseygeo/earthscape/blob/main/code/run.bat)
-    - [**../code/run.sh**](https://github.com/masseygeo/earthscape/blob/main/code/run.sh)
-    - [**../data/visualizations.ipynb**](https://github.com/masseygeo/earthscape/blob/main/code/visualizations.ipynb)
-      
-- 📁 **[../data](https://github.com/masseygeo/earthscape/tree/main/data) – Directory containing all data, including location GeoJSONs, label and area CSVs, and GeoTIFF images.**
-  
-  - *Class labels (all), class areas (all), class encoding key, patch locations (GIS), and example visualization images.*
-    - [**../data/earthscape_areas.csv**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_areas.csv)
-    - [**../data/earthscape_labels.csv**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_labels.csv)
-    - [**../data/earthscape_locations.geojson**](https://github.com/masseygeo/earthscape/blob/main/data/earthscape_locations.geojson)
-    - [**../data/hardin_sonora_256_50_2950.png**](https://github.com/masseygeo/earthscape/blob/main/data/hardin_sonora_256_50_2950_modalities.jpg)
-    - [**../data/warren_256_50_21983.png**](https://github.com/masseygeo/earthscape/blob/main/data/warren_256_50_21983_modalities.jpg)
-      
-  - *GeoTIFF images and per-patch labels (not saved in GitHub; see download links given in the "Exploring the Dataset" section below).*
-    - [**../data/patches_warren**](https://github.com/masseygeo/earthscape/tree/main/data/patches_warren)
-      - ../data/patches_warren/*.tif
-      - ../data/patches_warren/*.csv
-    - [**../data/patches_hardin**](https://github.com/masseygeo/earthscape/tree/main/data/patches_hardin)
-      - ../data/patches_hardin/*.tif
-      - ../data/patches_hardin/*.csv
-        
-- 📁 **[../models**](https://github.com/masseygeo/earthscape/tree/main/models) – Directory containing selected training patches and model results.**
-  
-  - *Selected training, validation, testing, and cross-domain testing patches (GIS).*
-    - [**../models/patches**](https://github.com/masseygeo/earthscape/tree/main/models/patches)
-      - [**../models/patches/warren_patches_train.geojson**](https://github.com/masseygeo/earthscape/blob/main/models/patches/warren_patches_train.geojson)
-      - [**../models/patches/warren_patches_val.geojson**](https://github.com/masseygeo/earthscape/blob/main/models/patches/warren_patches_val.geojson)
-      - [**../models/patches/warren_patches_test.geojson**](https://github.com/masseygeo/earthscape/blob/main/models/patches/warren_patches_test.geojson)
-      - [**../models/patches/hardin_patches_test.geojson**](https://github.com/masseygeo/earthscape/blob/main/models/patches/hardin_patches_test.geojson)
-     
-  - *Unimodal and multimodal model checkpoints, results, and visualizations.*
-    - [**../models/classification**](https://github.com/masseygeo/earthscape/tree/main/models/classification) 
+- :file_folder: [assets](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
+- :file_folder: [data](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset and associated metadata; frozen for each minor version (v1.1.x)
+- :file_folder: [earthscape](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Core source code.
+- :file_folder: [experiments](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments with configurations for reproducible workflows.
+- :file_folder: [notebooks](https://github.com/masseygeo/earthscape/tree/main/notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
+- :file_folder: [scripts](https://github.com/masseygeo/earthscape/tree/main/scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
+- :file_folder: [splits](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits; frozen for each major version (v1.x).
+- :page_facing_up: [CHANGELOG.md](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md) - Version history.
+- :page_facing_up: [environment.yml](https://github.com/masseygeo/earthscape/blob/v1.1/environment.yml) - Reproducible environment specification.
+- :page_facing_up: [pyproject.yml](https://github.com/masseygeo/earthscape/blob/v1.1/pyproject.toml) - Python package configuration.
 
 
 ## Exploring the Dataset
-[![Version](https://img.shields.io/badge/Version-1.0.1-BB3E00)](#)
+[![Version](https://img.shields.io/badge/Version-1.1-BB3E00)](#)
 [![Available](https://img.shields.io/badge/Available%20Patches-31%2c066-FFA55D)](#)
 [![Patch Size](https://img.shields.io/badge/Patch%20Size-256x256-FFDF88)](#)
 [![Patch Overlap](https://img.shields.io/badge/Patch%20Overlap-50%25-5E936C)](#)
 [![Modalities](https://img.shields.io/badge/Channels-38-BBD8A3)](#)
 [![Classes](https://img.shields.io/badge/Classes-7-F0F1C5)](#)
 
-### **Where to get it?**
-Metadata, segmentation masks, vector labels, and features can be downloaded here: https://uknowledge.uky.edu/kgs_data/16/
 
-- A *small example file* (15.1 MB) is available for easy inspection of the available data for two patch locations. It is strongly recommended to inspect this first before downloading the full dataset packages! This file is accessed by the labeled "*DOWNLOAD*" link on the landing page.
-  
-- The *README* and *DataDictionary* contain basic metadata and file structure information.
-  
-- The full datasets are availbe as quadrangle-scale downloads (~26-32 GB each) using the direct URLs on the landing page.
-
-*\*This dataset is versioned. All updates and modifications will be reflected in the README. Individual quadrangle datasets should be re-downloaded for the current version.*
-
-*\*\*Dataset .zip files are large (~26-32 GB) and we recommend using command line utilities to unzip these to your local machines.*
+### *Where to get it?*
+Metadata, segmentation masks, vector labels, and features can be reproduced with this repository or directly downloaded [here](https://uknowledge.uky.edu/kgs_data/16/).
 
 
-### **What's included?**
+### *What's included?*
+#### Image Patches
+- Overview
+  - 31,066 patches (256 x 256 pixels)
+  - Each patch covers ~1,280 x 1,280 ft at 5 ft (~1.5 m) GSD
+  - 50% overlap between adjacent patches
+- Geospatial
+  - Coordinate reference system: EPSG:3089
+  - Two study areas separated by ~77 km
+- Data Layers
+  - Segmentation masks
+  - Aerial optical imagery (RGB+NIR)
+  - LiDAR DEM
+  - OpenStreetMap road and railway centerlines
+  - U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons
+  - DEM-derived terrain features calculated at six spatial resolutions:
+    - Elevation Percentile
+    - Planform Curvature
+    - Profile Curvature
+    - Slope
+    - Standard Deviation of Slope
+  - Filenames that use a unique patch ID and modality/scale
+    - *{patch_id}_{modality/scale}.tif*
 
-The EarthScape dataset (v1.0.1) has 31,066 patches spanning two continguos areas in East-central United States.
+#### Metadata Files
+- [areas.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_areas.csv) - Per-patch class area proportions.
+- [labels.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_labels.csv) - Binary class presence labels (≥1 pixel).
+- [patches.geojson](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_patches.geojson) - Patch geometries.
+- [metadata.json](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_metadata.json) - Dataset-level metadata.
+- [stats.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_stats.csv) - Per-modality summary statistics.
+- Common keys (*patch_id*, *modality*) enable joins across files and data layers.
 
-- Each patch is 256x256 covering an area of 1280x1280 square feet (~78 GSD meters).
-  
-- Adjacent patches overlap one another by 50%.
-  
-- Each patch has labeled data and predictive features (38 channels total), including:
-  - Segmentation masks as expert-labeled surficial geologic maps with seven classes (.tif)
-  - One-hot encoded labels (.csv)
-  - Class area perr patch (.csv)
-  - RGB+NIR overhead imagery (each saved as separate .tif files using our workflow)
-  - Digital elevation model (DEM) (.tif)
-  - OpenStreetMap road and railway centerlines (.tif)
-  - U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons (.tif)
-  - Five DEM-derived terrain features calculated at six spatial resolutions (.tif):
-      - Elevation Perrcentile
-      - Planform Curvature
-      - Profile Curvature
-      - Slope
-      - Standard Deviation of Slope
-      
-      
 
-### **How to use it?**
+### *How was the dataset prepared?*
 
-Individual images are in GeoTIFF format, but can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend [Rasterio](https://rasterio.readthedocs.io/en/stable/).
+
+Check out the dataset compilation pipeline notebooks to see how each area was compiled:
+- [Hardin County, Howe Valley Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_hardin_howevalley.ipynb)
+- [Hardin County, Sonora Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_hardin_sonora.ipynb)
+- [Warren County quadrangles](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_warren.ipynb)
+
+
+
+### *How to explore?*
+
+#### Dataset compilation notebooks
+Check out the dataset compilation pipeline notebooks to see how each area was compiled:
+- [](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_hardin_howevalley.ipynb)
+
+
+#### Self-exploration
+Individual images are in GeoTIFF format, and can easily be inspected with GIS software (QGIS, ArcGIS) or Python. For Python users, we recommend [Rasterio](https://rasterio.readthedocs.io/en/stable/).
 
   ```Python
   import rasterio
@@ -123,24 +138,34 @@ Individual images are in GeoTIFF format, but can easily be inspected with GIS so
     show(src)
   ```
 
-The data pre-processing pipeline can be explored with the following notebooks:
-  - [*Warren County (six quadrangles)*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_warren.ipynb)
-  - [*Sonora Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_sonora.ipynb)
-  - [*Howe Valley Quadrangle*](https://github.com/masseygeo/earthscape/blob/main/code/data_prep_howevalley.ipynb)
 
 
 
-## Ongoing Work
+
+## Roadmap
 - Adding additional 1:24,000-scale surficial geologic quadrangle maps
 - Updating the unique patch ID grid for intuitive geospatially aware selection
-- Testing additional modalities
+- Additional modalities
   - New terrain features
   - Datasets with broader coverage (e.g., 1/3-arc-second DEM, Sentinel-1, Sentinel-2, etc.)
-- Segmentation tests
+
+
 
 ## Citations
-- **The dataset:**
-  - @article{masseyearthscape, title={EarthScape AI Dataset}, author={Massey, Matthew and Imran, Abdullah-Al-Zubaer and others}, publisher={University of Kentucky Libraries}}
+```
+# dataset download
+@article{
+  masseyearthscape, title={EarthScape AI Dataset},
+  author={Massey, Matthew and Imran, Abdullah-Al-Zubaer and others},
+  publisher={University of Kentucky Libraries}
+  }
     
-- **The manuscript descibing the dataset processing and initial modeling:**
-  - @article{massey2025earthscape, title={EarthScape: A Multimodal Dataset for Surficial Geologic Mapping and Earth Surface Analysis}, author={Massey, Matthew and Imran, Abdullah-Al-Zubaer}, journal={arXiv preprint arXiv:2503.15625}, year={2025}}
+# manuscript descibing processing and benchmarks
+@article{
+  massey2025earthscape,
+  title={EarthScape: A Multimodal Dataset for Surficial Geologic Mapping and Earth Surface Analysis},
+  author={Massey, Matthew and Imran, Abdullah-Al-Zubaer},
+  journal={arXiv preprint arXiv:2503.15625},
+  year={2025}
+  }
+```
