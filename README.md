@@ -107,7 +107,7 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
 
 EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated to lie entirely within mapped surficial geologic units, resulting in no background class and no nodata pixels. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
 
-![pipeline](https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/pipeline.png)
+<img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/pipeline.png" width="600">
 
 Check out these notebooks to see how each map area was compiled and processed:
 - [Hardin County, Howe Valley Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_area_hardin_howevalley.ipynb)
@@ -160,11 +160,19 @@ EarthScape spans two disjoint regions in Kentucky, USA, consisting of 23,566 pat
 
 
 ## Roadmap
-- Adding additional 1:24,000-scale surficial geologic quadrangle maps
+:diamond_shape_with_a_dot_inside: **Datasets**
+- Adding broad-coverage DEM and optical imagery (USGS 1/3-arc-second DEM, NAIP RGB+NIR)
+- Adding addiitonal terrain features (topographic position index)
+- Updating terrain feature scaling to logarithmic scales
+- Using metric projected coordinate reference system
+    
+:diamond_shape_with_a_dot_inside: **Geographic Coverage**
+- New areas...
+
+
+:diamond_shape_with_a_dot_inside: **Code**
+- Evaluation script...
 - Updating the unique patch ID grid for intuitive geospatially aware selection
-- Additional modalities
-  - New terrain features
-  - Datasets with broader coverage (e.g., 1/3-arc-second DEM, Sentinel-1, Sentinel-2, etc.)
 
 
 ## Citations
