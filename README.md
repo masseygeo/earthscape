@@ -130,24 +130,26 @@ Although geographically limited, the represented surface processes are broadly a
 #### Class Imbalance
 EarthScape exhibits a pronounced long-tailed distribution across its seven classes. Qr appears in 94.4% of patches, whereas the rarest units occur in only 4.6% (Qat) and 0.9% (Qaf) of patches. Effective number of samples ranges from 9,464 (Qr) to 266 (Qaf), and the imbalance ratio per label spans more than two orders of magnitude (1.0-108.4), reflecting strong label-level complexity driven by frequency skew. Beyond global frequencies, EarthScape exhibits marked intra-patch complexity. Mean and standard-deviation class-area proportions show that most patches contain multiple SG units with uneven contributions, and the majority-area rate indicates that Qr dominates more than 70\% of patches while rare units almost never occupy the largest fraction. Patch-level class counts vary widely across the regions, reflecting strong geospatial complexity in how classes co-occur and mix spatially.
 
-| Class | Freq. (n) | Freq. (%) | IRLbl | N_Eff. | Mean Patch Area | SD Patch Area | Dominant Class Rate
+| Class | Freq. (n) | Freq. (%) | IRLbl | N Eff. | Mean Patch Area | SD Patch Area | Dominant Class Rate (%)
 | :--- | :-- | :-- | :-- | :-- | :-- | :-- | :-- |
-| Qr | - | - | - | - | - | - | - |
-| Qal | - | - | - | - | - | - | - |
-| Qc | - | - | - | - | - | - | - |
-| af1 | - | - | - | - | - | - | - |
-| Qca | - | - | - | - | - | - | - |
-| Qat | - | - | - | - | - | - | - |
-| Qaf | - | - | - | - | - | - | - |
+| Qr | 29271 | 94.4 | 1.0 | 9464.6 | 0.651 | 0.358 | 0.701 |
+| Qal | 18802 | 60.6 | 1.56 | 8474.5 | 0.089 | 0.168 | 0.058 |
+| Qc | 13768 | 44.4 | 2.13 | 7476.3 | 0.142 | 0.242 | 0.148 |
+| af1 | 10908 | 35.2 | 2.68 | 6640.7 | 	0.051 | 0.161 | 0.035 |
+| Qca | 7666 | 24.7 | 3.82 | 5354.3 | 0.061 | 0.154 | 0.054 |
+| Qat | 1435 | 4.6 | 20.40 | 1336.9 | 0.006 | 0.045 | 0.004 |
+| Qaf | 270 | 0.9 | 108.41 | 266.4 | 0.0002 | 0.003 | 0.0 |
 
 ![class_dist](https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/class_dist.png)
 
 #### Domain Shift
 EarthScape spans two disjoint regions in Kentucky, USA, consisting of 23,566 patches from Warren County and 7,452 patches from Hardin County, separated by ~77 km. This structure provides a natural geographic partition for analyzing cross-region variation. Maximum mean discrepancy (MMD) is used to quantify distributional differences between patch-level feature summaries (P5, P10, P25, P50, P75, P90, P95) of selected input modalities from each region. We observe measurable domain shift, including MMD values of 0.365 for RGB, 0.832 for DEM, and 0.164 for a multi-scale terrain stack (EP+S+SDS). Although both regions share the same label set, their input feature distributions differ, reflecting geographic variation and providing a clean, geographically partitioned setting for studying domain shift in multimodal geospatial learning.
 
-| Modality | MMD |
-| :-- | :--|
-| - | - |
+| Modality | MMD | | Modality | MMD |
+| :-- | :-- | :--  | :-- | :-- |
+| DEM | 0.2773 | | - | - |
+| RGB | 0.1396 | | - | - |
+| - | - | | - | - |
 
 
 ## Baseline Benchmarks
