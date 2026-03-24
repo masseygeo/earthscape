@@ -34,7 +34,7 @@ EarthScape is structured to support:
 3. [Exploring the Dataset](#exploring-the-dataset)
 4. [Baseline Benchmarks](#baseline-benchmarks)
 5. [Roadmap](#roadmap)
-6. [Citations](#citations)
+6. [Citations](#cite)
 
 
 ## Getting Started
@@ -172,8 +172,6 @@ EarthScape follows semantic versioning in the format **MAJOR.MINOR.PATCH** (e.g.
 - Version changes will be documented in [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md)
 
 
-
-
 ### *Dataset Preparation*
 
 EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
@@ -217,6 +215,8 @@ Although geographically limited, the represented surface processes are broadly a
 
 See the following for more in-depth analysis of the dataset...
 - [EarthScape Exploratory Data Analysis (EDA)](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_eda.ipynb)
+
+
 
 ## Baseline Benchmarks
 
@@ -308,7 +308,7 @@ EarthScape is an evolving dataset designed to support research in multimodal geo
 - Enhanced dataset indexing and geospatial query capabilities
 
 
-## Citations
+## Cite
 ```
 # dataset download
 @article{
