@@ -169,6 +169,7 @@ EarthScape follows semantic versioning in the format **MAJOR.MINOR.PATCH** (e.g.
 #### Versioning
 - The [downloadable dataset](https://uknowledge.uky.edu/kgs_data/16/) corresponds to the latest major or minor version (e.g., v1.0, v1.1, v2.0)
 - The GitHub repository reflects the corresponding dataset version, along with any subsequent patch-level updates
+- Version changes will be documented in [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md)
 
 
 
