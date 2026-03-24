@@ -148,6 +148,31 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
 - Common keys (*patch_id*, *modality*) enable joins across files and data layers.
 
 
+### *Dataset Governance and Versioning*
+
+EarthScape follows semantic versioning in the format **MAJOR.MINOR.PATCH** (e.g., v1.1.0), where version increments reflect changes to dataset content, scope, and reproducibility.
+
+#### Major releases (vX.0.0)
+- Introduce substantial changes to dataset scope  
+- May include new geographic regions, label space or classes, tasks (e.g., additional prediction objectives), or significant additions to input modalities or features  
+- Train/validation/test splits may be redefined for each major release
+
+#### Minor releases (vX.Y.0)
+- Update dataset content within the existing scope  
+- May include improved or corrected data processing workflows, updated or refined input features, or additional benchmarks or tasks within the same label space  
+- Train/validation/test splits remain fixed
+
+#### Patch releases (vX.Y.Z)
+- Do not modify dataset content  
+- May include code updates or restructuring, documentation improvements, additional analyses or experiment configurations, or bug fixes and usability enhancements  
+
+#### Versioning
+- The [downloadable dataset](https://uknowledge.uky.edu/kgs_data/16/) corresponds to the latest major or minor version (e.g., v1.0, v1.1, v2.0)
+- The GitHub repository reflects the corresponding dataset version, along with any subsequent patch-level updates
+
+
+
+
 ### *Dataset Preparation*
 
 EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
@@ -291,7 +316,7 @@ EarthScape is an evolving dataset designed to support research in multimodal geo
   publisher={University of Kentucky Libraries}
   }
     
-# manuscript descibing processing and benchmarks
+# manuscript
 @article{
   massey2025earthscape,
   title={EarthScape: A Multimodal Dataset for Surficial Geologic Mapping and Earth Surface Analysis},
