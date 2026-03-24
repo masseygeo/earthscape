@@ -4,7 +4,7 @@
 <img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/esv1p1_warren_modalities.png" width="800">
 </p>
 
-## Introduction
+# Introduction
 [![Paper](https://img.shields.io/badge/Paper-10.48550%2FarXiv.2503.15625-BB3E00)](https://doi.org/10.48550/arXiv.2503.15625)
 [![Dataset](https://img.shields.io/badge/Dataset-10.13023%2Fkgs.data.05.01.2025-FFA55D)](https://uknowledge.uky.edu/kgs_data/16/)
 [![Python](https://img.shields.io/badge/Python-3.12+-FFDF88)](https://www.python.org/)
@@ -28,7 +28,7 @@ EarthScape is structured to support:
 - Controlled experiments on geographic domain shift using disjoint regions with a shared label space
 
 
-## Table of Contents
+# Table of Contents
 1. [Getting Started](#getting-started)
 2. [Navigating the Repository](#navigating-the-repository)
 3. [Exploring the Dataset](#exploring-the-dataset)
@@ -37,9 +37,9 @@ EarthScape is structured to support:
 6. [Citations](#cite)
 
 
-## Getting Started
+# Getting Started
 
-### *Installation*
+## Installation
 
 1. Clone the repository.
 2. Install [Conda](https://anaconda.org/channels/anaconda/packages/conda/overview) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main).
@@ -59,12 +59,11 @@ pip install -e .
     1. Download the [dataset and metadata](https://uknowledge.uky.edu/kgs_data/16/).
     2. Extract all archives into the [`data`](https://github.com/masseygeo/earthscape/tree/v1.1/data) directory.
 
-
-### *Quickstart*
+## Quickstart
 
 Once the repository is cloned and the dataset is installed, you are ready to run experiments.
 
-#### Run a single experiment
+### Run a single experiment
 
 1. Modify the [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/earthscape/configs_template.yml) file for your experiment. Most settings can also be overridden via CLI flags.
 
@@ -77,10 +76,10 @@ train_cls --config_path earthscape/configs_template.yml --mode train-test-cross
 # segmentation
 train_seg --config_path earthscape/configs_template.yml --mode train-test-cross
 ```
-3. Explore training logs, performance metrics, and visualizations saved for each experiment. Experiment configurations are also automatically saved in the output directory for reproducibility.
+3. Explore training logs, performance metrics, and visualizations saved for each experiment in an intuitively named output directory `{model}_{modality}_{timestamp}`. Experiment configurations are also automatically saved for reproducibility.
 
 
-#### Run multiple experiments
+### Run multiple experiments
 
 1. Define your sweep (inputs, models, hyperparameters) in the classification [`run_cls.py`](https://github.com/masseygeo/earthscape/blob/v1.1/scripts/run_cls.py) or segmentation [`run_seg.py`](https://github.com/masseygeo/earthscape/blob/v1.1/scripts/run_seg.py) scripts.
 
@@ -93,10 +92,10 @@ python scripts\run_cls.py
 # segmentation...
 python scripts\run_seg.py
 ```
-3. Sit back and wait.
+3. Explore training logs, performance metrics, and visualizations saved for each experiment in an intuitively named output directory `{model}_{modality}_{timestamp}`. Experiment configurations are also automatically saved for reproducibility.
 
 
-## Navigating the Repository
+# Navigating the Repository
 - :file_folder: [`assets`](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
 - :file_folder: [`data`](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset and associated metadata; frozen for each minor version (e.g., v1.1.x, v2.0.x, etc.)
 - :file_folder: [`earthscape`](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Core source code.
@@ -110,7 +109,7 @@ python scripts\run_seg.py
 - :page_facing_up: [`pyproject.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/pyproject.toml) - Python package configuration.
 
 
-## Exploring the Dataset
+# Exploring the Dataset
 [![Version](https://img.shields.io/badge/Current%20Version-1.1-BB3E00)](#)
 [![Patches](https://img.shields.io/badge/Available%20Patches-31%2c066-FFA55D)](#)
 [![Size](https://img.shields.io/badge/Patch%20Size-256x256-FFDF88)](#)
@@ -119,13 +118,13 @@ python scripts\run_seg.py
 [![EPSG](https://img.shields.io/badge/CRS-EPSG:3089-F0F1C5)](#)
 
 
-### *Where to get it?*
+## Where to get it?
 Metadata, segmentation masks, vector labels, and features can be reproduced with this repository or directly downloaded [here](https://uknowledge.uky.edu/kgs_data/16/).
 
 
-### *What's included?*
+## What's included?
 
-#### Image Patches
+### Image Patches
 - Segmentation masks
 - Aerial optical imagery (RGB+NIR)
 - LiDAR DEM
@@ -139,7 +138,7 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
     - Standard Deviation of Slope
 - Filenames that use a unique patch ID and modality/scale: *{patch_id}_{modality/scale}.tif*
 
-#### Metadata Files
+### Metadata Files
 - [areas.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_areas.csv) - Per-patch class area proportions.
 - [labels.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_labels.csv) - Binary class presence labels (≥1 pixel).
 - [patches.geojson](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_patches.geojson) - Patch geometries.
@@ -148,31 +147,31 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
 - Common keys (*patch_id*, *modality*) enable joins across files and data layers.
 
 
-### *Dataset Governance and Versioning*
+## Dataset Governance and Versioning
 
 EarthScape follows semantic versioning in the format **MAJOR.MINOR.PATCH** (e.g., v1.1.0), where version increments reflect changes to dataset content, scope, and reproducibility.
 
-#### Major releases (vX.0.0)
+### Major releases (vX.0.0)
 - Introduce substantial changes to dataset scope  
 - May include new geographic regions, label space or classes, tasks (e.g., additional prediction objectives), or significant additions to input modalities or features  
 - Train/validation/test splits may be redefined for each major release
 
-#### Minor releases (vX.Y.0)
+### Minor releases (vX.Y.0)
 - Update dataset content within the existing scope  
 - May include improved or corrected data processing workflows, updated or refined input features, or additional benchmarks or tasks within the same label space  
 - Train/validation/test splits remain fixed
 
-#### Patch releases (vX.Y.Z)
+### Patch releases (vX.Y.Z)
 - Do not modify dataset content  
 - May include code updates or restructuring, documentation improvements, additional analyses or experiment configurations, or bug fixes and usability enhancements  
 
-#### Versioning
+### Versioning
 - The [downloadable dataset](https://uknowledge.uky.edu/kgs_data/16/) corresponds to the latest major or minor version (e.g., v1.0, v1.1, v2.0)
 - The GitHub repository reflects the corresponding dataset version, along with any subsequent patch-level updates
 - Version changes will be documented in [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md)
 
 
-### *Dataset Preparation*
+## Dataset Preparation
 
 EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
 
@@ -188,7 +187,7 @@ Check out these notebooks to see how each map area was compiled and processed...
 - [Warren County quadrangles](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_warren.ipynb)
 
 
-### *Class Labels*
+## Class Labels
 EarthScape defines seven surficial geologic (SG) units that form a mutually exclusive representation of surface cover within each study area. These units correspond to five process-based environments:
 - Fluvial deposits — Qal (alluvium), Qat (terrace deposits)
 - Debris-flow deposits — Qaf (alluvial fans)
@@ -198,7 +197,7 @@ EarthScape defines seven surficial geologic (SG) units that form a mutually excl
 Although geographically limited, the represented surface processes are broadly applicable across many landscapes.
 
 
-### *Dataset Characteristics*
+## Dataset Characteristics
 
 - Severe class imbalance and long-tailed distribution.
 - Class frequencies span more than two orders of magnitude, with dominant units (e.g., Qr) present in most patches and rare units (e.g., Qaf, Qat) appearing infrequently.
@@ -208,21 +207,19 @@ Although geographically limited, the represented surface processes are broadly a
 - Geographic domain shift (covariate shift) where disjoint regions share the same label space, but differ in input feature distributions.
 
 <p align="center">
-<img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/class_dist.png" width="600">
+<img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/class_dist.png" width="800">
 </p>
-
----
 
 See the following for more in-depth analysis of the dataset...
 - [EarthScape Exploratory Data Analysis (EDA)](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_eda.ipynb)
 
 
 
-## Baseline Benchmarks
+# Baseline Benchmarks
 
 EarthScape includes reproducible baseline experiments designed to evaluate modality contributions, multi-scale representations, and cross-domain generalization.
 
-### *Multilabel classification*
+## Multilabel classification
 - Models
     - ResNet18, ResNet50, ViT-B/16, Swin-Tiny
     - No pre-trained weights
@@ -242,7 +239,7 @@ EarthScape includes reproducible baseline experiments designed to evaluate modal
         - Precision, recall, F1, AUROC, mAP/AP
 - *All experiment configuration files (configs.yml) can be found in the respective directories [here](https://github.com/masseygeo/earthscape/tree/v1.1/experiments/baselines/classification).*
 
-### *Semantic segmentation*
+## Semantic segmentation
 - Models
     - U-Net (ResNet18), DeepLabv3+ (ResNet50), Segformer (MiT-b0)
     - No pre-trained weights
@@ -263,7 +260,7 @@ EarthScape includes reproducible baseline experiments designed to evaluate modal
 - *All experiment configuration files (configs.yml) can be found in the respective directories [here](https://github.com/masseygeo/earthscape/tree/v1.1/experiments/baselines/segmentation).*
 
       
-### *Key findings*
+## Key findings
 - **Multi-scale representations improve robustness.** Stacking terrain features across spatial scales consistently improves stability and cross-domain performance compared to single-scale inputs.
 - **Raw elevation and imagery are brittle under domain shift.** DEM and RGB often perform well in-domain but degrade substantially in cross-domain settings, reflecting sensitivity to regional differences in absolute elevation and appearance.
 - **More modalities do not reliably improve performance.** Adding additional inputs does not consistently yield gains and can introduce redundancy or noise, sometimes degrading performance.
@@ -271,7 +268,6 @@ EarthScape includes reproducible baseline experiments designed to evaluate modal
 - **Class imbalance significantly impacts performance.** Rare classes are consistently harder to predict across models and input configurations.
 - **Domain shift remains a central challenge.** All models exhibit performance degradation when evaluated on geographically disjoint regions, highlighting the difficulty of transferring learned representations across landscapes. Modality selection plays a significant role in reducing model transfer failures.
 
----
 
 Check out the results processing notebooks for more information and visualizations...
 - [Classification](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/analysis_cls.ipynb)
@@ -279,36 +275,34 @@ Check out the results processing notebooks for more information and visualizatio
 
 
 
-## Roadmap
+# Roadmap
 
-EarthScape is an evolving dataset designed to support research in multimodal geospatial learning and domain generalization.
-
-:diamond_shape_with_a_dot_inside: **Expanded Data Sources**
+### Expanded Data Sources
 - Integration of national-scale datasets (USGS 3DEP DEM, NAIP RGB+NIR)
 - Additional terrain features (e.g., topographic position index)
 - Improved feature representations (e.g., logarithmic scaling)
 
-:diamond_shape_with_a_dot_inside: **Geographic Expansion**
+### Geographic Expansion
 - Addition of new regions with shared label space to enable broader domain shift studies
 - Inclusion of new geologic tasks for improved generalization benchmarking
 
-:diamond_shape_with_a_dot_inside: **Benchmark Development**
+### Benchmark Development
 - Expanded baseline experiments across additional modalities and model architectures
 - Systematic evaluation of cross-domain generalization and modality transferability
 
-:diamond_shape_with_a_dot_inside: **Modeling and Methods**
+### Modeling and Methods
 - Exploration of multimodal fusion strategies (early fusion, attention-based methods)
 - Integration of foundation models and pretraining approaches
 - Investigation of domain adaptation and generalization techniques
 - Model development and testing to handle challenges of EarthScape
 
-:diamond_shape_with_a_dot_inside: **Code and Usability**
+### Code and Usability
 - Standardized evaluation scripts and reporting tools
 - Improved experiment configuration and orchestration workflows
 - Enhanced dataset indexing and geospatial query capabilities
 
 
-## Cite
+# Cite
 ```
 # dataset download
 @article{
