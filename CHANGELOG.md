@@ -12,34 +12,32 @@ This release updates the dataset within the existing scope, improves consistency
 - A formal Python package layout under `earthscape/`
 - `pyproject.toml` for package installation and project configuration
 - New `environment.yml` for reproducible environment setup
-- Configuration files in `experiments/` for reproducible baseline experiments
+- Configuration files in `experiments/*` for reproducible baseline experiments
 - Experiment orchestration scripts in `scripts/`
-- Official versioned train/validation/in-domain/cross-domain splits in `splits/esv1p1_splits/`
 - Dataset and experiment figures/tables used in documentation and analysis in `assets/`
 - Explicit release tracking in `CHANGELOG.md `
-- Support and documentation for semantic segmentation benchmarks in addition to multilabel classification
+- Support and documentation for semantic segmentation in addition to multilabel classification
 
 ### Changed
 - Repository structure was refactored
-- Dataset metadata and split assets were renamed and versioned consistently using the `esv1p1_*` naming convention
 - README scope was expanded
-- The following raster products were standardized to `uint8` where appropriate:
-  - RGB + NIR imagery
-  - segmentation masks
+- The following raster products were standardized to `uint8`:
+  - RGB+NIR imagery
+  - Segmentation masks
   - OSM infrastructure layers
   - NHD hydrography layers
 - Dataset class was updated to support:
   - Semantic segmentation
-  - Classification one-hot labels from user-defined patch-level class-area proportion threshold
+  - One-hot label vectors based on user-defined threshold of patch-level class-area proportion
   - Class-area proportions as target vectors
 - Corrected inconsistent computation of profile and planform curvatures across available geographic regions
+- Modified focal loss class to support binary cross-entropy, positive weighting, class weighting, and focal parameter.
 
 ---
 
 ## [v1.0.1] - 2025-07-18
 
-Initial public release of the EarthScape dataset and repository.
-
+Initial release of the EarthScape dataset and repository.
 - Public release of the EarthScape dataset with 31,066 patches, 38 channels, and 7 surficial geologic classes
 - Benchmark support for multilabel classification
 - Dataset download and exploratory usage documentation in the README
