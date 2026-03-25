@@ -33,7 +33,7 @@ def make_experiments(base, grid):
 # NOTE: subprocess expects each flag & value separate/tokenized
 BASE = [
     sys.executable, "-m", "earthscape.cli.train_cls", 
-    "--config_path", "earthscape/configs_template.yml",
+    "--config_path", "configs_template.yml",
     "--mode", "train-test-cross",
     "--experiment_root", "experiments/baselines/classification/multimodal"
     ]
@@ -75,7 +75,7 @@ GRID = {
         # 'ep-ms+prc-ms+s-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
         'ep-ms+s-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
         'prc-ms+s-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
-        'ep-ms+s-ms+sds-ms::ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif,sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'
+        'ep-ms+s-ms+sds-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif,sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'
         ]
     }
 
