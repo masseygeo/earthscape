@@ -179,8 +179,6 @@ EarthScape is derived from open-access geospatial data sources, compiled into a 
 <img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/pipeline.png" width="600">
 </p>
 
----
-
 Check out these notebooks to see how each map area was compiled and processed...
 - [Hardin County, Howe Valley Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_hardin_howevalley.ipynb)
 - [Hardin County, Sonora Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_hardin_sonora.ipynb)
