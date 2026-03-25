@@ -56,16 +56,16 @@ conda activate earthscape
 pip install -e .
 ```
 6. You can now use EarthScape to reproduce the dataset, train and evaluate models, and run analyses. While the full data pipeline is available, most users will prefer downloading the precompiled dataset.
-    1. Download the [dataset and metadata](https://uknowledge.uky.edu/kgs_data/16/).
-    2. Extract all archives into the [`data`](https://github.com/masseygeo/earthscape/tree/v1.1/data) directory.
+    1. [Download](https://uknowledge.uky.edu/kgs_data/16/) the dataset and metadata files.
+    2. Extract all archives into the [`data/`](https://github.com/masseygeo/earthscape/tree/v1.1/data) directory.
 
 ## Quickstart
 
-Once the repository is cloned and the dataset is installed, you are ready to run experiments.
+Once the repository is cloned and the dataset is added, you are ready to run experiments.
 
 ### Run a single experiment
 
-1. Modify the [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/earthscape/configs_template.yml) file for your experiment. Most settings can also be overridden via CLI flags.
+1. Modify [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/earthscape/configs_template.yml) file for your experiment. Most settings can also be overridden via CLI flags.
 
 2. Run the training script.
 
@@ -87,24 +87,24 @@ train_seg --config_path earthscape/configs_template.yml --mode train-test-cross
 
 ```
 # classification...
-python scripts\run_cls.py
+python scripts/run_cls.py
 
 # segmentation...
-python scripts\run_seg.py
+python scripts/run_seg.py
 ```
 3. Explore training logs, performance metrics, and visualizations saved for each experiment in an intuitively named output directory `{model}_{modality}_{timestamp}`. Experiment configurations are also automatically saved for reproducibility.
 
 
 # Navigating the Repository
-- :file_folder: [`assets`](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
-- :file_folder: [`data`](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset and associated metadata; frozen for each minor version (e.g., v1.1.x, v2.0.x, etc.)
-- :file_folder: [`earthscape`](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Core source code.
-- :file_folder: [`experiments`](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments with configurations for reproducibility.
-- :file_folder: [`notebooks`](https://github.com/masseygeo/earthscape/tree/main/notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
-- :file_folder: [`scripts`](https://github.com/masseygeo/earthscape/tree/main/scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
-- :file_folder: [`splits`](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits; frozen for each major version (e.g., v1.x, v2.x, etc.).
+- :file_folder: [`assets/`](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
+- :file_folder: [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset and associated metadata; frozen for each minor version (e.g., v1.1.x, v2.0.x, etc.)
+- :file_folder: [`earthscape/`](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Core source code.
+- :file_folder: [`experiments/`](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments with configurations for reproducibility.
+- :file_folder: [`notebooks/`](https://github.com/masseygeo/earthscape/tree/main/notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
+- :file_folder: [`scripts/`](https://github.com/masseygeo/earthscape/tree/main/scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
+- :file_folder: [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits; frozen for each major version (e.g., v1.x, v2.x, etc.).
 - :page_facing_up: [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md) - Version history.
-- :page_facing_up: [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) - Experiment configuration file. A copy will be saved automatically for each experiment.
+- :page_facing_up: [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) - Experiment configuration file to be modified by the user (a copy will be saved with the experiment results).
 - :page_facing_up: [`environment.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/environment.yml) - Reproducible environment specification.
 - :page_facing_up: [`pyproject.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/pyproject.toml) - Python package configuration.
 
@@ -119,11 +119,10 @@ python scripts\run_seg.py
 
 
 ## Where to get it?
-Metadata, segmentation masks, vector labels, and features can be reproduced with this repository or directly downloaded [here](https://uknowledge.uky.edu/kgs_data/16/).
+Metadata, segmentation masks, vector labels, and features can be reproduced with this repository or directly [downloaded](https://uknowledge.uky.edu/kgs_data/16/).
 
 
 ## What's included?
-
 ### Image Patches
 - Segmentation masks
 - Aerial optical imagery (RGB+NIR)
@@ -148,9 +147,6 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
 
 
 ## Dataset Governance and Versioning
-
-EarthScape follows semantic versioning in the format **MAJOR.MINOR.PATCH** (e.g., v1.1.0), where version increments reflect changes to dataset content, scope, and reproducibility.
-
 ### Major releases (vX.0.0)
 - Introduce substantial changes to dataset scope  
 - May include new geographic regions, label space or classes, tasks (e.g., additional prediction objectives), or significant additions to input modalities or features  
@@ -172,7 +168,6 @@ EarthScape follows semantic versioning in the format **MAJOR.MINOR.PATCH** (e.g.
 
 
 ## Dataset Preparation
-
 EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
 
 <p align="center">
@@ -186,17 +181,15 @@ Check out these notebooks to see how each map area was compiled and processed...
 
 
 ## Class Labels
-EarthScape defines seven surficial geologic (SG) units that form a mutually exclusive representation of surface cover within each study area. These units correspond to five process-based environments:
+EarthScape defines seven surficial geologic units that form a mutually exclusive representation of surface cover within each study area. These units correspond to distinct surficial geologic processes that are broadly applicable across many landscapes:
 - Fluvial deposits — Qal (alluvium), Qat (terrace deposits)
 - Debris-flow deposits — Qaf (alluvial fans)
 - Hillslope materials — Qc (colluvium), Qca (colluvial aprons)
-- In situ weathering products — Qr (residuum)
+- In-situ weathering — Qr (residuum)
 - Anthropogenic modification — af1 (artificial fill)
-Although geographically limited, the represented surface processes are broadly applicable across many landscapes.
 
 
 ## Dataset Characteristics
-
 - Severe class imbalance and long-tailed distribution.
 - Class frequencies span more than two orders of magnitude, with dominant units (e.g., Qr) present in most patches and rare units (e.g., Qaf, Qat) appearing infrequently.
 - Inter-patch spatial structure and class co-occurrence.
@@ -214,7 +207,6 @@ See the following for more in-depth analysis of the dataset...
 
 
 # Baseline Benchmarks
-
 EarthScape includes reproducible baseline experiments designed to evaluate modality contributions, multi-scale representations, and cross-domain generalization.
 
 ## Multilabel classification
@@ -266,7 +258,6 @@ EarthScape includes reproducible baseline experiments designed to evaluate modal
 - **Class imbalance significantly impacts performance.** Rare classes are consistently harder to predict across models and input configurations.
 - **Domain shift remains a central challenge.** All models exhibit performance degradation when evaluated on geographically disjoint regions, highlighting the difficulty of transferring learned representations across landscapes. Modality selection plays a significant role in reducing model transfer failures.
 
-
 Check out the results processing notebooks for more information and visualizations...
 - [Classification](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/analysis_cls.ipynb)
 - [Segmentation]()
@@ -274,7 +265,6 @@ Check out the results processing notebooks for more information and visualizatio
 
 
 # Roadmap
-
 ### Expanded Data Sources
 - Integration of national-scale datasets (USGS 3DEP DEM, NAIP RGB+NIR)
 - Additional terrain features (e.g., topographic position index)
@@ -302,19 +292,26 @@ Check out the results processing notebooks for more information and visualizatio
 
 # Cite
 ```
-# dataset download
-@article{
-  masseyearthscape, title={EarthScape AI Dataset},
-  author={Massey, Matthew and Imran, Abdullah-Al-Zubaer and others},
-  publisher={University of Kentucky Libraries}
-  }
+# dataset
+@misc{massey2025earthscape_dataset,
+    title        = {EarthScape AI Dataset},
+    author       = {Massey, Matthew and Imran, Abdullah-Al-Zubaer},
+    year         = {2025},
+    institution  = {Kentucky Geological Survey, University of Kentucky},
+    series       = {KGS Research Data},
+    publisher    = {University of Kentucky Libraries},
+    doi          = {10.13023/kgs.data.05.01.2025},
+    url          = {https://doi.org/10.13023/kgs.data.05.01.2025},
+    note         = {Version 1.1}
+}
     
 # manuscript
-@article{
-  massey2025earthscape,
-  title={EarthScape: A Multimodal Dataset for Surficial Geologic Mapping and Earth Surface Analysis},
-  author={Massey, Matthew and Imran, Abdullah-Al-Zubaer},
-  journal={arXiv preprint arXiv:2503.15625},
-  year={2025}
-  }
+@article{massey2026earthscape,
+    title   = {EarthScape: A Multimodal Dataset for Surficial Geologic Mapping and Earth Surface Analysis},
+    author  = {Massey, Matthew and Munia, Nusrat and Imran, Abdullah-Al-Zubaer},
+    year    = {2026},
+    journal = {arXiv preprint arXiv:2503.15625},
+    doi     = {10.48550/arXiv.2503.15625},
+    url     = {https://doi.org/10.48550/arXiv.2503.15625}
+}
 ```
