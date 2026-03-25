@@ -298,7 +298,7 @@ Check out the results processing notebooks for more information and visualizatio
     author       = {Massey, Matthew and Imran, Abdullah-Al-Zubaer},
     year         = {2025},
     institution  = {Kentucky Geological Survey, University of Kentucky},
-    series       = {KGS Research Data},
+    series       = {Research Data},
     publisher    = {University of Kentucky Libraries},
     doi          = {10.13023/kgs.data.05.01.2025},
     url          = {https://doi.org/10.13023/kgs.data.05.01.2025},
