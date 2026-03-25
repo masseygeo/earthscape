@@ -52,7 +52,6 @@ GRID = {
         ##### SINGLE MODALITIES
         # 'rgb:aerialr.tif,aerialg.tif,aerialb.tif', 
         # 'nir:aerialnir.tif', 
-        # 'rgb+nir:aerialr.tif,aerialg.tif,aerialb.tif,aerialnir.tif', 
         # 'dem:dem.tif', 
         # 'nhd:nhd.tif', 'osm:osm.tif',
         # 'ep-5:ep_5x5.tif','ep-11:ep_11x11.tif','ep-21:ep_21x21.tif','ep-51:ep_51x51.tif','ep-101:ep_101x101.tif','ep-201:ep_201x201.tif',
@@ -70,12 +69,12 @@ GRID = {
 
         ##### MULTIMODAL
         # core experiments...
-        # 'dem_rgb:dem.tif,aerialr.tif,aerialg.tif,aerialb.tif',
+        # 'dem+rgb:dem.tif,aerialr.tif,aerialg.tif,aerialb.tif',
         # 'ep-ms+prc-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif',
         # 'ep-ms+prc-ms+s-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
-        'ep-ms+s-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
-        'prc-ms+s-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
-        'ep-ms+s-ms+sds-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif,sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'
+        # 'ep-ms+s-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
+        # 'prc-ms+s-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
+        # 'ep-ms+s-ms+sds-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif,sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'
         ]
     }
 
