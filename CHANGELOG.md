@@ -11,26 +11,28 @@ This release updates the dataset within the existing scope, improves consistency
 ### Added
 - A formal Python package layout under `earthscape/`
 - `pyproject.toml` for package installation and project configuration
-- New `environment.yml` for reproducible environment setup
-- Configuration files in `experiments/*` for reproducible baseline experiments
+- Configuration files for experiments
+  - Benchmarks provided can be reproduced with `config.yml` files in `experiments/*`
+  - User can specify experiment hyperparameters using `config_template.yml`
 - Experiment orchestration scripts in `scripts/`
 - Dataset and experiment figures/tables used in documentation and analysis in `assets/`
 - Explicit release tracking in `CHANGELOG.md `
 - Support and documentation for semantic segmentation in addition to multilabel classification
 
 ### Changed
-- Repository structure was refactored
-- README scope was expanded
-- The following raster products were standardized to `uint8`:
+- The following raster products were changed from `float32` to `uint8`:
   - RGB+NIR imagery
   - Segmentation masks
   - OSM infrastructure layers
   - NHD hydrography layers
+- Corrected inconsistent computation of profile and planform curvatures across available geographic regions
+  - Changes to image patches and normalization statistics used during training
+- Repository structure was refactored
+- README scope was expanded
 - Dataset class was updated to support:
   - Semantic segmentation
   - One-hot label vectors based on user-defined threshold of patch-level class-area proportion
   - Class-area proportions as target vectors
-- Corrected inconsistent computation of profile and planform curvatures across available geographic regions
 - Modified focal loss class to support binary cross-entropy, positive weighting, class weighting, and focal parameter.
 
 ---
