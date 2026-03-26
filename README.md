@@ -43,7 +43,7 @@ EarthScape is structured to support:
 
 1. Clone the repository.
 2. Install [Conda](https://anaconda.org/channels/anaconda/packages/conda/overview) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main).
-3. Create the environment.
+3. Create the environment. If using non-GPU machine, delete 'pytorch-gpu' from [`environment.yml`]().
 ```Bash
 conda env create -f environment.yml
 ```
