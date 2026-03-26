@@ -10,7 +10,6 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-FFDF88)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-
 EarthScape is a living, open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis. It is designed to support multimodal learning, multi-scale reasoning, and evaluation under geographic domain shift.
 
 The dataset includes:
@@ -56,7 +55,7 @@ conda activate earthscape
 pip install -e .
 ```
 6. You can now use EarthScape to reproduce the dataset, train and evaluate models, and run analyses. While the full data pipeline is available, most users will prefer downloading the precompiled dataset.
-    1. [Download](https://uknowledge.uky.edu/kgs_data/16/) the dataset and metadata files.
+    1. [Download the dataset and metadata files.](https://uknowledge.uky.edu/kgs_data/16/)
     2. Extract all archives into the [`data/`](https://github.com/masseygeo/earthscape/tree/v1.1/data) directory.
 
 ## Quickstart
