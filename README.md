@@ -135,6 +135,7 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
     - Profile Curvature
     - Slope
     - Standard Deviation of Slope
+- Small example smokeset
 - Filenames that use a unique patch ID and modality/scale: *{patch_id}_{modality/scale}.tif*
 
 ### Metadata Files
@@ -174,10 +175,11 @@ EarthScape is derived from open-access geospatial data sources, compiled into a 
 <img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/pipeline.png" width="600">
 </p>
 
-Check out these notebooks to see how each map area was compiled and processed...
+Check out these notebooks to see how each map area and the smokeset were compiled and processed...
 - [Hardin County, Howe Valley Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_hardin_howevalley.ipynb)
 - [Hardin County, Sonora Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_hardin_sonora.ipynb)
 - [Warren County quadrangles](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_warren.ipynb)
+- [Smokeset](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_smokeset.ipynb)
 
 
 ## Class Labels
@@ -201,7 +203,7 @@ EarthScape defines seven surficial geologic units that form a mutually exclusive
 <img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/class_dist.png" width="800">
 </p>
 
-See the following for more in-depth analysis of the dataset...
+See the following notebook for more in-depth analysis of the dataset...
 - [EarthScape Exploratory Data Analysis (EDA)](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_eda.ipynb)
 
 
@@ -258,7 +260,8 @@ EarthScape includes reproducible baseline experiments designed to evaluate modal
 - **Class imbalance significantly impacts performance.** Rare classes are consistently harder to predict across models and input configurations.
 - **Domain shift remains a central challenge.** All models exhibit performance degradation when evaluated on geographically disjoint regions, highlighting the difficulty of transferring learned representations across landscapes. Modality selection plays a significant role in reducing model transfer failures.
 
-Check out the results processing notebooks for more information and visualizations...
+Check out these notebooks for more information and visualizations...
+- [Training, Validation, and Testing Splits](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/model_splits.ipynb)
 - [Classification](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/analysis_cls.ipynb)
 - [Segmentation]()
 
