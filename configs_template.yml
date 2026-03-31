@@ -2,7 +2,7 @@
 experiment:
   root: experiments/baselines/classification/single
   seed: 111
-  task: classification
+  task: segmentation
 
 
 data:
@@ -109,5 +109,5 @@ early_stop:
   warmup_epochs: 20
 
 
-# eval:
-#   optimize_clf_thresholds: true
+eval:
+  optimize_clf_thresholds: true

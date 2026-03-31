@@ -1,0 +1,129 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    prc-ms+s-ms:
+      channels:
+      - prc.tif
+      - prc_10.tif
+      - prc_20.tif
+      - prc_50.tif
+      - prc_100.tif
+      - prc_200.tif
+      - s.tif
+      - s_10.tif
+      - s_20.tif
+      - s_50.tif
+      - s_100.tif
+      - s_200.tif
+      mean:
+      - 0.036541183
+      - 0.10695917
+      - 0.056374535
+      - -0.016703786
+      - -0.14705871
+      - -0.14074461
+      - 5.486915
+      - 4.8205023
+      - 4.4264684
+      - 3.5336185
+      - 2.687141
+      - 1.8690363
+      sd:
+      - 0.55064213
+      - 1.6511495
+      - 1.4133822
+      - 0.98491603
+      - 1.9288739
+      - 1.3290366
+      - 5.0718284
+      - 4.716982
+      - 4.337691
+      - 3.575751
+      - 2.7809925
+      - 1.8542851
+  root: data
+dataloader:
+  base:
+    batch_size: 64
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 10
+  warmup_epochs: 20
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\baselines\segmentation\multimodal\deeplabv3p_prc-ms+s-ms_20260328_065426\best_loss_epoch33.pth
+  end_training: 07:43 03/28/2026
+  output_dir: E:\GitHub\earthscape\experiments\baselines\segmentation\multimodal\deeplabv3p_prc-ms+s-ms_20260328_065426
+  root: experiments/baselines/segmentation/multimodal
+  seed: 111
+  start_training: 06:54 03/28/2026
+  task: segmentation
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  name: crossentropyloss
+  params:
+    reduction: mean
+    weight: null
+model:
+  encoder_name: resnet50
+  image_size: 256
+  in_channels: 12
+  model_name: deeplabv3p
+  output_size: 7
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: true
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150
