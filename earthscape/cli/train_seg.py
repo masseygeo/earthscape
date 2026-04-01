@@ -91,6 +91,7 @@ def main():
     ##### dataset parameters...
     patch_dirs = [os.path.abspath(os.path.join(cfg['data']['root'], d)) for d in cfg['data']['dirs']]
     areas_path = os.path.abspath(glob.glob(os.path.join(cfg['labels']['root'], cfg['labels']['glob']))[0])
+    cfg['experiment']['task'] = 'segmentation'
     ds_params = {
         'patch_dirs': patch_dirs, 
         'input_features': input_dict, 

@@ -2,7 +2,6 @@
 experiment:
   root: experiments/baselines/classification/single
   seed: 111
-  task: segmentation
 
 
 data:
