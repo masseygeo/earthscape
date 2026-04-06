@@ -40,7 +40,7 @@ BASE = [
 MODEL_ENCODERS = {
     # "unet": ["resnet18"],
     # "deeplabv3p": ["resnet50"],
-    "segformer": ["mit_b0"],
+    # "segformer": ["mit_b0"],
     # "segformer": ["mit_b2"],
     }
 

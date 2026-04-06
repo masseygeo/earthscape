@@ -10,7 +10,7 @@ from earthscape.utils import set_seed, set_worker_seed, config_load, config_upda
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
 from earthscape.models import create_unet_seg, create_deeplabv3p_seg, create_segformer_seg
 from earthscape.train import seg_train_model, architecture_to_json, plot_training_curves
-from earthscape.evaluation import test_model_seg, image_class_metrics_seg, image_overall_metrics_seg, overall_metrics_seg, overall_class_metrics_seg, plot_cm_seg
+from earthscape.evaluation import test_model_seg, image_class_metrics_seg, overall_metrics_seg, overall_class_metrics_seg, plot_cm_seg
 import argparse
 import os
 import glob
@@ -202,8 +202,7 @@ def main():
     input_names = list(cfg['data']['input'].keys())
     input_names = '_'.join(input_names)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    # dir_name = f"{model_name}_{input_names}_{timestamp}"
-    dir_name = f"{model_name}_{encoder_name}_{input_names}_{timestamp}"
+    dir_name = f"{model_name}-{encoder_name.replace('_','-')}_{input_names}_{timestamp}"
     output_dir = os.path.abspath(os.path.join(output_root, dir_name))
     
     if not os.path.isdir(output_dir):
@@ -253,18 +252,18 @@ def main():
         # calculate metrics & plots...
         patch_ids = test_dataset.ids
         df_image_class = image_class_metrics_seg(preds=predictions, masks=masks, patch_ids=patch_ids, class_cols=class_cols)
-        df_image_overall = image_overall_metrics_seg(df_image_class)
+        # df_image_overall = image_overall_metrics_seg(df_image_class)
         df_overall = overall_metrics_seg(df_image_class)
         df_overall_class = overall_class_metrics_seg(df_image_class)
-        fig_raw = plot_cm_seg(predictions, masks, class_cols, mode='raw')
+        # fig_raw = plot_cm_seg(predictions, masks, class_cols, mode='raw')
         fig_norm = plot_cm_seg(predictions, masks, class_cols, mode='row_norm')
 
         # save metrics & plots...
         df_image_class.to_csv(os.path.join(output_dir, 'id_img_class.csv'), index=False)
-        df_image_overall.to_csv(os.path.join(output_dir, 'id_img.csv'), index=False)
+        # df_image_overall.to_csv(os.path.join(output_dir, 'id_img.csv'), index=False)
         df_overall.to_csv(os.path.join(output_dir, 'id_overall.csv'), index=False)
         df_overall_class.to_csv(os.path.join(output_dir, 'id_overall_class.csv'), index=False)
-        fig_raw.savefig(os.path.join(output_dir, 'id_cm_raw.png'), dpi=300, bbox_inches='tight', pad_inches=0)
+        # fig_raw.savefig(os.path.join(output_dir, 'id_cm_raw.png'), dpi=300, bbox_inches='tight', pad_inches=0)
         fig_norm.savefig(os.path.join(output_dir, 'id_cm_norm.png'), dpi=300, bbox_inches='tight', pad_inches=0)
 
         # print testing elapsed time...
@@ -281,18 +280,18 @@ def main():
         # calculate metrics & plots...
         patch_ids = cross_dataset.ids
         df_image_class = image_class_metrics_seg(preds=predictions, masks=masks, patch_ids=patch_ids, class_cols=class_cols)
-        df_image_overall = image_overall_metrics_seg(df_image_class)
+        # df_image_overall = image_overall_metrics_seg(df_image_class)
         df_overall = overall_metrics_seg(df_image_class)
         df_overall_class = overall_class_metrics_seg(df_image_class)
-        fig_raw = plot_cm_seg(predictions, masks, class_cols, mode='raw')
+        # fig_raw = plot_cm_seg(predictions, masks, class_cols, mode='raw')
         fig_norm = plot_cm_seg(predictions, masks, class_cols, mode='row_norm')
 
         # save metrics & plots...
         df_image_class.to_csv(os.path.join(output_dir, 'cd_img_class.csv'), index=False)
-        df_image_overall.to_csv(os.path.join(output_dir, 'cd_img.csv'), index=False)
+        # df_image_overall.to_csv(os.path.join(output_dir, 'cd_img.csv'), index=False)
         df_overall.to_csv(os.path.join(output_dir, 'cd_overall.csv'), index=False)
         df_overall_class.to_csv(os.path.join(output_dir, 'cd_overall_class.csv'), index=False)
-        fig_raw.savefig(os.path.join(output_dir, 'cd_cm_raw.png'), dpi=300, bbox_inches='tight', pad_inches=0)
+        # fig_raw.savefig(os.path.join(output_dir, 'cd_cm_raw.png'), dpi=300, bbox_inches='tight', pad_inches=0)
         fig_norm.savefig(os.path.join(output_dir, 'cd_cm_norm.png'), dpi=300, bbox_inches='tight', pad_inches=0)
         
         # print testing elapsed time...

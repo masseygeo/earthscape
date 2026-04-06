@@ -36,10 +36,14 @@ def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
     hd = hd.masked_fill(~hd_valid, float("nan"))
     hd95 = hd95.masked_fill(~hd_valid, float("nan"))
 
-    iou = smp.metrics.iou_score(tp, fp, fn, tn, reduction="none")
-    dice = smp.metrics.f1_score(tp, fp, fn, tn, reduction="none")
-    precision = smp.metrics.precision(tp, fp, fn, tn, reduction="none")
-    recall = smp.metrics.recall(tp, fp, fn, tn, reduction="none")
+    iou = smp.metrics.iou_score(tp, fp, fn, tn, reduction="none", zero_division=float("nan"))
+    dice = smp.metrics.f1_score(tp, fp, fn, tn, reduction="none", zero_division=float("nan"))
+
+    precision = smp.metrics.precision(tp, fp, fn, tn, reduction="none", zero_division=0.0)
+    recall = smp.metrics.recall(tp, fp, fn, tn, reduction="none", zero_division=0.0)
+    empty_mask = (~gt_present) & (~pred_present)
+    precision = precision.masked_fill(empty_mask, float("nan"))
+    recall = recall.masked_fill(empty_mask, float("nan"))
     
     rows = []
     for i, patch_id in enumerate(patch_ids):
@@ -68,24 +72,22 @@ def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
 
 
 
-def image_overall_metrics_seg(df_image_class):
-    """Calculates overall segmentation performance metrics across each image."""
-    df = (
-        df_image_class.groupby("patch_id", as_index=False)
-        .agg(
-            mean_iou=("iou", "mean"),
-            mean_dice=("dice", "mean"),
-            macro_precision=("precision", "mean"),
-            macro_recall=("recall", "mean"),
-            mean_hd=("hd", "mean"),
-            mean_hd95=("hd95", "mean"),
-            img_gt_support=("gt_support", "sum"),
-            img_pred_support=("pred_support", "sum"),
-            img_gt_classes_present=("gt_present", "sum"),
-            img_pred_classes_present=("pred_present", "sum"),
-        ).copy())
+# def image_overall_metrics_seg(df_image_class):
+#     """Calculates overall segmentation performance metrics across each image."""
+#     df = (
+#         df_image_class.groupby("patch_id", as_index=False)
+#         .agg(
+#             mean_iou=("iou", "mean"),
+#             mean_dice=("dice", "mean"),
+#             macro_precision=("precision", "mean"),
+#             macro_recall=("recall", "mean"),
+#             mean_hd=("hd", "mean"),
+#             mean_hd95=("hd95", "mean"),
+#             gt_num_classes=("gt_present", "sum"),
+#             pred_num_classes=("pred_present", "sum"),
+#         ).copy())
 
-    return df
+#     return df
 
 
 
@@ -93,32 +95,23 @@ def image_overall_metrics_seg(df_image_class):
 def overall_metrics_seg(df_image_class):
     """Calculates global segementation performance across images and pixels."""
 
-    tp = df_image_class["tp"].sum()
-    fp = df_image_class["fp"].sum()
-    fn = df_image_class["fn"].sum()
+    tp = torch.tensor(df_image_class['tp'].to_numpy()).sum()
+    fp = torch.tensor(df_image_class['fp'].to_numpy()).sum()
+    fn = torch.tensor(df_image_class['fn'].to_numpy()).sum()
+    tn = torch.tensor(df_image_class['tn'].to_numpy()).sum()
 
-    df = pd.DataFrame({
-        "metric": [
-            "miou",
-            "mean_dice",
-            "micro_iou",
-            "micro_dice",
-            "micro_precision",
-            "micro_recall",
-            "mean_hd",
-            "mean_hd95",
-        ],
-        "value": [
-            df_image_class["iou"].mean(),
-            df_image_class["dice"].mean(),
-            tp / (tp + fp + fn),
-            2 * tp / (2 * tp + fp + fn),
-            tp / (tp + fp),
-            tp / (tp + fn),
-            df_image_class["hd"].mean(),
-            df_image_class["hd95"].mean(),
-        ]
-    })
+    df = pd.DataFrame([{
+        'macro_iou': df_image_class['iou'].mean(),
+        'macro_dice': df_image_class['dice'].mean(),
+        'macro_precision': df_image_class['precision'].mean(),
+        'macro_recall': df_image_class['recall'].mean(),
+        'micro_iou': smp.metrics.iou_score(tp, fp, fn, tn, reduction='micro', zero_division=float('nan')).item(),
+        'micro_dice': smp.metrics.f1_score(tp, fp, fn, tn, reduction='micro', zero_division=float('nan')).item(),
+        'micro_precision': smp.metrics.precision(tp, fp, fn, tn, reduction='micro', zero_division=float('nan')).item(),
+        'micro_recall': smp.metrics.recall(tp, fp, fn, tn, reduction='micro', zero_division=float('nan')).item(),
+        'mean_hd': df_image_class['hd'].mean(),
+        'mean_hd95': df_image_class['hd95'].mean(),
+        }])
 
     return df
 
@@ -133,20 +126,26 @@ def overall_class_metrics_seg(df_image_class):
             fp=("fp", "sum"),
             fn=("fn", "sum"),
             tn=("tn", "sum"),
-            hd=("hd", "mean"),
-            hd95=("hd95", "mean"),
+            mean_hd=("hd", "mean"),
+            mean_hd95=("hd95", "mean"),
             gt_support=("gt_support", "sum"),
             pred_support=("pred_support", "sum"),
-            gt_class_support=("gt_present", "sum"),
-            pred_class_support=("pred_present", "sum"),
+            gt_num_images=("gt_present", "sum"),
+            pred_num_images=("pred_present", "sum"),
         ).copy())
 
-    df_class["iou"] = df_class["tp"] / (df_class["tp"] + df_class["fp"] + df_class["fn"])
-    df_class["dice"] = 2 * df_class["tp"] / (2 * df_class["tp"] + df_class["fp"] + df_class["fn"])
-    df_class["precision"] = df_class["tp"] / (df_class["tp"] + df_class["fp"])
-    df_class["recall"] = df_class["tp"] / (df_class["tp"] + df_class["fn"])
+    df_class["micro_iou"] = df_class["tp"] / (df_class["tp"] + df_class["fp"] + df_class["fn"])
+    df_class["micro_dice"] = 2 * df_class["tp"] / (2 * df_class["tp"] + df_class["fp"] + df_class["fn"])
+    df_class["micro_precision"] = df_class["tp"] / (df_class["tp"] + df_class["fp"])
+    df_class["micro_recall"] = df_class["tp"] / (df_class["tp"] + df_class["fn"])
 
-    return df_class[["class","iou","dice","precision","recall","hd","hd95","gt_support","pred_support","gt_class_support","pred_class_support","tp","fp","fn","tn"]]
+    
+    df_class.loc[(df_class["tp"] + df_class["fp"] + df_class["fn"]) == 0, ["micro_iou", "micro_dice"]] = float("nan")
+    df_class.loc[(df_class["tp"] + df_class["fp"]) == 0, "micro_precision"] = float("nan")
+    df_class.loc[(df_class["tp"] + df_class["fn"]) == 0, "micro_recall"] = float("nan")
+
+    return df_class[["class", "tp", "fp", "fn", "tn", "gt_support", "pred_support", "gt_num_images","pred_num_images",
+                     "micro_iou", "micro_dice", "micro_precision", "micro_recall", "mean_hd", "mean_hd95"]]
 
 
 
