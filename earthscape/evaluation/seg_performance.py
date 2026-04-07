@@ -119,33 +119,33 @@ def overall_metrics_seg(df_image_class):
 
 def overall_class_metrics_seg(df_image_class):
     """Calculates per-class segmentation micro metrics (pooled over images)."""
-    df_class = (
+    df = (
         df_image_class.groupby("class", as_index=False)
         .agg(
-            tp=("tp", "sum"),
-            fp=("fp", "sum"),
-            fn=("fn", "sum"),
-            tn=("tn", "sum"),
-            mean_hd=("hd", "mean"),
-            mean_hd95=("hd95", "mean"),
             gt_support=("gt_support", "sum"),
             pred_support=("pred_support", "sum"),
             gt_num_images=("gt_present", "sum"),
             pred_num_images=("pred_present", "sum"),
+            tp=("tp", "sum"),
+            fp=("fp", "sum"),
+            fn=("fn", "sum"),
+            tn=("tn", "sum"),
+            macro_iou=('iou', 'mean'),
+            macro_dice=('dice', 'mean'),
+            macro_precision=('precision', 'mean'),
+            macro_recall=('recall', 'mean'),
+            mean_hd=("hd", "mean"),
+            mean_hd95=("hd95", "mean"),
         ).copy())
 
-    df_class["micro_iou"] = df_class["tp"] / (df_class["tp"] + df_class["fp"] + df_class["fn"])
-    df_class["micro_dice"] = 2 * df_class["tp"] / (2 * df_class["tp"] + df_class["fp"] + df_class["fn"])
-    df_class["micro_precision"] = df_class["tp"] / (df_class["tp"] + df_class["fp"])
-    df_class["micro_recall"] = df_class["tp"] / (df_class["tp"] + df_class["fn"])
-
+    df["micro_iou"] = df["tp"] / (df["tp"] + df["fp"] + df["fn"])
+    df["micro_dice"] = 2 * df["tp"] / (2 * df["tp"] + df["fp"] + df["fn"])
+    df["micro_precision"] = df["tp"] / (df["tp"] + df["fp"])
+    df["micro_recall"] = df["tp"] / (df["tp"] + df["fn"])
     
-    df_class.loc[(df_class["tp"] + df_class["fp"] + df_class["fn"]) == 0, ["micro_iou", "micro_dice"]] = float("nan")
-    df_class.loc[(df_class["tp"] + df_class["fp"]) == 0, "micro_precision"] = float("nan")
-    df_class.loc[(df_class["tp"] + df_class["fn"]) == 0, "micro_recall"] = float("nan")
+    df.loc[(df["tp"] + df["fp"]) == 0, "micro_precision"] = 0.0
 
-    return df_class[["class", "tp", "fp", "fn", "tn", "gt_support", "pred_support", "gt_num_images","pred_num_images",
-                     "micro_iou", "micro_dice", "micro_precision", "micro_recall", "mean_hd", "mean_hd95"]]
+    return df
 
 
 

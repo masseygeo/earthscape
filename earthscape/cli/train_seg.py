@@ -202,7 +202,7 @@ def main():
     input_names = list(cfg['data']['input'].keys())
     input_names = '_'.join(input_names)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    dir_name = f"{model_name}-{encoder_name.replace('_','-')}_{input_names}_{timestamp}"
+    dir_name = f"{model_name}-{encoder_name.replace('_','')}_{input_names}_{timestamp}"
     output_dir = os.path.abspath(os.path.join(output_root, dir_name))
     
     if not os.path.isdir(output_dir):
