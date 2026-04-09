@@ -1,5 +1,5 @@
 
-from earthscape.evaluation.inference import test_model
+from earthscape.evaluation import test_model
 import numpy as np
 from sklearn.metrics import precision_recall_curve
 

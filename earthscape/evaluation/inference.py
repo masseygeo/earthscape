@@ -12,22 +12,21 @@ def test_model(model, test_loader, device, baseline=True):
     model : torch.nn.Module
         Trained model used for inference.
     test_loader : torch.utils.data.DataLoader
-        DataLoader yielding test batches as dicts with a ``'label'`` tensor and one
-        or more modality tensors.
+        DataLoader yielding test batches as dicts with an optional ``'label'``
+        tensor and one or more input tensors.
     device : torch.device
         Device used for model inference.
+    baseline : bool, optional
+        If True, a single input tensor is selected from each batch and passed
+        to the model. If False, the full input dictionary is passed.
 
     Returns
     -------
     probabilities : torch.Tensor
         Concatenated sigmoid probabilities for all test samples (on CPU).
-    targets : torch.Tensor
-        Concatenated ground-truth labels for all test samples (on CPU).
-    baseline : bool, default True
-        Controls how input tensors are extracted from each batch. If True,
-        a single modality tensor is selected from the input dictionary and
-        passed to the model. If False, the full modality dictionary is passed 
-        to the model (e.g., for SGMap-Net).
+    targets : torch.Tensor or None
+        Concatenated ground-truth labels for all test samples (on CPU), or None
+        if labels are not provided in the test loader.
     """
 
     # set model for evaluation
@@ -79,6 +78,29 @@ def test_model(model, test_loader, device, baseline=True):
 
 
 def test_model_seg(model, test_loader, device, baseline=True):
+    """
+    Run inference on a segmentation test set and return predicted and target masks.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Trained segmentation model used for inference.
+    test_loader : torch.utils.data.DataLoader
+        DataLoader yielding test batches with a ``'mask'`` tensor and one or more
+        input tensors.
+    device : torch.device
+        Device used for model inference.
+    baseline : bool, optional
+        If True, a single input tensor is selected from each batch and passed
+        to the model. If False, the full input dictionary is passed.
+
+    Returns
+    -------
+    predictions : torch.Tensor
+        Concatenated predicted class indices with shape [N, H, W] (on CPU).
+    target_masks : torch.Tensor
+        Concatenated ground-truth masks with shape [N, H, W] (on CPU).
+    """
     model.eval()
 
     predictions = []

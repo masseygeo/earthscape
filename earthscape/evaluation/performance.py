@@ -51,11 +51,6 @@ def get_global_metrics(targets, probabilities, thresholds):
     df['macro_recall'] = recall_score(targs, binary_preds, average='macro', zero_division=0.0)
     df['macro_f1'] = f1_score(targs, binary_preds, average='macro', zero_division=0.0)
     df['macro_map'] = average_precision_score(targs, probs, average='macro')
-    
-    # df['Precision (Wt.)'] = precision_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    # df['Recall (Wt.)'] = recall_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    # df['F1 (Wt.)'] = f1_score(targs, binary_preds, average='weighted', zero_division=0.0)
-    # df['mAP (Wt.)'] = average_precision_score(targs, probs, average='weighted')
     df['micro_accuracy'] = (binary_preds == targs).mean()
 
     df = pd.DataFrame(df, index=[0])
@@ -66,18 +61,12 @@ def get_global_metrics(targets, probabilities, thresholds):
 
     if len(valid_cols) > 0:
         m = roc_auc_score(targs[:, valid_cols], probs[:, valid_cols], average="macro")
-        # w = roc_auc_score(targs[:, valid_cols], probs[:, valid_cols], average='weighted')
     else:
         m = np.nan
-        # w = np.nan
 
     df.insert(loc=3, column='auroc', value=m)
-    # df.insert(loc=8, column='AUC (Wt.)', value=w)
 
     return df
-
-
-
 
 
 

@@ -1,9 +1,22 @@
-
 import yaml
 
 
 
+
 def config_load(path):
+    """
+    Load a configuration file from disk.
+
+    Parameters
+    ----------
+    path : str or os.PathLike
+        Path to the configuration file.
+
+    Returns
+    -------
+    dict
+        Parsed configuration data.
+    """
     with open(path, "r") as f:
         cfg = yaml.safe_load(f)
     return cfg
@@ -11,8 +24,26 @@ def config_load(path):
 
 
 def config_update(cfg, args):
+    """
+    Update a configuration dictionary (from earthscape experiment config.yml file) 
+    with values from an argument namespace.
+
+    Parameters
+    ----------
+    cfg : dict
+        Configuration dictionary to be updated in place.
+    args : object
+        Object exposing attributes corresponding to configurable parameters.
+        Missing attributes or attributes set to None are ignored.
+
+    Returns
+    -------
+    dict
+        Updated configuration dictionary.
+    """
 
     def _opt(name, default=None):
+        """Retrieve an attribute from the argument namespace with a default fallback."""
         return getattr(args, name, default)
 
     if _opt("experiment_root") is not None:
@@ -49,24 +80,29 @@ def config_update(cfg, args):
         cfg['early_stop']['min_delta'] = _opt("min_delta")
     if _opt("warmup_epochs") is not None:
         cfg['early_stop']['warmup_epochs'] = _opt("warmup_epochs")
-
     return cfg
 
 
 
 def _parse_inputs(arg_inputs):
+    """
+    Parse input feature specifications into a structured mapping.
+
+    Parameters
+    ----------
+    arg_inputs : iterable of str or None
+        Input feature specifications of the form "name:channel1,channel2,...".
+        If None, no inputs are parsed.
+
+    Returns
+    -------
+    dict
+        Mapping from input names to dictionaries with a "channels" key
+        containing a list of channel names.
+    """
     out = {}
     for input_features in arg_inputs or []:
         name, channels = input_features.split(':')
         channels = [c.strip() for c in channels.split(',') if c.strip()]
         out[name] = {'channels': channels}
     return out
-
-
-
-# def config_save(cfg, output_path):
-#     cfg_copy = cfg.copy()
-#     cfg_copy["experiment"]["config_path"] = str(Path(config_path).resolve())
-#     out_path = run_dir / "config_used.yml"
-#     with open(out_path, "w") as f:
-#         yaml.safe_dump(cfg_copy, f)

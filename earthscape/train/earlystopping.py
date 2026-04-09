@@ -2,7 +2,25 @@
 
 
 class EarlyStopping:
+    """
+    Early stopping utility based on validation loss.
 
+    Parameters
+    ----------
+    patience : int
+        Number of consecutive epochs without improvement allowed before stopping.
+    min_delta : float
+        Minimum decrease in validation loss required to qualify as an improvement.
+    warmup_epochs : int
+        Number of initial epochs during which early stopping is disabled.
+
+    Attributes
+    ----------
+    best_loss : float or None
+        Best observed validation loss.
+    bad_epochs : int
+        Number of consecutive epochs without improvement.
+    """
     def __init__(self, patience, min_delta, warmup_epochs):
         self.patience = patience
         self.min_delta = min_delta
@@ -12,6 +30,21 @@ class EarlyStopping:
 
 
     def step(self, val_loss, epoch):
+        """
+        Evaluate early stopping criteria for a given epoch.
+
+        Parameters
+        ----------
+        val_loss : float
+            Validation loss for the current epoch.
+        epoch : int
+            Current epoch index.
+
+        Returns
+        -------
+        bool
+            True if training should stop, False otherwise.
+        """
 
         # update best loss on first call & continue training...
         if self.best_loss is None:

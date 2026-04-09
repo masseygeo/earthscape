@@ -1,7 +1,6 @@
 
-from earthscape.train.earlystopping import EarlyStopping
+from earthscape.train import EarlyStopping
 from earthscape.evaluation import calculate_dice_score
-
 import os
 import glob
 from datetime import datetime
@@ -10,7 +9,32 @@ import torch
 
 
 
-def train_epoch_seg(model, train_loader, criterion, optimizer, device, baseline=True, scheduler=None,):
+def train_epoch_seg(model, train_loader, criterion, optimizer, device, baseline=True, scheduler=None):
+    """
+    Run a single training epoch for a segmentation model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to train.
+    train_loader : iterable
+        Data loader yielding batches with keys "mask" and input features.
+    criterion : callable
+        Loss function taking (logits, masks) as input.
+    optimizer : torch.optim.Optimizer
+        Optimizer used for parameter updates.
+    device : torch.device
+        Device on which computations are performed.
+    baseline : bool, optional
+        If True, use a single input tensor instead of a dictionary of inputs.
+    scheduler : object, optional
+        Learning rate scheduler with a `.step()` method called after each batch.
+
+    Returns
+    -------
+    tuple of float
+        Mean loss and mean Dice score over the epoch.
+    """
     
     model.train()
 
@@ -60,6 +84,27 @@ def train_epoch_seg(model, train_loader, criterion, optimizer, device, baseline=
 
 
 def validate_epoch_seg(model, val_loader, criterion, device, baseline=True):
+    """
+    Run a single validation epoch for a segmentation model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to evaluate.
+    val_loader : iterable
+        Data loader yielding batches with keys "mask" and input features.
+    criterion : callable
+        Loss function taking (logits, masks) as input.
+    device : torch.device
+        Device on which computations are performed.
+    baseline : bool, optional
+        If True, use a single input tensor instead of a dictionary of inputs.
+
+    Returns
+    -------
+    tuple of float
+        Mean loss and mean Dice score over the epoch.
+    """
 
     model.eval()
 
@@ -102,6 +147,43 @@ def validate_epoch_seg(model, val_loader, criterion, device, baseline=True):
 
 
 def seg_train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir, early_stop=None, warmup=True, cosine_decay=True, baseline=True):
+    """
+    Train a segmentation model over multiple epochs and record training history.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to train.
+    train_loader : iterable
+        Data loader yielding training batches.
+    val_loader : iterable
+        Data loader yielding validation batches.
+    criterion : callable
+        Loss function used for training and validation.
+    optimizer : torch.optim.Optimizer
+        Optimizer used for parameter updates.
+    device : torch.device
+        Device on which computations are performed.
+    num_epochs : int
+        Number of training epochs.
+    output_dir : str or os.PathLike
+        Directory where model checkpoints and the training log are written.
+    early_stop : dict or None, optional
+        Keyword arguments used to initialize `EarlyStopping`. If None, early
+        stopping is disabled.
+    warmup : bool, optional
+        If True, apply linear learning-rate warmup.
+    cosine_decay : bool, optional
+        If True, apply cosine learning-rate decay.
+    baseline : bool, optional
+        If True, pass a single input tensor to the model instead of a dictionary
+        of inputs.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Training log containing per-epoch training and validation metrics.
+    """
 
     # initialize variables...
     train_loss = []                   # training - list of epoch losses

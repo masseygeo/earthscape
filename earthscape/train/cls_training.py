@@ -1,5 +1,5 @@
 
-from earthscape.train.earlystopping import EarlyStopping
+from earthscape.train import EarlyStopping
 
 import os
 import glob
@@ -11,34 +11,34 @@ import torch
 
 def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True, scheduler=None):
     """
-    Train a model for a single training epoch.
+    Train a multilabel classification model for a single training epoch.
 
     Parameters
     ----------
     model : torch.nn.Module
         Model to be trained. The model is set to training mode.
     train_loader : torch.utils.data.DataLoader
-        DataLoader yielding training batches. Each batch is a dictionary containing
-        a ``'label'`` tensor and one or more modality tensors.
+        DataLoader yielding training batches. Each batch is a dictionary
+        containing a ``'label'`` tensor and one or more input tensors.
     criterion : callable
         Loss function applied to model outputs and labels.
     optimizer : torch.optim.Optimizer
         Optimizer used to update model parameters.
     device : torch.device
         Device on which model and tensors are located.
-    baseline : bool, default True
-        Controls how input tensors are extracted from each batch. If True,
-        a single modality tensor is selected from the input dictionary and
-        passed to the model. If False, the full modality dictionary is passed 
-        to the model (e.g., for SGMap-Net).
+    baseline : bool, optional
+        If True, a single input tensor is selected from the batch and passed
+        to the model. If False, the full input dictionary is passed.
+    scheduler : object, optional
+        Learning-rate scheduler with a ``step()`` method called after each batch.
 
     Returns
     -------
     epoch_loss : float
         Mean loss across all training batches.
     epoch_accuracy : float
-        Micro-averaged classification accuracy (percentage), computed across all
-        batches by thresholding sigmoid outputs at 0.5.
+        Micro-averaged classification accuracy in percent, computed by
+        thresholding sigmoid outputs at 0.5.
     """
     # set model for training
     model.train()
@@ -94,7 +94,7 @@ def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True
 
 def validate_epoch(model, val_loader, criterion, device, baseline=True):
     """
-    Validate a model for one epoch.
+    Validate a multilabel classification model for one epoch.
 
     Parameters
     ----------
@@ -169,7 +169,7 @@ def validate_epoch(model, val_loader, criterion, device, baseline=True):
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, device, num_epochs, output_dir, baseline=True, early_stop=None, warmup=True, cosine_decay=True):
     """
-    Train a model for multiple epochs and log training/validation metrics.
+    Train a multilabel classification model for multiple epochs and log training/validation metrics.
 
     Parameters
     ----------
@@ -180,27 +180,31 @@ def train_model(model, train_loader, val_loader, criterion, optimizer, device, n
     val_loader : torch.utils.data.DataLoader
         DataLoader yielding validation batches.
     criterion : callable
-        PyTorch-compatible loss function that accepts (logits, labels) and
-        returns a scalar tensor.
+        Loss function accepting (logits, labels) and returning a scalar tensor.
     optimizer : torch.optim.Optimizer
         Optimizer used to update model parameters.
     device : torch.device
         Device used for training and validation.
     num_epochs : int
         Number of training epochs.
-    output_dir : str or pathlib.Path
-        Directory to save the best model checkpoint and the training log CSV.
-    baseline : bool, default True
-        Controls how input tensors are extracted from each batch. If True,
-        a single modality tensor is selected from the input dictionary and
-        passed to the model. If False, the full modality dictionary is passed 
-        to the model (e.g., for SGMap-Net).
+    output_dir : str or os.PathLike
+        Directory to save model checkpoints and the training log CSV.
+    baseline : bool, optional
+        If True, a single input tensor is selected from each batch and passed
+        to the model. If False, the full input dictionary is passed.
+    early_stop : dict or None, optional
+        Keyword arguments used to initialize `EarlyStopping`. If None, early
+        stopping is disabled.
+    warmup : bool, optional
+        If True, apply linear learning-rate warmup.
+    cosine_decay : bool, optional
+        If True, apply cosine learning-rate decay.
 
     Returns
     -------
     pandas.DataFrame
-        DataFrame containing per-epoch training & validation loss and accuracy, 
-        plus training time in minutes.
+        DataFrame containing per-epoch training and validation loss and accuracy,
+        along with training time in minutes.
     """
 
     # initialize variables...

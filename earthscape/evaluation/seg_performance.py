@@ -1,5 +1,4 @@
 
-# import numpy as np
 import pandas as pd
 import torch
 import torch.nn.functional as F
@@ -15,7 +14,28 @@ warnings.filterwarnings("ignore")
 
 
 def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
-    """Calculates segmentation performance metrics for each class in each image."""
+    """
+    Compute per-image, per-class segmentation metrics.
+
+    Parameters
+    ----------
+    preds : torch.Tensor
+        Predicted class-index masks with shape [N, H, W].
+    masks : torch.Tensor
+        Ground-truth class-index masks with shape [N, H, W].
+    patch_ids : sequence
+        Identifiers for each image or patch. Length must match ``N``.
+    class_cols : sequence of str
+        Class names ordered to match the class indices in ``preds`` and ``masks``.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Table with one row per image-class pair containing support counts,
+        confusion-matrix counts, IoU, Dice score, precision, recall,
+        Hausdorff distance, Hausdorff distance at the 95th percentile, and
+        indicators of class presence in the ground-truth and prediction.
+    """
 
     num_classes = len(class_cols)
 
@@ -72,28 +92,24 @@ def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
 
 
 
-# def image_overall_metrics_seg(df_image_class):
-#     """Calculates overall segmentation performance metrics across each image."""
-#     df = (
-#         df_image_class.groupby("patch_id", as_index=False)
-#         .agg(
-#             mean_iou=("iou", "mean"),
-#             mean_dice=("dice", "mean"),
-#             macro_precision=("precision", "mean"),
-#             macro_recall=("recall", "mean"),
-#             mean_hd=("hd", "mean"),
-#             mean_hd95=("hd95", "mean"),
-#             gt_num_classes=("gt_present", "sum"),
-#             pred_num_classes=("pred_present", "sum"),
-#         ).copy())
-
-#     return df
-
-
-
-
 def overall_metrics_seg(df_image_class):
-    """Calculates global segementation performance across images and pixels."""
+    """
+    Compute aggregated segmentation metrics from per-image, per-class results.
+
+    Parameters
+    ----------
+    df_image_class : pandas.DataFrame
+        DataFrame containing per-image, per-class metrics, including confusion
+        counts (tp, fp, fn, tn) and metric columns such as IoU, Dice, precision,
+        recall, hd, and hd95.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Single-row DataFrame containing macro-averaged metrics (mean over rows),
+        micro-averaged metrics (computed from globally aggregated confusion
+        counts), and mean Hausdorff distances.
+    """
 
     tp = torch.tensor(df_image_class['tp'].to_numpy()).sum()
     fp = torch.tensor(df_image_class['fp'].to_numpy()).sum()
@@ -117,8 +133,26 @@ def overall_metrics_seg(df_image_class):
 
 
 
+
 def overall_class_metrics_seg(df_image_class):
-    """Calculates per-class segmentation micro metrics (pooled over images)."""
+    """
+    Compute per-class aggregated segmentation metrics across images.
+
+    Parameters
+    ----------
+    df_image_class : pandas.DataFrame
+        DataFrame containing per-image, per-class metrics, including support
+        counts, confusion-matrix counts (tp, fp, fn, tn), and metric columns.
+
+    Returns
+    -------
+    pandas.DataFrame
+        DataFrame with one row per class containing aggregated support counts,
+        confusion-matrix totals, macro-averaged metrics (mean over images),
+        micro-averaged metrics (computed from aggregated counts), and mean
+        Hausdorff distances.
+    """
+
     df = (
         df_image_class.groupby("class", as_index=False)
         .agg(
@@ -150,8 +184,27 @@ def overall_class_metrics_seg(df_image_class):
 
 
 
+def plot_cm_seg(preds, masks, class_cols, mode="row_norm"):
+    """
+    Plot a confusion matrix for segmentation predictions.
 
-def plot_cm_seg(preds, masks, class_cols, mode="raw"):
+    Parameters
+    ----------
+    preds : torch.Tensor
+        Predicted class-index masks with shape [N, H, W].
+    masks : torch.Tensor
+        Ground-truth class-index masks with shape [N, H, W].
+    class_cols : sequence of str
+        Class names ordered to match the class indices.
+    mode : {"row_norm", "raw"}, default='row_norm'
+        If "row_norm", normalize rows to show per-class recall. Otherwise,
+        display raw pixel counts.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure containing the confusion matrix heatmap.
+    """
     num_classes = len(class_cols)
 
     x = masks.reshape(-1) * num_classes + preds.reshape(-1)
@@ -186,6 +239,21 @@ def plot_cm_seg(preds, masks, class_cols, mode="raw"):
 
 
 def calculate_dice_score(logits, masks):
+    """
+    Compute the mean Dice score across classes for a batch of segmentation outputs.
+
+    Parameters
+    ----------
+    logits : torch.Tensor
+        Model outputs with shape [B, C, H, W].
+    masks : torch.Tensor
+        Ground-truth class-index masks with shape [B, H, W].
+
+    Returns
+    -------
+    float
+        Mean Dice score across classes.
+    """
 
     num_classes = logits.shape[1]
 
@@ -204,49 +272,3 @@ def calculate_dice_score(logits, masks):
 
     return dice.item()
 
-
-
-
-# from scipy.ndimage import binary_erosion, distance_transform_edt
-
-# def calculate_hausdorff_distance(preds, targets, num_classes, percentile=95):
-
-#     preds = preds.cpu().numpy()
-#     targets = targets.cpu().numpy()
-
-#     hd_per_class = {}
-
-#     for c in range(num_classes):
-#         class_distances = []
-
-#         for pred, target in zip(preds, targets):
-#             pred_c = (pred == c)
-#             target_c = (target == c)
-
-#             pred_boundary = pred_c ^ binary_erosion(pred_c)
-#             target_boundary = target_c ^ binary_erosion(target_c)
-
-#             # distance to nearest boundary point in opposite mask
-#             dt_target = distance_transform_edt(~target_boundary)
-#             dt_pred = distance_transform_edt(~pred_boundary)
-
-#             pred_to_target = dt_target[pred_boundary]
-#             target_to_pred = dt_pred[target_boundary]
-
-#             surface_distances = np.concatenate([pred_to_target, target_to_pred])
-
-#             if surface_distances.size > 0:
-#                 hd = np.percentile(surface_distances, percentile)
-#                 class_distances.append(hd)
-
-#         valid = [d for d in class_distances if not np.isnan(d)]
-
-#         if len(valid) > 0:
-#             hd_per_class[c] = float(np.mean(valid))
-#         else:
-#             hd_per_class[c] = np.nan
-
-#     valid_values = [v for v in hd_per_class.values() if not np.isnan(v)]
-#     mean_hd = float(np.mean(valid_values)) if len(valid_values) > 0 else np.nan
-
-#     return mean_hd, hd_per_class
