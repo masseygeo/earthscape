@@ -27,6 +27,17 @@ EarthScape is structured to support:
 - Controlled experiments on geographic domain shift using disjoint regions with a shared label space
 
 
+# UPDATES!!!
+1. **EarthScape dataset v1.1 is now available!**
+    - Same as v1.0, but with several updates...
+      - Profile and planform curvatures are now consistent across all subsets.
+      - Categorical and binary image features are supplied as `uint8` (instead of `float32`).
+        
+2. **EarthScape codebase v1.1.0 (this repository) has been significantly updated!**
+
+3. **Segmentation functionality and benchmarks are now available!**
+
+
 # Table of Contents
 1. [Getting Started](#getting-started)
 2. [Navigating the Repository](#navigating-the-repository)
@@ -64,7 +75,7 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
 
 ### Run a single experiment
 
-1. Modify [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/earthscape/configs_template.yml) file for your experiment. Most settings can also be overridden via CLI flags.
+1. Modify [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) file for your experiment. Most settings can also be overridden via CLI flags.
 
 2. Run the training script.
 
@@ -260,9 +271,9 @@ EarthScape includes reproducible baseline experiments designed to evaluate modal
 - **Domain shift remains a central challenge.** All models exhibit performance degradation when evaluated on geographically disjoint regions, highlighting the difficulty of transferring learned representations across landscapes. Modality selection plays a significant role in reducing model transfer failures.
 
 Check out these notebooks for more information and visualizations...
-- [Training, Validation, and Testing Splits](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/model_splits.ipynb)
+- [Training, Validation, and Testing Splits](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/splits.ipynb)
 - [Classification](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/analysis_cls.ipynb)
-- [Segmentation]()
+- [Segmentation](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/analysis_seg.ipynb)
 
 
 
