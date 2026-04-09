@@ -1,5 +1,5 @@
 
-from earthscape.utils.constants import SRC_URLS, VERSION
+from earthscape.constants import SRC_URLS, VERSION
 
 import os
 from datetime import datetime

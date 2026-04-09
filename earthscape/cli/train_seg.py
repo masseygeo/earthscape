@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use("Agg")
 
 # regular imports...
-from earthscape.utils.constants import SG_MAPPING
+from earthscape.constants import SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
 from earthscape.models import create_unet_seg, create_deeplabv3p_seg, create_segformer_seg
