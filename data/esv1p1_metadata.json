@@ -1,0 +1,55 @@
+{
+    "Geospatial": {
+        "crs": "EPSG:3089",
+        "resolution": 5.0,
+        "nodata": {
+            "smoke": NaN,
+            "howevalley": NaN,
+            "warren": NaN,
+            "sonora": NaN
+        },
+        "units": "us-ft"
+    },
+    "Data Sources": {
+        "howevalley": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1631&pid=111985",
+        "nhd": "https://prd-tnm.s3.amazonaws.com/StagedProducts/Hydrography/NHDPlusHR/VPU/Current/GDB/NHDPLUS_H_0511_HU4_GDB.zip",
+        "kyfromabove_aerial_index": "https://services3.arcgis.com/ghsX9CKghMvyYjBU/arcgis/rest/services/Ky_KYAPED_Aerial_Tile_Index_WM_gdb/FeatureServer/0",
+        "warren": "https://uknowledge.uky.edu/context/kgs_data/article/1014/type/native/viewcontent",
+        "kyfromabove_dem_index": "https://kygisserver.ky.gov/arcgis/rest/services/WGS84WM_Services/KY_Data_Tiles_DEM_WGS84WM/MapServer/0",
+        "osm": "http://download.geofabrik.de/north-america/us/kentucky-latest-free.shp.zip",
+        "sonora": "https://ngmdb.usgs.gov/ngm-bin/gems_download.pl?id=1630&pid=111983"
+    },
+    "EarthScape": {
+        "overlap": "50%",
+        "version": "1.1",
+        "label space": {
+            "af1": 1,
+            "Qal": 2,
+            "Qc": 5,
+            "Qat": 4,
+            "Qr": 7,
+            "Qca": 6,
+            "Qaf": 3
+        },
+        "created": {
+            "smoke": "2026-02-27, 12:06",
+            "howevalley": "2025-12-23, 19:18",
+            "warren": "2026-02-06, 12:56",
+            "sonora": "2026-01-06, 19:49"
+        },
+        "num channels": 38,
+        "num patches": {
+            "smoke": 28,
+            "howevalley": 3726,
+            "warren": 23566,
+            "sonora": 3726
+        },
+        "total images": {
+            "smoke": 1064,
+            "howevalley": 141588,
+            "warren": 895508,
+            "sonora": 141588
+        },
+        "patch size": 256
+    }
+}

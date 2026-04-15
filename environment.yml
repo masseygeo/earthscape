@@ -1,0 +1,25 @@
+name: earthscape
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.12
+  - jupyterlab
+  - ipykernel
+  - ipywidgets
+  - tqdm
+  - numpy
+  - pandas
+  - geopandas
+  - rasterio
+  - fiona
+  - whitebox
+  - matplotlib
+  - seaborn
+  - pytorch
+  - pytorch-gpu
+  - torchvision
+  - torchinfo
+  - segmentation-models-pytorch
+  - monai
+  - hyppo

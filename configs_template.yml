@@ -1,0 +1,112 @@
+
+experiment:
+  root: experiments/baselines/classification/single
+  seed: 111
+
+
+data:
+  root: data
+  dirs: 
+    - warren/patches
+    - howevalley/patches
+    - sonora/patches
+    # - smoke/patches
+  input:
+    dem:
+      channels:
+        - dem.tif
+    # aerial:
+    #   channels:
+    #     - aerialr.tif
+    #     - aerialg.tif
+    #     - aerialb.tif
+
+
+splits:
+  root: splits/esv1p1_splits
+  glob:
+    train: "*train_id.geojson"
+    val: "*val_id.geojson"
+    test: "*test_id.geojson"
+    cross: "*test_cd.geojson"
+
+
+norm:
+  root: splits/esv1p1_splits
+  glob: "*train_stats.csv"
+  normalize: true
+
+
+dataloader:
+  base:
+    batch_size: 64
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  train:
+    augment: true
+    shuffle: true
+    drop_last: true
+  eval:
+    augment: false
+    shuffle: false
+    drop_last: false
+
+
+model: 
+  model_name: resnet18         # model name (resnet18, resnet50, vit, swin) for classification; (unet, deeplabv3p, segformer) for segmentation
+  encoder_name: null   # encoder used for segmentation model baselines (see segmentation-models-pytorch docs; default is resnet50)
+  image_size: 256
+  output_size: 7
+
+
+labels:
+  root: data
+  glob: "*areas.csv"
+  area_threshold: 0.0        # supervision labels - None: use area-proportions (need softmax), float: create one-hots of class presence by area proportion
+
+
+training:
+  num_epochs: 150    
+
+
+optimizer:
+  name: AdamW
+  params:
+    lr: 0.0003
+    weight_decay: 0.01
+    betas: 
+      - 0.9
+      - 0.999
+  warmup: true
+  warmup_params:
+    start_factor: 0.001
+    end_factor: 1.0
+    total_iters: "5 epochs converted to steps"
+  cosine_decay: true
+  cd_params:
+    T_max: "starts at 5 epochs"
+    eta_min: 0.00001
+
+
+loss:
+  # name: bcefocal            # multilabel classification - BCE with optional class weights & focal loss
+  # params:
+  #   pos_weight: null
+  #   gamma: 0
+  #   alpha: null
+  #   reduction: "mean"
+  name: crossentropyloss      # segmentation - 
+  params:
+    weight: null
+    reduction: "mean"
+  
+
+early_stop:
+  patience: 10
+  min_delta: 0.0
+  warmup_epochs: 20
+
+
+eval:
+  optimize_clf_thresholds: true

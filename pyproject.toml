@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "earthscape"
+version = "1.1"
+description = "EarthScape dataset processing, modeling, utilities, and data visualization."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+train_cls = "earthscape.cli.train_cls:main"
+eval_cls = "earthscape.cli.eval_cls:main"
+train_seg = "earthscape.cli.train_seg:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
