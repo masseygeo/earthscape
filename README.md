@@ -12,7 +12,11 @@
 
 EarthScape is a living, open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis. It is designed to support multimodal learning, multi-scale reasoning, and evaluation under geographic domain shift.
 
-The dataset includes:
+- Expert-labeled surficial geologic masks and labels
+- LiDAR-derived DEMs and geomorphometric terrain features at multiple spatial resolutions  
+- High-resolution aerial RGB+NIR imagery  
+- Hydrography and infrastructure vector overlays  
+- Benchmarks for multilabel classification
 
 - Expert-labeled surficial geologic segmentation masks
 - High-resolution optical imagery (RGB + NIR)
@@ -301,6 +305,16 @@ Check out these notebooks for more information and visualizations...
 - Standardized evaluation scripts and reporting tools
 - Improved experiment configuration and orchestration workflows
 - Enhanced dataset indexing and geospatial query capabilities
+
+## Roadmap
+- Expanding the dataset with new surficial geologic maps
+- Updating the unique patch ID grid for intuitive geospatially aware selection
+- Testing datasets with broader coverage (e.g., 1/3-arc-second DEM, ASTER DEM, etc.)
+- Segmentation benchmarks
+
+
+## Contributing to EarthScape
+We encourage your contributions to EarthScape! Detailed instructions to come...
 
 
 # Cite
