@@ -1,5 +1,5 @@
 
-from earthscape.train import EarlyStopping
+from .earlystopping import EarlyStopping
 
 import os
 import glob

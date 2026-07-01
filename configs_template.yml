@@ -1,7 +1,7 @@
 
 experiment:
   root: experiments/baselines/classification/single
-  seed: 111
+  seed: 042
 
 
 data:
@@ -12,9 +12,9 @@ data:
     - sonora/patches
     # - smoke/patches
   input:
-    dem:
+    ep:
       channels:
-        - dem.tif
+        - ep_51x51.tif
     # aerial:
     #   channels:
     #     - aerialr.tif
@@ -90,16 +90,16 @@ optimizer:
 
 
 loss:
-  # name: bcefocal            # multilabel classification - BCE with optional class weights & focal loss
-  # params:
-  #   pos_weight: null
-  #   gamma: 0
-  #   alpha: null
-  #   reduction: "mean"
-  name: crossentropyloss      # segmentation - 
+  name: bcefocal            # multilabel classification - BCE with optional class weights & focal loss
   params:
-    weight: null
+    pos_weight: null
+    gamma: 0
+    alpha: null
     reduction: "mean"
+  # name: crossentropyloss      # segmentation - 
+  # params:
+  #   weight: null
+  #   reduction: "mean"
   
 
 early_stop:
