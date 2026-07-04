@@ -90,16 +90,16 @@ optimizer:
 
 
 loss:
-  name: bcefocal            # multilabel classification - BCE with optional class weights & focal loss
-  params:
-    pos_weight: null
-    gamma: 0
-    alpha: null
-    reduction: "mean"
-  # name: crossentropyloss      # segmentation - 
+  # name: bcefocal            # multilabel classification - BCE with optional class weights & focal loss
   # params:
-  #   weight: null
+  #   pos_weight: null
+  #   gamma: 0
+  #   alpha: null
   #   reduction: "mean"
+  name: crossentropyloss      # segmentation - 
+  params:
+    weight: null
+    reduction: "mean"
   
 
 early_stop:
