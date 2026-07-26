@@ -7,7 +7,7 @@ matplotlib.use("Agg")
 from earthscape.constants import SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
-from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls
+from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls, SGMapNet_Classification
 from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
 from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 import argparse
@@ -27,10 +27,17 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Train and test a multilabel classification model using config.yml file.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to config.yml; copy will be saved to the experiment output directory for reproducibility.")
     parser.add_argument("--mode", type=str, choices=("train", "train-test", "train-test-cross"), required=True, help="Execution mode: train, training with validation set model selection; train-test, training & validation plus in-domain test; train-test-cross, training & validation plus in- and cross-domain tests.")
+    parser.add_argument("--task", type=str, choices=("classification", "segmentation"), required=True, help="Task definition.")
+
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
-    # parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override config torch.compile(model) setting.")
-    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin'), default=None, help="(Optional) Override config model.")
+
+    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin', 'sgmap-net'), default=None, help="(Optional) Override config model.")
+    parser.add_argument("--encoder_name", type=str, default=None, help="(Optional) Override config encoder name.")
+    parser.add_argument("--input_adapter", type=str, default=None, help="(Optional) Override config SGMap-Net input adaptation strategy.")
+    parser.add_argument("--encoder_sharing", type=str, default=None, help="(Optional) Override config SGMap-Net encoder sharing strategy.")
+    parser.add_argument("--embedding_fusion", type=str, choices=('none', 'concat', 'self_attention', 'cross_attention'), default=None, help="(Optional) Override config SGMap-Net mid-level fusion strategy.")
+
     parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
 
     parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override config class-area proportion threshold for target labels.")
@@ -126,7 +133,7 @@ def main():
     # build taining set...
     train_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['train']))[0])
     train_patches = gpd.read_file(train_patch_path)
-    train_patch_ids = train_patches['patch_id'].to_list()
+    train_patch_ids = train_patches['patch_id'].to_list()[:64]
     train_dataset = ESDataset_Classification(train_patch_ids, augment=cfg['dataloader']['train']['augment'], **ds_params)
     train_loader = DataLoader(train_dataset, **dl_train_params)
     print('Training samples: ', len(train_loader.dataset))
@@ -134,7 +141,7 @@ def main():
     # build validation set...
     val_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['val']))[0])
     val_patches = gpd.read_file(val_patch_path)
-    val_patch_ids = val_patches['patch_id'].to_list()
+    val_patch_ids = val_patches['patch_id'].to_list()[:64]
     val_dataset = ESDataset_Classification(val_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
     val_loader = DataLoader(val_dataset, **dl_eval_params)
     print('Validation samples: ', len(val_loader.dataset))
@@ -143,7 +150,7 @@ def main():
     if args.mode == "train-test" or args.mode == "train-test-cross":
         test_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['test']))[0])
         test_patches = gpd.read_file(test_patch_path)
-        test_patch_ids = test_patches['patch_id'].to_list()
+        test_patch_ids = test_patches['patch_id'].to_list()[:64]
         test_dataset = ESDataset_Classification(test_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
         test_loader = DataLoader(test_dataset, **dl_eval_params)
         print('Test samples (in-domain): ', len(test_loader.dataset))
@@ -152,7 +159,7 @@ def main():
     if args.mode == "train-test-cross":
         cross_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['cross']))[0])
         cross_patches = gpd.read_file(cross_patch_path)
-        cross_patch_ids = cross_patches['patch_id'].to_list()
+        cross_patch_ids = cross_patches['patch_id'].to_list()[:64]
         cross_dataset = ESDataset_Classification(cross_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
         cross_loader = DataLoader(cross_dataset, **dl_eval_params)
         print('Test samples (cross-domain): ', len(cross_loader.dataset))
@@ -184,15 +191,18 @@ def main():
     elif model_name == 'swin':
         model = create_swin_cls(in_channels=in_channels, num_classes=output_size).to(device)
 
-    # # compile model for optimal performance
-    # if cfg['model']['compile']:
-    #     model = torch.compile(model)
+    elif model_name == 'sgmap-net':
+        params = {
+            **cfg['model']['sgmapnet_params'],
+            'encoder': cfg['model']['encoder_name']
+            }
+        model = SGMapNet_Classification(modality_configs=input_dict, output_dim=output_size, **params).to(device)
 
 
     ##### loss...
-    loss_name = cfg['loss']['name']
+    loss_name = cfg['loss']['classification']['name']
     if loss_name == 'bcefocal':
-        loss_params = cfg['loss']['params']
+        loss_params = cfg['loss']['classification']['params']
         criterion = BCEFocalLogits(**loss_params).to(device)
 
 
@@ -220,7 +230,8 @@ def main():
     ##### training...
     # define epochs and train/validate model
     epochs = cfg['training']['num_epochs']
-    baseline = len(input_dict.keys()) == 1
+    # baseline = len(input_dict.keys()) == 1
+    baseline = model_name != "sgmap-net"
     early_stop = cfg['early_stop']
     warmup = cfg['optimizer']['warmup']
     cosine_decay = cfg['optimizer']['cosine_decay']
@@ -254,7 +265,7 @@ def main():
 
         ##### optimize thresholds...
         if cfg['eval']['optimize_clf_thresholds']:
-            optimal_thresholds = get_optimal_thresholds(model, val_loader, device)
+            optimal_thresholds = get_optimal_thresholds(model, val_loader, device, baseline=baseline)
         else:
             optimal_thresholds = np.full(shape=cfg['model']['output_size'], fill_value=0.5)
         cfg['eval']['thresholds'] = optimal_thresholds.tolist()
@@ -287,7 +298,7 @@ def main():
 
     ###### testing (cross-domain)...
     if args.mode == "train-test-cross":
-        probabilities, targets = test_model(model, cross_loader, device)
+        probabilities, targets = test_model(model, cross_loader, device, baseline=baseline)
 
         # save individual sample predictions...
         predictions = pd.DataFrame(data=cross_dataset.ids, columns=['patch_id'])
@@ -312,7 +323,7 @@ def main():
 
 
     ##### save experiment metadata files...
-    architecture_to_json(output_dir, model, val_loader)                          # model architecture file
+    architecture_to_json(output_dir, model, val_loader, device, baseline=baseline)                          # model architecture file
     cfg_output_path = os.path.abspath(os.path.join(output_dir, 'config.yml'))    # config file used for experiment
     with open(cfg_output_path, "w") as f:
         yaml.safe_dump(cfg, f)

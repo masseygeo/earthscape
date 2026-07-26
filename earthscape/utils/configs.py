@@ -50,36 +50,51 @@ def config_update(cfg, args):
         cfg['experiment']['root'] = _opt("experiment_root")
     if _opt("seed") is not None:
         cfg['experiment']['seed'] = _opt("seed")
-    if _opt("compile") is not None:
-        cfg['model']['compile'] = args.compile == 'true'
+    if _opt("task") is not None:
+        cfg['experiment']['task'] = _opt("task")
+
     if _opt("model_name") is not None:
         cfg['model']['model_name'] = _opt("model_name")
     if _opt("encoder_name") is not None:
         cfg['model']['encoder_name'] = _opt("encoder_name")
+    if _opt("input_adapter") is not None:
+        cfg['model']['sgmapnet_params']['input_adapter'] = _opt("input_adapter")
+    if _opt("encoder_sharing") is not None:
+        cfg['model']['sgmapnet_params']['encoder_sharing'] = _opt("encoder_sharing")
+    if _opt("embedding_fusion") is not None:
+        cfg['model']['sgmapnet_params']['embedding_fusion'] = _opt("embedding_fusion")
+
+    if _opt("input"):
+        cfg['data']['input'] = _parse_inputs(_opt("input"))
+
     if _opt("area_threshold") is not None:
         cfg['labels']['area_threshold'] = _opt("area_threshold")
+
     if _opt("batch_size") is not None:
         cfg['dataloader']['base']['batch_size'] = _opt("batch_size")
+
     if _opt("lr") is not None:
         cfg['optimizer']['params']['lr'] = _opt("lr")
     if _opt("weight_decay") is not None:
         cfg['optimizer']['params']['weight_decay'] = _opt("weight_decay")
-    if _opt("pos_weight") is not None:
-        cfg['loss']['params']['pos_weight'] = _opt("pos_weight")
-    if _opt("gamma") is not None:
-        cfg['loss']['params']['gamma'] = _opt("gamma")
-    if _opt("alpha") is not None:
-        cfg['loss']['params']['alpha'] = _opt("alpha")
-    if _opt("reduction") is not None:
-        cfg['loss']['params']['reduction'] = _opt("reduction")
-    if _opt("input"):
-        cfg['data']['input'] = _parse_inputs(_opt("input"))
+
+    if cfg['experiment']['task'] == 'classification':
+        if _opt("pos_weight") is not None:
+            cfg['loss']['classification']['params']['pos_weight'] = _opt("pos_weight")
+        if _opt("gamma") is not None:
+            cfg['loss']['classification']['params']['gamma'] = _opt("gamma")
+        if _opt("alpha") is not None:
+            cfg['loss']['classification']['params']['alpha'] = _opt("alpha")
+        if _opt("reduction") is not None:
+            cfg['loss']['classification']['params']['reduction'] = _opt("reduction")
+
     if _opt("patience") is not None:
         cfg['early_stop']['patience'] = _opt("patience")
     if _opt("min_delta") is not None:
         cfg['early_stop']['min_delta'] = _opt("min_delta")
     if _opt("warmup_epochs") is not None:
         cfg['early_stop']['warmup_epochs'] = _opt("warmup_epochs")
+
     return cfg
 
 

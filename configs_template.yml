@@ -1,7 +1,8 @@
 
 experiment:
   root: experiments/baselines/classification/single
-  seed: 042
+  seed: 111
+  task: classification
 
 
 data:
@@ -15,11 +16,11 @@ data:
     ep:
       channels:
         - ep_51x51.tif
-    # aerial:
-    #   channels:
-    #     - aerialr.tif
-    #     - aerialg.tif
-    #     - aerialb.tif
+    aerial:
+      channels:
+        - aerialr.tif
+        - aerialg.tif
+        - aerialb.tif
 
 
 splits:
@@ -40,9 +41,9 @@ norm:
 dataloader:
   base:
     batch_size: 64
-    num_workers: 8
-    persistent_workers: true
-    prefetch_factor: 2
+    num_workers: 0
+    persistent_workers: false
+    prefetch_factor: null
   train:
     augment: true
     shuffle: true
@@ -55,19 +56,29 @@ dataloader:
 
 model: 
   model_name: resnet18         # model name (resnet18, resnet50, vit, swin) for classification; (unet, deeplabv3p, segformer) for segmentation
-  encoder_name: null   # encoder used for segmentation model baselines (see segmentation-models-pytorch docs; default is resnet50)
+  encoder_name: null           # encoder used for segmentation model baselines (see segmentation-models-pytorch docs; default is resnet50)
   image_size: 256
   output_size: 7
+  sgmapnet_params:
+    input_adapter: adapt                    # adapt, direct
+    encoder_sharing: separate               # shared, separate
+    embedding_fusion: cross_attention         # none, self_attention, cross_attention, concat
+    image_size: null
+    pretrained: true
+    embedding_dim: 512
+    num_heads: 8
+    p_attn: 0.0
+    p_resid: 0.0
 
 
 labels:
   root: data
   glob: "*areas.csv"
-  area_threshold: 0.0        # supervision labels - None: use area-proportions (need softmax), float: create one-hots of class presence by area proportion
+  area_threshold: 0.0        # labels - None: use area-proportions (need softmax), float: create one-hots of class presence by area proportion
 
 
 training:
-  num_epochs: 150    
+  num_epochs: 2    
 
 
 optimizer:
@@ -90,16 +101,18 @@ optimizer:
 
 
 loss:
-  # name: bcefocal            # multilabel classification - BCE with optional class weights & focal loss
-  # params:
-  #   pos_weight: null
-  #   gamma: 0
-  #   alpha: null
-  #   reduction: "mean"
-  name: crossentropyloss      # segmentation - 
-  params:
-    weight: null
-    reduction: "mean"
+  classification:
+    name: bcefocal
+    params:
+      pos_weight: null
+      gamma: 0
+      alpha: null
+      reduction: "mean"
+  segmentation:
+    name: crossentropyloss
+    params:
+      weight: null
+      reduction: "mean"
   
 
 early_stop:
