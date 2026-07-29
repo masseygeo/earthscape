@@ -41,9 +41,9 @@ norm:
 dataloader:
   base:
     batch_size: 64
-    num_workers: 0
-    persistent_workers: false
-    prefetch_factor: null
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
   train:
     augment: true
     shuffle: true
@@ -61,8 +61,8 @@ model:
   output_size: 7
   sgmapnet_params:
     input_adapter: adapt                    # adapt, direct
-    encoder_sharing: separate               # shared, separate
-    embedding_fusion: cross_attention         # none, self_attention, cross_attention, concat
+    encoder_sharing: shared               # shared, separate
+    embedding_fusion: none         # none, self_attention, cross_attention, concat
     image_size: null
     pretrained: true
     embedding_dim: 512
@@ -78,7 +78,7 @@ labels:
 
 
 training:
-  num_epochs: 2    
+  num_epochs: 150    
 
 
 optimizer:
@@ -94,7 +94,7 @@ optimizer:
     start_factor: 0.001
     end_factor: 1.0
     total_iters: "5 epochs converted to steps"
-  cosine_decay: true
+  cosine_decay: false
   cd_params:
     T_max: "starts at 5 epochs"
     eta_min: 0.00001
@@ -105,7 +105,7 @@ loss:
     name: bcefocal
     params:
       pos_weight: null
-      gamma: 0
+      gamma: 0.5
       alpha: null
       reduction: "mean"
   segmentation:
@@ -116,9 +116,9 @@ loss:
   
 
 early_stop:
-  patience: 10
+  patience: 5
   min_delta: 0.0
-  warmup_epochs: 20
+  warmup_epochs: 5
 
 
 eval:

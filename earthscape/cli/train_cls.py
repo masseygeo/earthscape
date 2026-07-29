@@ -133,7 +133,7 @@ def main():
     # build taining set...
     train_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['train']))[0])
     train_patches = gpd.read_file(train_patch_path)
-    train_patch_ids = train_patches['patch_id'].to_list()[:64]
+    train_patch_ids = train_patches['patch_id'].to_list()
     train_dataset = ESDataset_Classification(train_patch_ids, augment=cfg['dataloader']['train']['augment'], **ds_params)
     train_loader = DataLoader(train_dataset, **dl_train_params)
     print('Training samples: ', len(train_loader.dataset))
@@ -141,7 +141,7 @@ def main():
     # build validation set...
     val_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['val']))[0])
     val_patches = gpd.read_file(val_patch_path)
-    val_patch_ids = val_patches['patch_id'].to_list()[:64]
+    val_patch_ids = val_patches['patch_id'].to_list()
     val_dataset = ESDataset_Classification(val_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
     val_loader = DataLoader(val_dataset, **dl_eval_params)
     print('Validation samples: ', len(val_loader.dataset))
@@ -150,7 +150,7 @@ def main():
     if args.mode == "train-test" or args.mode == "train-test-cross":
         test_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['test']))[0])
         test_patches = gpd.read_file(test_patch_path)
-        test_patch_ids = test_patches['patch_id'].to_list()[:64]
+        test_patch_ids = test_patches['patch_id'].to_list()
         test_dataset = ESDataset_Classification(test_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
         test_loader = DataLoader(test_dataset, **dl_eval_params)
         print('Test samples (in-domain): ', len(test_loader.dataset))
@@ -159,7 +159,7 @@ def main():
     if args.mode == "train-test-cross":
         cross_patch_path = os.path.abspath(glob.glob(os.path.join(cfg['splits']['root'], cfg['splits']['glob']['cross']))[0])
         cross_patches = gpd.read_file(cross_patch_path)
-        cross_patch_ids = cross_patches['patch_id'].to_list()[:64]
+        cross_patch_ids = cross_patches['patch_id'].to_list()
         cross_dataset = ESDataset_Classification(cross_patch_ids, augment=cfg['dataloader']['eval']['augment'], **ds_params)
         cross_loader = DataLoader(cross_dataset, **dl_eval_params)
         print('Test samples (cross-domain): ', len(cross_loader.dataset))
