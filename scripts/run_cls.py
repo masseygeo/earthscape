@@ -100,7 +100,7 @@ GRID = {
         
     'embedding_fusion': ['cross_attention'],
 
-    'batch_size': [32]
+    'batch_size': [16]
 
     }
 
