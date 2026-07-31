@@ -6,6 +6,7 @@ import sys
 ###################################################################
 def make_experiments(base, grid):
     """function to build tokenized experiment CLI lists"""
+
     # initialize list to hold experiments
     experiments = []
 
@@ -20,7 +21,13 @@ def make_experiments(base, grid):
 
         # build flag and argument as separate tokens & build experiment list
         for k, v in zip(keys, values):
-            exp += [f"--{k}", str(v)]
+
+            if k == 'input':
+                input_branches = (v if isinstance(v, (list,tuple)) else [v])
+                for branch in input_branches:
+                    exp += ["--input", str(branch)]
+            else:
+                exp += [f"--{k}", str(v)]
         
         # append to list of all experiments
         experiments.append(exp)
@@ -36,7 +43,7 @@ BASE = [
     "--config_path", "configs_template.yml",
     "--mode", "train-test-cross",
     "--task", "classification",
-    "--experiment_root", "experiments/sgmap-net/classification/single_sa"
+    "--experiment_root", "experiments/sgmap-net/classification/multiscale_ca"
     ]
 
 # experiment grid sweeps...
@@ -63,15 +70,15 @@ GRID = {
 
     'input': [
         ##### SINGLE MODALITIES
-        'rgb:aerialr.tif,aerialg.tif,aerialb.tif', 
-        'nir:aerialnir.tif', 
-        'dem:dem.tif', 
-        'nhd:nhd.tif', 'osm:osm.tif',
-        'ep-5:ep_5x5.tif','ep-11:ep_11x11.tif','ep-21:ep_21x21.tif','ep-51:ep_51x51.tif','ep-101:ep_101x101.tif','ep-201:ep_201x201.tif',
-        'plc-5:plc.tif','plc-10:plc_10.tif','plc-20:plc_20.tif','plc-50:plc_50.tif','plc-100:plc_100.tif','plc-200:plc_200.tif',
-        'prc-5:prc.tif','prc-10:prc_10.tif','prc-20:prc_20.tif','prc-50:prc_50.tif','prc-100:prc_100.tif','prc-200:prc_200.tif',
-        's-5:s.tif','s-10:s_10.tif','s-20:s_20.tif','s-50:s_50.tif','s-100:s_100.tif','s-200:s_200.tif',
-        'sds-5:sds_5x5.tif','sds-11:sds_11x11.tif','sds-21:sds_21x21.tif','sds-51:sds_51x51.tif','sds-101:sds_101x101.tif','sds-201:sds_201x201.tif',
+        # 'rgb:aerialr.tif,aerialg.tif,aerialb.tif', 
+        # 'nir:aerialnir.tif', 
+        # 'dem:dem.tif', 
+        # 'nhd:nhd.tif', 'osm:osm.tif',
+        ['ep-5:ep_5x5.tif','ep-11:ep_11x11.tif','ep-21:ep_21x21.tif','ep-51:ep_51x51.tif','ep-101:ep_101x101.tif','ep-201:ep_201x201.tif'],
+        ['plc-5:plc.tif','plc-10:plc_10.tif','plc-20:plc_20.tif','plc-50:plc_50.tif','plc-100:plc_100.tif','plc-200:plc_200.tif'],
+        ['prc-5:prc.tif','prc-10:prc_10.tif','prc-20:prc_20.tif','prc-50:prc_50.tif','prc-100:prc_100.tif','prc-200:prc_200.tif'],
+        ['s-5:s.tif','s-10:s_10.tif','s-20:s_20.tif','s-50:s_50.tif','s-100:s_100.tif','s-200:s_200.tif'],
+        ['sds-5:sds_5x5.tif','sds-11:sds_11x11.tif','sds-21:sds_21x21.tif','sds-51:sds_51x51.tif','sds-101:sds_101x101.tif','sds-201:sds_201x201.tif'],
 
         ##### MULTI-SCALE
         # 'ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif',
@@ -91,7 +98,10 @@ GRID = {
         # 'ep-ms+s-ms+sds-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif,sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'
     ],
         
-    'embedding_fusion': ['self_attention']
+    'embedding_fusion': ['cross_attention'],
+
+    'batch_size': [32]
+
     }
 
 

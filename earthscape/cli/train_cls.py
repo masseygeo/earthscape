@@ -38,7 +38,8 @@ def parse_args():
     parser.add_argument("--encoder_sharing", type=str, default=None, help="(Optional) Override config SGMap-Net encoder sharing strategy.")
     parser.add_argument("--embedding_fusion", type=str, choices=('none', 'concat', 'self_attention', 'cross_attention'), default=None, help="(Optional) Override config SGMap-Net mid-level fusion strategy.")
 
-    parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
+    # parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
+    parser.add_argument("--input", type=str, action="append", default=None, help=("Override input features. Repeat --input to define separate branches. Example: --input dem:dem.tif --input aerial:aerialr.tif,aerialg.tif,aerialb.tif"))
 
     parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override config class-area proportion threshold for target labels.")
     parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override config batch size.")
@@ -80,7 +81,6 @@ def main():
     ##### set device & add to configs.yml
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     cfg['training']['device'] = str(device)
-
 
     ##### setup input feature dict, datasets, & dataloaders...
     
