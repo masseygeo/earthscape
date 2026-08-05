@@ -6,7 +6,7 @@ matplotlib.use("Agg")
 # normal imports
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
-from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls
+from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls, SGMapNet_Classification, SGMapNetGradCAMWrapper
 from earthscape.evaluation import test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 
 import os
@@ -20,6 +20,9 @@ import torch
 from torch.utils.data import DataLoader
 
 
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+import numpy as np
 
 
 def parse_args():
@@ -30,6 +33,8 @@ def parse_args():
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override seed.")
     parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override batch size.")
+
+    parser.add_argument("--save_gradcams", action="store_true", help="Save class-specific Grad-CAM arrays for positive classes.",)
 
     return parser.parse_args()
 
@@ -108,24 +113,31 @@ def main():
 
 
     ##### build model...
-    encoder = cfg['model']['encoder']
+    model_name = cfg['model']['encoder']
     in_channels = cfg['model']['in_channels']
     output_size = cfg['model']['output_size']
     image_size = cfg['model']['image_size']
 
     # instantiate model...
-    if encoder == 'resnet18':
-        model = create_resnet_cls(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
+    if model_name == 'resnet18':
+        model = create_resnet_cls(architecture=model_name, in_channels=in_channels, out_features=output_size).to(device)
     
-    elif encoder == 'resnet50':
-        model = create_resnet_cls(architecture=encoder, in_channels=in_channels, out_features=output_size).to(device)
+    elif model_name == 'resnet50':
+        model = create_resnet_cls(architecture=model_name, in_channels=in_channels, out_features=output_size).to(device)
     
-    elif encoder == 'vit':
+    elif model_name == 'vit':
         image_size = cfg['model']['image_size']
         model = create_vit_cls(in_channels=in_channels, num_classes=output_size, image_size=image_size).to(device)
     
-    elif encoder == 'swin':
+    elif model_name == 'swin':
         model = create_swin_cls(in_channels=in_channels, num_classes=output_size)
+
+    elif model_name == 'sgmap-net':
+        params = {
+            **cfg['model']['sgmapnet_params'],
+            'encoder': cfg['model']['encoder_name']
+            }
+        model = SGMapNet_Classification(modality_configs=input_dict, output_dim=output_size, **params).to(device)
 
 
     ##### output directory...
@@ -147,11 +159,72 @@ def main():
 
 
     ##### inference...
-    baseline = len(input_dict.keys()) == 1
+    # baseline = len(input_dict.keys()) == 1
+    baseline = model_name != "sgmap-net"
     class_cols = cfg['eval']['labels']
     optimal_thresholds = [float(t) for t in cfg['eval']['thresholds']]
     probabilities, targets = test_model(model, test_loader, device, baseline=baseline)
-    
+
+
+
+    ##### grad-cam (optional)...
+    ##### optionally generate class-specific Grad-CAMs...
+    if args.save_gradcams:
+
+        if model_name != "sgmap-net":
+            raise ValueError("Grad-CAM export currently supports SGMap-Net only.")
+        if len(input_dict) != 1:
+            raise ValueError("Grad-CAM export currently expects one input branch, such as an early-stacked input.")
+        if cfg["dataloader"]["eval"]["shuffle"]:
+            raise ValueError("Set eval shuffle=False so CAM arrays match patch IDs.")
+        if cfg["dataloader"]["eval"]["drop_last"]:
+            raise ValueError("Set eval drop_last=False so all patches are processed.")
+
+
+        gradcam_dir = os.path.join(output_dir, "gradcams")
+        os.makedirs(gradcam_dir, exist_ok=True)
+
+        input_name = next(iter(input_dict.keys()))
+        wrapped_model = SGMapNetGradCAMWrapper(model=model,input_name=input_name,).to(device)
+        wrapped_model.eval()
+        target_layers = [model.encoder.encoder.layer4[-1]]
+        patch_index = 0
+
+        with GradCAM( model=wrapped_model, target_layers=target_layers) as cam:
+
+            for batch in test_loader:
+
+                # Use the same batch-unpacking logic as test_model().
+                inputs, batch_targets = batch
+                x = inputs[input_name].to(device,non_blocking=True)
+                batch_targets = batch_targets.to(device)
+
+                for i in range(x.shape[0]):
+
+                    sample = x[i:i + 1]
+                    sample_targets = batch_targets[i]
+
+                    patch_id = str(test_dataset.ids[patch_index])
+                    patch_index += 1
+
+                    height, width = sample.shape[-2:]
+                    num_classes = len(class_cols)
+
+                    # Shape: [classes, H, W]
+                    # NaN means no CAM was generated for that class.
+                    sample_cams = np.full((num_classes, height, width), np.nan, dtype=np.float32,)
+
+                    # Generate CAMs only for ground-truth positive classes.
+                    positive_classes = torch.where(sample_targets > 0.5)[0].tolist()
+
+                    for class_index in positive_classes:
+
+                        grayscale_cam = cam(input_tensor=sample, targets=[ClassifierOutputTarget(int(class_index))])
+                        sample_cams[class_index] = grayscale_cam[0]
+
+                    np.save(os.path.join(gradcam_dir,f"{patch_id}.npy"), sample_cams)
+        
+
 
     ##### save individual sample predictions...
     predictions = pd.DataFrame(data=test_dataset.ids, columns=['patch_id'])

@@ -1,0 +1,149 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    dem:
+      channels:
+      - dem.tif
+      mean:
+      - 578.66797
+      sd:
+      - 74.129265
+    nhd:
+      channels:
+      - nhd.tif
+      mean:
+      - null
+      sd:
+      - null
+    osm:
+      channels:
+      - osm.tif
+      mean:
+      - null
+      sd:
+      - null
+    rgb:
+      channels:
+      - aerialr.tif
+      - aerialg.tif
+      - aerialb.tif
+      mean:
+      - 81.96619
+      - 81.83767
+      - 74.148636
+      sd:
+      - 36.90098
+      - 31.398926
+      - 27.555475
+  root: data
+dataloader:
+  base:
+    batch_size: 16
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 5
+  warmup_epochs: 5
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.43520691990852356
+  - 0.1804453730583191
+  - 0.2702854573726654
+  - 0.36940959095954895
+  - 0.3491252660751343
+  - 0.3822644352912903
+  - 0.3834603726863861
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_concat\sgmap-net_rgb_dem_nhd_osm_20260805_143628\best_loss_epoch6.pth
+  end_training: 15:02 08/05/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_concat\sgmap-net_rgb_dem_nhd_osm_20260805_143628
+  root: experiments/sgmap-net/classification/multimodal_concat
+  seed: 111
+  start_training: 14:36 08/05/2026
+  task: classification
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  classification:
+    name: bcefocal
+    params:
+      alpha: null
+      gamma: 0.5
+      pos_weight: null
+      reduction: mean
+  segmentation:
+    name: crossentropyloss
+    params:
+      reduction: mean
+      weight: null
+model:
+  encoder_name: resnext50_32x4d
+  image_size: 256
+  in_channels: 6
+  model_name: sgmap-net
+  output_size: 7
+  sgmapnet_params:
+    embedding_dim: 512
+    embedding_fusion: concat
+    encoder_sharing: shared
+    image_size: null
+    input_adapter: adapt
+    num_heads: 8
+    p_attn: 0.0
+    p_resid: 0.0
+    pretrained: true
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: false
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150

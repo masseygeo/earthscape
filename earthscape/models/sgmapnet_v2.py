@@ -410,3 +410,16 @@ class SGMapNet_Classification(nn.Module):
         if encoder_sharing == "shared" and input_adapter == "direct":
             if len(set(channel_counts)) != 1:
                 raise ValueError("A shared direct-input encoder requires all input branches to have the same number of channels...")
+
+
+
+
+
+class SGMapNetGradCAMWrapper(nn.Module):
+    def __init__(self, model, input_name):
+        super().__init__()
+        self.model = model
+        self.input_name = input_name
+
+    def forward(self, x):
+        return self.model({self.input_name: x})
