@@ -28,13 +28,15 @@ import numpy as np
 def parse_args():
     parser = argparse.ArgumentParser(description="Use a multilabel classification model for evaluation.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to trained model config.yml file.")
-    parser.add_argument("--patch_ids_path", type=str, required=True, help="Path to GeoJSON file with test patch IDs; must contain column 'patch_id'.")
-    parser.add_argument("--data_dir", type=str, nargs="+", required=True, help="Directory paths containing data. Example: --data_dir ../data/dir1  ../data/dir2 ...")
-    parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override output directory.")
-    parser.add_argument("--seed", type=int, default=None, help="(Optional) Override seed.")
-    parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override batch size.")
+    parser.add_argument("--data_dir", type=str, nargs="+", required=True, help="Directory paths containing data.")
 
-    parser.add_argument("--save_gradcams", action="store_true", help="Save class-specific Grad-CAM arrays for positive classes.",)
+    parser.add_argument("--patch_ids_path", type=str, default=None, help="(Optional) Path to GeoJSON file with test patch IDs (must contain column 'patch_id'). If left blank, must pass list of patch IDs that match data_dir.")
+    parser.add_argument("--patch_ids", type=str, nargs="+", default=None, help="(Optional) List of patch IDs passed directly.")
+
+
+
+    parser.add_argument("--seed", type=int, default=None, help="(Optional) Override seed.")
+    parser.add_argument("--save_gradcams", action="store_true", help="(Optional) Save class-specific Grad-CAM arrays. No argument needed, only flag.",)
 
     return parser.parse_args()
 
@@ -106,14 +108,26 @@ def main():
         }
 
     # build evaluation set...
-    patches = gpd.read_file(args.patch_ids_path)
-    patch_ids = patches['patch_id'].to_list()
+    # patches = gpd.read_file(args.patch_ids_path)
+    # patch_ids = patches['patch_id'].to_list()
+    
+    if args.patch_ids is not None:
+        patch_ids = args.patch_ids
+
+    elif args.patch_ids_path is not None:
+        patches = gpd.read_file(args.patch_ids_path)
+        patch_ids = patches["patch_id"].astype(str).to_list()
+
+    else:
+        raise ValueError("Provide either --patch_ids_path or --patch_ids.")
+
+
     test_dataset = ESDataset_Classification(patch_ids, **ds_params)
     test_loader = DataLoader(test_dataset, **dl_params)
 
 
     ##### build model...
-    model_name = cfg['model']['encoder']
+    model_name = cfg['model']['model_name']
     in_channels = cfg['model']['in_channels']
     output_size = cfg['model']['output_size']
     image_size = cfg['model']['image_size']
@@ -192,7 +206,7 @@ def main():
 
 
         input_name = next(iter(input_dict.keys()))
-        wrapped_model = SGMapNetGradCAMWrapper(model=model,input_name=input_name,).to(device)
+        wrapped_model = SGMapNetGradCAMWrapper(model=model, input_name=input_name,).to(device)
         wrapped_model.eval()
         target_layers = [model.encoder.encoder.layer4[-1]]
         patch_index = 0
@@ -201,10 +215,7 @@ def main():
 
             for batch in test_loader:
 
-                inputs, batch_targets = batch
-                x = inputs[input_name].to(device,non_blocking=True)
-                batch_targets = batch_targets.to(device)
-
+                x = batch[input_name].to(device, non_blocking=True)
 
                 for i in range(x.shape[0]):
 
