@@ -143,8 +143,8 @@ def main():
     ##### output directory...
     output_root = cfg['experiment']['output_dir']
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    dir_name = f"{timestamp}"
-    output_dir = os.path.abspath(os.path.join(output_root, "inference", dir_name))
+    # dir_name = f"{timestamp}"
+    output_dir = os.path.abspath(os.path.join(output_root, "inference", timestamp))
 
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
@@ -166,6 +166,11 @@ def main():
     probabilities, targets = test_model(model, test_loader, device, baseline=baseline)
 
 
+    ##### save individual sample predictions...
+    predictions = pd.DataFrame(data=test_dataset.ids, columns=['patch_id'])
+    predictions[class_cols] = probabilities.detach().cpu().numpy()
+    predictions.to_csv(os.path.join(output_dir, 'predictions.csv'), index=False)
+
 
     ##### grad-cam (optional)...
     ##### optionally generate class-specific Grad-CAMs...
@@ -182,7 +187,9 @@ def main():
 
 
         gradcam_dir = os.path.join(output_dir, "gradcams")
-        os.makedirs(gradcam_dir, exist_ok=True)
+        if not os.path.isdir(gradcam_dir):
+            os.makedirs(gradcam_dir)
+
 
         input_name = next(iter(input_dict.keys()))
         wrapped_model = SGMapNetGradCAMWrapper(model=model,input_name=input_name,).to(device)
@@ -194,15 +201,14 @@ def main():
 
             for batch in test_loader:
 
-                # Use the same batch-unpacking logic as test_model().
                 inputs, batch_targets = batch
                 x = inputs[input_name].to(device,non_blocking=True)
                 batch_targets = batch_targets.to(device)
 
+
                 for i in range(x.shape[0]):
 
                     sample = x[i:i + 1]
-                    sample_targets = batch_targets[i]
 
                     patch_id = str(test_dataset.ids[patch_index])
                     patch_index += 1
@@ -210,26 +216,15 @@ def main():
                     height, width = sample.shape[-2:]
                     num_classes = len(class_cols)
 
-                    # Shape: [classes, H, W]
-                    # NaN means no CAM was generated for that class.
-                    sample_cams = np.full((num_classes, height, width), np.nan, dtype=np.float32,)
+                    sample_cams = np.zeros((num_classes, height, width), dtype=np.float32)
 
-                    # Generate CAMs only for ground-truth positive classes.
-                    positive_classes = torch.where(sample_targets > 0.5)[0].tolist()
+                    for class_index in range(num_classes):
 
-                    for class_index in positive_classes:
+                        grayscale_cam = cam(input_tensor=sample, targets=[ClassifierOutputTarget(class_index)])
 
-                        grayscale_cam = cam(input_tensor=sample, targets=[ClassifierOutputTarget(int(class_index))])
                         sample_cams[class_index] = grayscale_cam[0]
 
-                    np.save(os.path.join(gradcam_dir,f"{patch_id}.npy"), sample_cams)
-        
-
-
-    ##### save individual sample predictions...
-    predictions = pd.DataFrame(data=test_dataset.ids, columns=['patch_id'])
-    predictions[class_cols] = probabilities.detach().cpu().numpy()
-    predictions.to_csv(os.path.join(output_dir, 'predictions.csv'), index=False)
+                    np.save(os.path.join(gradcam_dir, f"{patch_id}.npy"), sample_cams)
 
 
     ##### optionally assess performance (if labels provided)...
