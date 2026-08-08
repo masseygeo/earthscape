@@ -150,8 +150,9 @@ def main():
     ##### output directory...
     # output_root = cfg['experiment']['output_dir']
     output_root = args.output_dir
+    input_label = list(input_dict.keys())[0]
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = os.path.abspath(os.path.join(output_root, f"{model_name}_{timestamp}"))
+    output_dir = os.path.abspath(os.path.join(output_root, f"{model_name}_{input_label}_{timestamp}"))
 
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
