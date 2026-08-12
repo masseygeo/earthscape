@@ -65,7 +65,8 @@ GRID = {
     ],
 
     'encoder_name': [
-        'resnext50_32x4d'
+        # 'resnext50_32x4d', 
+        'vit_b_16'
     ],
 
     'input': [
@@ -123,7 +124,7 @@ GRID = {
         ['rgb:aerialr.tif,aerialg.tif,aerialb.tif', 'nhd:nhd.tif', 'osm:osm.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',], 
     ],
         
-    'embedding_fusion': ['concat'],
+    'embedding_fusion': ['cross_attention'],
 
     'batch_size': [16]
 

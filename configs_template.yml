@@ -63,7 +63,7 @@ model:
     input_adapter: adapt                    # adapt, direct
     encoder_sharing: shared               # shared, separate
     embedding_fusion: none         # none, self_attention, cross_attention, concat
-    image_size: null
+    image_size: 224
     pretrained: true
     embedding_dim: 512
     num_heads: 8

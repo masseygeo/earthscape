@@ -4,28 +4,28 @@ data:
   - howevalley/patches
   - sonora/patches
   input:
-    dem+nhd+osm+rgb:
+    prc-ms:
       channels:
-      - aerialr.tif
-      - aerialg.tif
-      - aerialb.tif
-      - dem.tif
-      - nhd.tif
-      - osm.tif
+      - prc.tif
+      - prc_10.tif
+      - prc_20.tif
+      - prc_50.tif
+      - prc_100.tif
+      - prc_200.tif
       mean:
-      - 81.96619
-      - 81.83767
-      - 74.148636
-      - 578.66797
-      - null
-      - null
+      - 0.036541183
+      - 0.10695917
+      - 0.056374535
+      - -0.016703786
+      - -0.14705871
+      - -0.14074461
       sd:
-      - 36.90098
-      - 31.398926
-      - 27.555475
-      - 74.129265
-      - null
-      - null
+      - 0.55064213
+      - 1.6511495
+      - 1.4133822
+      - 0.98491603
+      - 1.9288739
+      - 1.3290366
   root: data
 dataloader:
   base:
@@ -56,20 +56,20 @@ eval:
   - Qr
   optimize_clf_thresholds: true
   thresholds:
-  - 0.29827210307121277
-  - 0.5300090312957764
-  - 0.15645334124565125
-  - 0.24083107709884644
-  - 0.42550697922706604
-  - 0.4104788303375244
-  - 0.5757066011428833
+  - 0.3535212576389313
+  - 0.46270057559013367
+  - 0.09824565798044205
+  - 0.2928236722946167
+  - 0.4141964912414551
+  - 0.475757896900177
+  - 0.5350162982940674
 experiment:
-  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847\best_loss_epoch6.pth
-  end_training: 10:37 08/04/2026
-  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847
-  root: experiments/sgmap-net/classification/multimodal_stack
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multiscale_stack\sgmap-net_prc-ms_20260810_211057\best_loss_epoch6.pth
+  end_training: 21:21 08/10/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multiscale_stack\sgmap-net_prc-ms_20260810_211057
+  root: experiments/sgmap-net/classification/multiscale_stack
   seed: 111
-  start_training: 10:28 08/04/2026
+  start_training: 21:10 08/10/2026
   task: classification
 labels:
   area_threshold: 0.0
@@ -89,7 +89,7 @@ loss:
       reduction: mean
       weight: null
 model:
-  encoder_name: resnext50_32x4d
+  encoder_name: vit_b_16
   image_size: 256
   in_channels: 6
   model_name: sgmap-net
@@ -98,7 +98,7 @@ model:
     embedding_dim: 512
     embedding_fusion: none
     encoder_sharing: shared
-    image_size: null
+    image_size: 224
     input_adapter: adapt
     num_heads: 8
     p_attn: 0.0

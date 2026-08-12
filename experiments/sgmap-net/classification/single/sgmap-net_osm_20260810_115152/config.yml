@@ -4,27 +4,12 @@ data:
   - howevalley/patches
   - sonora/patches
   input:
-    dem+nhd+osm+rgb:
+    osm:
       channels:
-      - aerialr.tif
-      - aerialg.tif
-      - aerialb.tif
-      - dem.tif
-      - nhd.tif
       - osm.tif
       mean:
-      - 81.96619
-      - 81.83767
-      - 74.148636
-      - 578.66797
-      - null
       - null
       sd:
-      - 36.90098
-      - 31.398926
-      - 27.555475
-      - 74.129265
-      - null
       - null
   root: data
 dataloader:
@@ -56,20 +41,20 @@ eval:
   - Qr
   optimize_clf_thresholds: true
   thresholds:
-  - 0.29827210307121277
-  - 0.5300090312957764
-  - 0.15645334124565125
-  - 0.24083107709884644
-  - 0.42550697922706604
-  - 0.4104788303375244
-  - 0.5757066011428833
+  - 0.4193013310432434
+  - 0.4433775842189789
+  - 0.04793651029467583
+  - 0.12227997928857803
+  - 0.31857702136039734
+  - 0.21237479150295258
+  - 0.6695886254310608
 experiment:
-  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847\best_loss_epoch6.pth
-  end_training: 10:37 08/04/2026
-  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847
-  root: experiments/sgmap-net/classification/multimodal_stack
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\single\sgmap-net_osm_20260810_115152\best_loss_epoch19.pth
+  end_training: 12:07 08/10/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\single\sgmap-net_osm_20260810_115152
+  root: experiments/sgmap-net/classification/single
   seed: 111
-  start_training: 10:28 08/04/2026
+  start_training: 11:51 08/10/2026
   task: classification
 labels:
   area_threshold: 0.0
@@ -89,16 +74,16 @@ loss:
       reduction: mean
       weight: null
 model:
-  encoder_name: resnext50_32x4d
+  encoder_name: vit_b_16
   image_size: 256
-  in_channels: 6
+  in_channels: 1
   model_name: sgmap-net
   output_size: 7
   sgmapnet_params:
     embedding_dim: 512
     embedding_fusion: none
     encoder_sharing: shared
-    image_size: null
+    image_size: 224
     input_adapter: adapt
     num_heads: 8
     p_attn: 0.0

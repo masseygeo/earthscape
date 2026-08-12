@@ -4,28 +4,13 @@ data:
   - howevalley/patches
   - sonora/patches
   input:
-    dem+nhd+osm+rgb:
+    plc-20:
       channels:
-      - aerialr.tif
-      - aerialg.tif
-      - aerialb.tif
-      - dem.tif
-      - nhd.tif
-      - osm.tif
+      - plc_20.tif
       mean:
-      - 81.96619
-      - 81.83767
-      - 74.148636
-      - 578.66797
-      - null
-      - null
+      - 0.055494342
       sd:
-      - 36.90098
-      - 31.398926
-      - 27.555475
-      - 74.129265
-      - null
-      - null
+      - 3.5395117
   root: data
 dataloader:
   base:
@@ -56,20 +41,20 @@ eval:
   - Qr
   optimize_clf_thresholds: true
   thresholds:
-  - 0.29827210307121277
-  - 0.5300090312957764
-  - 0.15645334124565125
-  - 0.24083107709884644
-  - 0.42550697922706604
-  - 0.4104788303375244
-  - 0.5757066011428833
+  - 0.4142616093158722
+  - 0.3855046331882477
+  - 0.14218348264694214
+  - 0.2964252531528473
+  - 0.37315633893013
+  - 0.419063538312912
+  - 0.4341014623641968
 experiment:
-  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847\best_loss_epoch6.pth
-  end_training: 10:37 08/04/2026
-  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847
-  root: experiments/sgmap-net/classification/multimodal_stack
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\single\sgmap-net_plc-20_20260810_140708\best_loss_epoch22.pth
+  end_training: 14:24 08/10/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\single\sgmap-net_plc-20_20260810_140708
+  root: experiments/sgmap-net/classification/single
   seed: 111
-  start_training: 10:28 08/04/2026
+  start_training: 14:07 08/10/2026
   task: classification
 labels:
   area_threshold: 0.0
@@ -89,16 +74,16 @@ loss:
       reduction: mean
       weight: null
 model:
-  encoder_name: resnext50_32x4d
+  encoder_name: vit_b_16
   image_size: 256
-  in_channels: 6
+  in_channels: 1
   model_name: sgmap-net
   output_size: 7
   sgmapnet_params:
     embedding_dim: 512
     embedding_fusion: none
     encoder_sharing: shared
-    image_size: null
+    image_size: 224
     input_adapter: adapt
     num_heads: 8
     p_attn: 0.0

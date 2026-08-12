@@ -4,7 +4,7 @@ data:
   - howevalley/patches
   - sonora/patches
   input:
-    rgb+nhd+osm+s-ms:
+    nhd+osm+rgb+s-ms:
       channels:
       - aerialr.tif
       - aerialg.tif

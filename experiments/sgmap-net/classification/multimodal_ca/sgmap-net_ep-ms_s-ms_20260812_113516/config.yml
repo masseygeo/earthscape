@@ -4,76 +4,50 @@ data:
   - howevalley/patches
   - sonora/patches
   input:
-    dem+ep-ms+rgb+s-ms+sds-ms:
+    ep-ms:
       channels:
-      - aerialr.tif
-      - aerialg.tif
-      - aerialb.tif
-      - dem.tif
       - ep_5x5.tif
       - ep_11x11.tif
       - ep_21x21.tif
       - ep_51x51.tif
       - ep_101x101.tif
       - ep_201x201.tif
-      - s.tif
-      - s_10.tif
-      - s_20.tif
-      - s_50.tif
-      - s_100.tif
-      - s_200.tif
-      - sds_5x5.tif
-      - sds_11x11.tif
-      - sds_21x21.tif
-      - sds_51x51.tif
-      - sds_101x101.tif
-      - sds_201x201.tif
       mean:
-      - 81.96619
-      - 81.83767
-      - 74.148636
-      - 578.66797
       - 47.13096
       - 48.969097
       - 49.442913
       - 49.7404
       - 49.89192
       - 49.99699
-      - 5.486915
-      - 4.8205023
-      - 4.4264684
-      - 3.5336185
-      - 2.687141
-      - 1.8690363
-      - 1.2617278
-      - 1.7932228
-      - 2.2564251
-      - 2.894819
-      - 3.3649724
-      - 3.8161497
       sd:
-      - 36.90098
-      - 31.398926
-      - 27.555475
-      - 74.129265
       - 9.864855
       - 11.441515
       - 13.032106
       - 16.5102
       - 19.665495
       - 22.02067
+    s-ms:
+      channels:
+      - s.tif
+      - s_10.tif
+      - s_20.tif
+      - s_50.tif
+      - s_100.tif
+      - s_200.tif
+      mean:
+      - 5.486915
+      - 4.8205023
+      - 4.4264684
+      - 3.5336185
+      - 2.687141
+      - 1.8690363
+      sd:
       - 5.0718284
       - 4.716982
       - 4.337691
       - 3.575751
       - 2.7809925
       - 1.8542851
-      - 1.4703324
-      - 1.8890829
-      - 2.1219993
-      - 2.294933
-      - 2.314537
-      - 2.24883
   root: data
 dataloader:
   base:
@@ -104,20 +78,20 @@ eval:
   - Qr
   optimize_clf_thresholds: true
   thresholds:
-  - 0.3361971974372864
-  - 0.3967810571193695
-  - 0.11190512776374817
-  - 0.3166967034339905
-  - 0.3266068994998932
-  - 0.30781829357147217
-  - 0.4514150619506836
+  - 0.3373855948448181
+  - 0.5014150142669678
+  - 0.09442008286714554
+  - 0.2566637098789215
+  - 0.5559002161026001
+  - 0.4260241985321045
+  - 0.5354278683662415
 experiment:
-  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+ep-ms+s-ms+sds-ms_20260803_185407\best_loss_epoch3.pth
-  end_training: 19:34 08/03/2026
-  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+ep-ms+s-ms+sds-ms_20260803_185407
-  root: experiments/sgmap-net/classification/multimodal_stack
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_ca\sgmap-net_ep-ms_s-ms_20260812_113516\best_loss_epoch12.pth
+  end_training: 12:15 08/12/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_ca\sgmap-net_ep-ms_s-ms_20260812_113516
+  root: experiments/sgmap-net/classification/multimodal_ca
   seed: 111
-  start_training: 18:54 08/03/2026
+  start_training: 11:35 08/12/2026
   task: classification
 labels:
   area_threshold: 0.0
@@ -137,16 +111,16 @@ loss:
       reduction: mean
       weight: null
 model:
-  encoder_name: resnext50_32x4d
+  encoder_name: vit_b_16
   image_size: 256
-  in_channels: 22
+  in_channels: 12
   model_name: sgmap-net
   output_size: 7
   sgmapnet_params:
     embedding_dim: 512
-    embedding_fusion: none
+    embedding_fusion: cross_attention
     encoder_sharing: shared
-    image_size: null
+    image_size: 224
     input_adapter: adapt
     num_heads: 8
     p_attn: 0.0

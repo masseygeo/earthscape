@@ -4,28 +4,28 @@ data:
   - howevalley/patches
   - sonora/patches
   input:
-    dem+nhd+osm+rgb:
+    plc-ms:
       channels:
-      - aerialr.tif
-      - aerialg.tif
-      - aerialb.tif
-      - dem.tif
-      - nhd.tif
-      - osm.tif
+      - plc.tif
+      - plc_10.tif
+      - plc_20.tif
+      - plc_50.tif
+      - plc_100.tif
+      - plc_200.tif
       mean:
-      - 81.96619
-      - 81.83767
-      - 74.148636
-      - 578.66797
-      - null
-      - null
+      - 0.07032508
+      - 0.04538878
+      - 0.055494342
+      - 0.088411525
+      - 0.23687477
+      - 0.2785671
       sd:
-      - 36.90098
-      - 31.398926
-      - 27.555475
-      - 74.129265
-      - null
-      - null
+      - 1.252125
+      - 3.6387227
+      - 3.5395117
+      - 3.1152456
+      - 4.617218
+      - 4.065466
   root: data
 dataloader:
   base:
@@ -56,20 +56,20 @@ eval:
   - Qr
   optimize_clf_thresholds: true
   thresholds:
-  - 0.29827210307121277
-  - 0.5300090312957764
-  - 0.15645334124565125
-  - 0.24083107709884644
-  - 0.42550697922706604
-  - 0.4104788303375244
-  - 0.5757066011428833
+  - 0.4011584222316742
+  - 0.30102962255477905
+  - 0.22081871330738068
+  - 0.2914832830429077
+  - 0.3925909698009491
+  - 0.42060211300849915
+  - 0.613150417804718
 experiment:
-  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847\best_loss_epoch6.pth
-  end_training: 10:37 08/04/2026
-  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847
-  root: experiments/sgmap-net/classification/multimodal_stack
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multiscale_stack\sgmap-net_plc-ms_20260810_205338\best_loss_epoch13.pth
+  end_training: 21:08 08/10/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multiscale_stack\sgmap-net_plc-ms_20260810_205338
+  root: experiments/sgmap-net/classification/multiscale_stack
   seed: 111
-  start_training: 10:28 08/04/2026
+  start_training: 20:53 08/10/2026
   task: classification
 labels:
   area_threshold: 0.0
@@ -89,7 +89,7 @@ loss:
       reduction: mean
       weight: null
 model:
-  encoder_name: resnext50_32x4d
+  encoder_name: vit_b_16
   image_size: 256
   in_channels: 6
   model_name: sgmap-net
@@ -98,7 +98,7 @@ model:
     embedding_dim: 512
     embedding_fusion: none
     encoder_sharing: shared
-    image_size: null
+    image_size: 224
     input_adapter: adapt
     num_heads: 8
     p_attn: 0.0

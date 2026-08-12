@@ -4,28 +4,48 @@ data:
   - howevalley/patches
   - sonora/patches
   input:
-    dem+nhd+osm+rgb:
+    ep-101:
       channels:
-      - aerialr.tif
-      - aerialg.tif
-      - aerialb.tif
-      - dem.tif
-      - nhd.tif
-      - osm.tif
+      - ep_101x101.tif
       mean:
-      - 81.96619
-      - 81.83767
-      - 74.148636
-      - 578.66797
-      - null
-      - null
+      - 49.89192
       sd:
-      - 36.90098
-      - 31.398926
-      - 27.555475
-      - 74.129265
-      - null
-      - null
+      - 19.665495
+    ep-11:
+      channels:
+      - ep_11x11.tif
+      mean:
+      - 48.969097
+      sd:
+      - 11.441515
+    ep-201:
+      channels:
+      - ep_201x201.tif
+      mean:
+      - 49.99699
+      sd:
+      - 22.02067
+    ep-21:
+      channels:
+      - ep_21x21.tif
+      mean:
+      - 49.442913
+      sd:
+      - 13.032106
+    ep-5:
+      channels:
+      - ep_5x5.tif
+      mean:
+      - 47.13096
+      sd:
+      - 9.864855
+    ep-51:
+      channels:
+      - ep_51x51.tif
+      mean:
+      - 49.7404
+      sd:
+      - 16.5102
   root: data
 dataloader:
   base:
@@ -56,20 +76,20 @@ eval:
   - Qr
   optimize_clf_thresholds: true
   thresholds:
-  - 0.29827210307121277
-  - 0.5300090312957764
-  - 0.15645334124565125
-  - 0.24083107709884644
-  - 0.42550697922706604
-  - 0.4104788303375244
-  - 0.5757066011428833
+  - 0.5673640370368958
+  - 0.4489908814430237
+  - 0.0887945368885994
+  - 0.2882750332355499
+  - 0.4874594509601593
+  - 0.4683029055595398
+  - 0.5891757011413574
 experiment:
-  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847\best_loss_epoch6.pth
-  end_training: 10:37 08/04/2026
-  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multimodal_stack\sgmap-net_rgb+dem+nhd+osm_20260804_102847
-  root: experiments/sgmap-net/classification/multimodal_stack
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\multiscale_ca\sgmap-net_ep-5_ep-11_ep-21_ep-51_ep-101_ep-201_20260811_075232\best_loss_epoch2.pth
+  end_training: 08:32 08/11/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\multiscale_ca\sgmap-net_ep-5_ep-11_ep-21_ep-51_ep-101_ep-201_20260811_075232
+  root: experiments/sgmap-net/classification/multiscale_ca
   seed: 111
-  start_training: 10:28 08/04/2026
+  start_training: 07:52 08/11/2026
   task: classification
 labels:
   area_threshold: 0.0
@@ -89,16 +109,16 @@ loss:
       reduction: mean
       weight: null
 model:
-  encoder_name: resnext50_32x4d
+  encoder_name: vit_b_16
   image_size: 256
   in_channels: 6
   model_name: sgmap-net
   output_size: 7
   sgmapnet_params:
     embedding_dim: 512
-    embedding_fusion: none
+    embedding_fusion: cross_attention
     encoder_sharing: shared
-    image_size: null
+    image_size: 224
     input_adapter: adapt
     num_heads: 8
     p_attn: 0.0
