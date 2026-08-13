@@ -55,7 +55,7 @@ def train_epoch(model, train_loader, criterion, optimizer, device, baseline=True
         # get labels and images from batch...
         labels = batch['label'].to(device, non_blocking=True).float()
 
-        # dict of modality tensors to pass to model (SGMap-Net)
+        # dict of modality tensors to pass to model
         modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
 
         # single tensor to pass to model (baseline tests)
@@ -138,7 +138,7 @@ def validate_epoch(model, val_loader, criterion, device, baseline=True):
             # get labels and images from batch...
             labels = batch['label'].to(device, non_blocking=True)
             
-            # dict of modality tensors to pass to model (SGMap-Net)
+            # dict of modality tensors to pass to model 
             modalities = {k: v.to(device, non_blocking=True) for k, v in batch.items() if k != 'label'}
 
             # single tensor to pass to model (baseline tests)
