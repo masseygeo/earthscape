@@ -52,6 +52,9 @@ def parse_args():
     parser.add_argument("--patience", type=int, default=None, help='(Optional) Override config early stopping epoch patience.')
     parser.add_argument("--min_delta", type=float, default=None, help='(Optional) Override config early stopping min_delta.')
     parser.add_argument("--warmup_epochs", type=int, default=None, help='(Optional) Override config early stopping warmup epochs.')
+
+    parser.add_argument("--split_dir", type=str, default=None, help="(Optional) List of patch IDs passed directly.")
+    
     return parser.parse_args()
 
 

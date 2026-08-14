@@ -53,6 +53,11 @@ def config_update(cfg, args):
     if _opt("task") is not None:
         cfg['experiment']['task'] = _opt("task")
 
+    if _opt("split_dir") is not None:
+        cfg['splits']['root'] = _opt("split_dir")
+        cfg['norm']['root'] = _opt("split_dir")
+
+
     if _opt("model_name") is not None:
         cfg['model']['model_name'] = _opt("model_name")
     if _opt("encoder_name") is not None:

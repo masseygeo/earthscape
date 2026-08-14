@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument("--patch_ids_path", type=str, default=None, help="(Optional) Path to GeoJSON file with test patch IDs (must contain column 'patch_id'). If left blank, must use --patch_ids flag.")
     parser.add_argument("--patch_ids", type=str, nargs="+", default=None, help="(Optional) List of patch IDs passed directly.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override seed.")
-    parser.add_argument("--save_gradcams", action="store_true", help="(Optional) Save class-specific Grad-CAM arrays. No argument needed, only flag.",)
+    parser.add_argument("--save_gradcams", action="store_true", help="(Optional) Save class-specific Grad-CAM arrays. No argument needed, only flag.")
     return parser.parse_args()
 
 
