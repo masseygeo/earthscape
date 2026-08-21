@@ -43,7 +43,7 @@ BASE = [
     "--config_path", "configs_template.yml",
     "--mode", "train-test-cross",
     "--task", "classification",
-    "--experiment_root", "experiments/sgmap-net/classification/multimodal_ca"
+    "--experiment_root", "experiments/sgmap-net/classification/variance_splits"
     ]
 
 # experiment grid sweeps...
@@ -61,11 +61,14 @@ GRID = {
         # 'resnet50', 
         # 'vit',
         # 'swin',
-        'sgmap-net'
+        'sgmap-net', 
+        # 'dofa', 
+        # 'panopticon', 
+        # 'copernicus-fm'
     ],
 
     'encoder_name': [
-        # 'resnext50_32x4d', 
+        'resnext50_32x4d', 
         'vit_b_16'
     ],
 
@@ -73,12 +76,15 @@ GRID = {
         ##### SINGLE MODALITIES
         # 'rgb:aerialr.tif,aerialg.tif,aerialb.tif', 
         # 'nir:aerialnir.tif', 
-        # 'dem:dem.tif', 
+        # 'aerial:aerialr.tif,aerialg.tif,aerialb.tif,aerialnir.tif',
+        'dem:dem.tif', 
         # 'nhd:nhd.tif', 'osm:osm.tif',
         # 'ep-5:ep_5x5.tif','ep-11:ep_11x11.tif','ep-21:ep_21x21.tif','ep-51:ep_51x51.tif','ep-101:ep_101x101.tif','ep-201:ep_201x201.tif',
         # 'plc-5:plc.tif','plc-10:plc_10.tif','plc-20:plc_20.tif','plc-50:plc_50.tif','plc-100:plc_100.tif','plc-200:plc_200.tif',
         # 'prc-5:prc.tif','prc-10:prc_10.tif','prc-20:prc_20.tif','prc-50:prc_50.tif','prc-100:prc_100.tif','prc-200:prc_200.tif',
-        # 's-5:s.tif','s-10:s_10.tif','s-20:s_20.tif','s-50:s_50.tif','s-100:s_100.tif','s-200:s_200.tif',
+        # 's-5:s.tif',
+        # 's-10:s_10.tif',
+        # 's-20:s_20.tif','s-50:s_50.tif','s-100:s_100.tif','s-200:s_200.tif',
         # 'sds-5:sds_5x5.tif','sds-11:sds_11x11.tif','sds-21:sds_21x21.tif','sds-51:sds_51x51.tif','sds-101:sds_101x101.tif','sds-201:sds_201x201.tif',
 
 
@@ -112,21 +118,31 @@ GRID = {
         # 'rgb+nhd+osm+s-ms: aerialr.tif,aerialg.tif,aerialb.tif,nhd.tif,osm.tif,s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',
 
         # separate branches (concatenation & cross-attention + GAP)...
-        ['dem:dem.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
-        ['dem:dem.tif', 'rgb:aerialr.tif,aerialg.tif,aerialb.tif'], 
-        ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 'prc-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif'], 
-        ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 'prc-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
-        ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
-        ['prc-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
-        ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif', 'sds-ms:sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'], 
-        ['rgb:aerialr.tif,aerialg.tif,aerialb.tif', 'dem:dem.tif', 'ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif', 'sds-ms:sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'], 
-        ['rgb:aerialr.tif,aerialg.tif,aerialb.tif', 'dem:dem.tif', 'nhd:nhd.tif', 'osm:osm.tif',], 
-        ['rgb:aerialr.tif,aerialg.tif,aerialb.tif', 'nhd:nhd.tif', 'osm:osm.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',], 
+        # ['dem:dem.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
+        # ['dem:dem.tif', 'rgb:aerialr.tif,aerialg.tif,aerialb.tif'], 
+        # ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 'prc-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif'], 
+        # ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 'prc-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
+        # ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
+        # ['prc-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
+        # ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif', 'sds-ms:sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'], 
+        # ['rgb:aerialr.tif,aerialg.tif,aerialb.tif', 'dem:dem.tif', 'ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif', 'sds-ms:sds_5x5.tif,sds_11x11.tif,sds_21x21.tif,sds_51x51.tif,sds_101x101.tif,sds_201x201.tif'], 
+        # ['rgb:aerialr.tif,aerialg.tif,aerialb.tif', 'dem:dem.tif', 'nhd:nhd.tif', 'osm:osm.tif',], 
+        # ['rgb:aerialr.tif,aerialg.tif,aerialb.tif', 'nhd:nhd.tif', 'osm:osm.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',], 
     ],
         
-    'embedding_fusion': ['cross_attention'],
+    'embedding_fusion': ['none'],
 
-    'batch_size': [16]
+    'split_dir': [
+        # 'splits/esv1p1_splits', 
+        'splits/split_seed_42', 
+        'splits/split_seed_90', 
+        'splits/split_seed_128', 
+        'splits/split_seed_256', 
+        ],
+
+    'batch_size': [16],
+
+    # 'lr': [1e-3, 1e-4, 1e-5],
 
     }
 

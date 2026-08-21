@@ -35,7 +35,7 @@ class DOFAClassifier(nn.Module):
         super().__init__()
         self.wavelengths = wavelengths
         self.image_size = image_size
-        self.model = dofa_base_patch16_224(weights=DOFABase16_Weights.DEFAULT, num_classes=num_classes)
+        self.model = dofa_base_patch16_224(weights=DOFABase16_Weights.DOFA_MAE, num_classes=num_classes)
 
     def forward(self, x):
         if x.shape[-2:] != (self.image_size, self.image_size):
@@ -66,7 +66,7 @@ class PanopticonClassifier(nn.Module):
         super().__init__()
         self.channel_ids = channel_ids
         self.image_size = image_size
-        self.model = panopticon_vitb14(weights=Panopticon_Weights.DEFAULT, img_size=image_size)
+        self.model = panopticon_vitb14(weights=Panopticon_Weights.VIT_BASE14, img_size=image_size)
         self.classifier = nn.Linear(768, num_classes)
 
     def forward(self, x):
@@ -104,14 +104,14 @@ class CopernicusFMClassifier(nn.Module):
         Spatial input size.
     """
 
-    def __init__(self, wavelengths=[665, 560, 475, 842], bandwidths=None, language_embed=None, input_mode="spectral", num_classes=7, image_size=224):
+    def __init__(self, wavelengths=[665, 560, 475, 842], bandwidths=[30, 35, 65, 115], language_embed=None, input_mode="spectral", num_classes=7, image_size=224):
         super().__init__()
         self.wavelengths = wavelengths
         self.bandwidths = bandwidths
         self.language_embed = language_embed
         self.input_mode = input_mode
         self.image_size = image_size
-        self.model = copernicusfm_base(weights=CopernicusFM_Base_Weights.DEFAULT)
+        self.model = copernicusfm_base(weights=CopernicusFM_Base_Weights.CopernicusFM_ViT)
         self.classifier = nn.Linear(768, num_classes)
 
     def forward(self, x):

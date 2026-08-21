@@ -8,6 +8,7 @@ from earthscape.constants import SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
 from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls, SGMapNet_Classification
+from earthscape.models.foundation_models import DOFAClassifier, PanopticonClassifier, CopernicusFMClassifier
 from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
 from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 import argparse
@@ -32,13 +33,12 @@ def parse_args():
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
 
-    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin', 'sgmap-net'), default=None, help="(Optional) Override config model.")
+    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin', 'sgmap-net', 'dofa', 'panopticon', 'copernicus-fm'), default=None, help="(Optional) Override config model.")
     parser.add_argument("--encoder_name", type=str, default=None, help="(Optional) Override config encoder name.")
     parser.add_argument("--input_adapter", type=str, default=None, help="(Optional) Override config SGMap-Net input adaptation strategy.")
     parser.add_argument("--encoder_sharing", type=str, default=None, help="(Optional) Override config SGMap-Net encoder sharing strategy.")
     parser.add_argument("--embedding_fusion", type=str, choices=('none', 'concat', 'self_attention', 'cross_attention'), default=None, help="(Optional) Override config SGMap-Net mid-level fusion strategy.")
 
-    # parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
     parser.add_argument("--input", type=str, action="append", default=None, help=("Override input features. Repeat --input to define separate branches. Example: --input dem:dem.tif --input aerial:aerialr.tif,aerialg.tif,aerialb.tif"))
 
     parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override config class-area proportion threshold for target labels.")
@@ -92,6 +92,7 @@ def main():
     input_dict = cfg['data']['input']
 
     # path to training split statistics for normalization
+    print(cfg['norm']['root'])
     norm_stats_path = os.path.abspath(os.path.join(cfg['norm']['root'], cfg['norm']['glob']))
     norm_stats_path = glob.glob(norm_stats_path)[0]
 
@@ -99,6 +100,9 @@ def main():
     # NOTE: modified input dict -> {'dem': {'channels': ['dem.tif'], 'mean': [float], 'sd': [float]}, ...}
     input_dict = get_norm_stats(norm_stats_path, input_dict)
 
+
+
+    # cfg['norm']['normalize'] = False
 
     ##### dataset parameters...
     patch_dirs = [os.path.abspath(os.path.join(cfg['data']['root'], d)) for d in cfg['data']['dirs']]
@@ -201,6 +205,14 @@ def main():
             }
         model = SGMapNet_Classification(modality_configs=input_dict, output_dim=output_size, **params).to(device)
 
+
+    elif model_name == 'dofa':
+        model = DOFAClassifier().to(device)
+    elif model_name == 'panopticon':
+        model = PanopticonClassifier().to(device)
+    elif model_name == 'copernicus-fm':
+        model = CopernicusFMClassifier().to(device)
+    
 
     ##### loss...
     loss_name = cfg['loss']['classification']['name']

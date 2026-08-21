@@ -1,0 +1,122 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    dem:
+      channels:
+      - dem.tif
+      mean:
+      - 580.5244
+      sd:
+      - 74.84305
+  root: data
+dataloader:
+  base:
+    batch_size: 16
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 5
+  warmup_epochs: 5
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.31966832280158997
+  - 0.4886131286621094
+  - 0.6072804927825928
+  - 0.40737202763557434
+  - 0.3695778250694275
+  - 0.4138096272945404
+  - 0.4279078543186188
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\variance_splits\sgmap-net_dem_20260819_185221\best_loss_epoch10.pth
+  end_training: 19:02 08/19/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\variance_splits\sgmap-net_dem_20260819_185221
+  root: experiments/sgmap-net/classification/variance_splits
+  seed: 111
+  start_training: 18:52 08/19/2026
+  task: classification
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  classification:
+    name: bcefocal
+    params:
+      alpha: null
+      gamma: 0.5
+      pos_weight: null
+      reduction: mean
+  segmentation:
+    name: crossentropyloss
+    params:
+      reduction: mean
+      weight: null
+model:
+  encoder_name: resnext50_32x4d
+  image_size: 256
+  in_channels: 1
+  model_name: sgmap-net
+  output_size: 7
+  sgmapnet_params:
+    embedding_dim: 512
+    embedding_fusion: none
+    encoder_sharing: shared
+    image_size: 224
+    input_adapter: adapt
+    num_heads: 8
+    p_attn: 0.0
+    p_resid: 0.0
+    pretrained: true
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/split_seed_256
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: false
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/split_seed_256
+training:
+  device: cuda
+  num_epochs: 150

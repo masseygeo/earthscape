@@ -1,0 +1,137 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    s-ms:
+      channels:
+      - s.tif
+      - s_10.tif
+      - s_20.tif
+      - s_50.tif
+      - s_100.tif
+      - s_200.tif
+      mean:
+      - 5.486915
+      - 4.8205023
+      - 4.4264684
+      - 3.5336185
+      - 2.687141
+      - 1.8690363
+      sd:
+      - 5.0718284
+      - 4.716982
+      - 4.337691
+      - 3.575751
+      - 2.7809925
+      - 1.8542851
+  root: data
+dataloader:
+  base:
+    batch_size: 16
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 5
+  warmup_epochs: 5
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.3091287612915039
+  - 0.3964635729789734
+  - 0.40425512194633484
+  - 0.36169862747192383
+  - 0.3715769946575165
+  - 0.30559855699539185
+  - 0.5437366962432861
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\variance\sgmap-net_s-ms_20260813_205521\best_loss_epoch8.pth
+  end_training: 21:06 08/13/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\variance\sgmap-net_s-ms_20260813_205521
+  root: experiments/sgmap-net/classification/variance
+  seed: 256
+  start_training: 20:55 08/13/2026
+  task: classification
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  classification:
+    name: bcefocal
+    params:
+      alpha: null
+      gamma: 0.5
+      pos_weight: null
+      reduction: mean
+  segmentation:
+    name: crossentropyloss
+    params:
+      reduction: mean
+      weight: null
+model:
+  encoder_name: vit_b_16
+  image_size: 256
+  in_channels: 6
+  model_name: sgmap-net
+  output_size: 7
+  sgmapnet_params:
+    embedding_dim: 512
+    embedding_fusion: none
+    encoder_sharing: shared
+    image_size: 224
+    input_adapter: adapt
+    num_heads: 8
+    p_attn: 0.0
+    p_resid: 0.0
+    pretrained: true
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: false
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150
