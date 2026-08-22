@@ -78,7 +78,7 @@ labels:
 
 
 training:
-  num_epochs: 150    
+  num_epochs: 100    
 
 
 optimizer:
