@@ -7,6 +7,7 @@ from torchgeo.models import DOFABase16_Weights, dofa_base_patch16_224
 from torchgeo.models import Panopticon_Weights, panopticon_vitb14
 from torchgeo.models import CopernicusFM_Base_Weights, copernicusfm_base
 
+from terratorch.registry import BACKBONE_REGISTRY
 
 
 class DOFAClassifier(nn.Module):
@@ -126,4 +127,46 @@ class CopernicusFMClassifier(nn.Module):
             features = self.model(x, metadata, language_embed=self.language_embed.to(x.device), input_mode="variable")
 
         return self.classifier(features)
-    
+
+
+
+
+class TerraMindClassifier(nn.Module):
+    """
+    TerraMind wrapper for EarthScape multilabel classification.
+
+    Parameters
+    ----------
+    modalities : sequence of str
+        Native TerraMind input modalities. EarthScape options are
+        ["RGB"], ["DEM"], or ["RGB", "DEM"].
+
+    num_classes : int, default=7
+        Number of output classes.
+
+    image_size : int, default=224
+        Spatial input size used by TerraMind.
+    """
+
+    def __init__(self, modalities=["RGB"], num_classes=7, image_size=224):
+        super().__init__()
+        self.modalities = modalities
+        self.image_size = image_size
+        self.model = BACKBONE_REGISTRY.build("terramind_v1_small", pretrained=True, modalities=modalities, merge_method="mean")
+        self.classifier = nn.Linear(384, num_classes)
+
+    def forward(self, x):
+        inputs = {}
+
+        for modality in self.modalities:
+            z = x[modality.lower()]
+
+            if z.shape[-2:] != (self.image_size, self.image_size):
+                z = F.interpolate(z, size=(self.image_size, self.image_size), mode="bilinear", align_corners=False)
+
+            inputs[modality] = z
+
+        features = self.model(inputs)[-1]
+        features = features.mean(dim=1)
+
+        return self.classifier(features)

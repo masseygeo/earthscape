@@ -8,7 +8,7 @@ from earthscape.constants import SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
 from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls, SGMapNet_Classification
-from earthscape.models.foundation_models import DOFAClassifier, PanopticonClassifier, CopernicusFMClassifier
+from earthscape.models.foundation_models import DOFAClassifier, PanopticonClassifier, CopernicusFMClassifier, TerraMindClassifier
 from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
 from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 import argparse
@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
 
-    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin', 'sgmap-net', 'dofa', 'panopticon', 'copernicus-fm'), default=None, help="(Optional) Override config model.")
+    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin', 'sgmap-net', 'dofa', 'panopticon', 'copernicus-fm', 'terramind'), default=None, help="(Optional) Override config model.")
     parser.add_argument("--encoder_name", type=str, default=None, help="(Optional) Override config encoder name.")
     parser.add_argument("--input_adapter", type=str, default=None, help="(Optional) Override config SGMap-Net input adaptation strategy.")
     parser.add_argument("--encoder_sharing", type=str, default=None, help="(Optional) Override config SGMap-Net encoder sharing strategy.")
@@ -102,7 +102,7 @@ def main():
 
 
 
-    # cfg['norm']['normalize'] = False
+    cfg['norm']['normalize'] = False
 
     ##### dataset parameters...
     patch_dirs = [os.path.abspath(os.path.join(cfg['data']['root'], d)) for d in cfg['data']['dirs']]
@@ -212,6 +212,9 @@ def main():
         model = PanopticonClassifier().to(device)
     elif model_name == 'copernicus-fm':
         model = CopernicusFMClassifier().to(device)
+    elif model_name == "terramind":
+        modalities = [m.upper() for m in input_dict.keys()]
+        model = TerraMindClassifier(modalities=modalities, num_classes=output_size).to(device)
     
 
     ##### loss...
@@ -246,7 +249,8 @@ def main():
     # define epochs and train/validate model
     epochs = cfg['training']['num_epochs']
     # baseline = len(input_dict.keys()) == 1
-    baseline = model_name != "sgmap-net"
+    # baseline = model_name != "sgmap-net"
+    baseline = model_name not in ("sgmap-net", "terramind")
     early_stop = cfg['early_stop']
     warmup = cfg['optimizer']['warmup']
     cosine_decay = cfg['optimizer']['cosine_decay']

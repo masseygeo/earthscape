@@ -43,7 +43,7 @@ BASE = [
     "--config_path", "configs_template.yml",
     "--mode", "train-test-cross",
     "--task", "classification",
-    "--experiment_root", "experiments/sgmap-net/classification/variance_splits"
+    "--experiment_root", "experiments/sgmap-net/classification/foundation_models/terramind"
     ]
 
 # experiment grid sweeps...
@@ -61,23 +61,24 @@ GRID = {
         # 'resnet50', 
         # 'vit',
         # 'swin',
-        'sgmap-net', 
+        # 'sgmap-net', 
         # 'dofa', 
         # 'panopticon', 
-        # 'copernicus-fm'
+        # 'copernicus-fm', 
+        'terramind'
     ],
 
-    'encoder_name': [
-        'resnext50_32x4d', 
-        'vit_b_16'
-    ],
+    # 'encoder_name': [
+    #     'resnext50_32x4d', 
+    #     'vit_b_16'
+    # ],
 
     'input': [
         ##### SINGLE MODALITIES
         # 'rgb:aerialr.tif,aerialg.tif,aerialb.tif', 
         # 'nir:aerialnir.tif', 
         # 'aerial:aerialr.tif,aerialg.tif,aerialb.tif,aerialnir.tif',
-        'dem:dem.tif', 
+        # 'dem:dem.tif', 
         # 'nhd:nhd.tif', 'osm:osm.tif',
         # 'ep-5:ep_5x5.tif','ep-11:ep_11x11.tif','ep-21:ep_21x21.tif','ep-51:ep_51x51.tif','ep-101:ep_101x101.tif','ep-201:ep_201x201.tif',
         # 'plc-5:plc.tif','plc-10:plc_10.tif','plc-20:plc_20.tif','plc-50:plc_50.tif','plc-100:plc_100.tif','plc-200:plc_200.tif',
@@ -119,7 +120,7 @@ GRID = {
 
         # separate branches (concatenation & cross-attention + GAP)...
         # ['dem:dem.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
-        # ['dem:dem.tif', 'rgb:aerialr.tif,aerialg.tif,aerialb.tif'], 
+        ['dem:dem.tif', 'rgb:aerialr.tif,aerialg.tif,aerialb.tif'], 
         # ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 'prc-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif'], 
         # ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 'prc-ms:prc.tif,prc_10.tif,prc_20.tif,prc_50.tif,prc_100.tif,prc_200.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
         # ['ep-ms:ep_5x5.tif,ep_11x11.tif,ep_21x21.tif,ep_51x51.tif,ep_101x101.tif,ep_201x201.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif'], 
@@ -130,15 +131,15 @@ GRID = {
         # ['rgb:aerialr.tif,aerialg.tif,aerialb.tif', 'nhd:nhd.tif', 'osm:osm.tif', 's-ms:s.tif,s_10.tif,s_20.tif,s_50.tif,s_100.tif,s_200.tif',], 
     ],
         
-    'embedding_fusion': ['none'],
+    # 'embedding_fusion': ['none'],
 
-    'split_dir': [
-        # 'splits/esv1p1_splits', 
-        'splits/split_seed_42', 
-        'splits/split_seed_90', 
-        'splits/split_seed_128', 
-        'splits/split_seed_256', 
-        ],
+    # 'split_dir': [
+    #     'splits/esv1p1_splits', 
+        # 'splits/split_seed_42', 
+        # 'splits/split_seed_90', 
+        # 'splits/split_seed_128', 
+        # 'splits/split_seed_256', 
+        # ],
 
     'batch_size': [16],
 
