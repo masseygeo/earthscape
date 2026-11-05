@@ -4,137 +4,134 @@
 <img src="https://github.com/masseygeo/earthscape/blob/dev_1.1.1/assets/data_eda/esv1p1_warren_modalities.png" width="800">
 </p>
 
-# Introduction
-[![Paper](https://img.shields.io/badge/Paper-10.48550%2FarXiv.2503.15625-BB3E00)](https://doi.org/10.48550/arXiv.2503.15625)
-[![Dataset](https://img.shields.io/badge/Dataset-10.13023%2Fkgs.data.05.01.2025-FFA55D)](https://doi.org/10.13023/kgs.data.05.01.2025)
-[![Python](https://img.shields.io/badge/Python-3.12+-FFDF88)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-
-EarthScape is a living, open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis. It is designed to support multimodal learning, multi-scale reasoning, and evaluation under geographic domain shift.
-
-- Expert-labeled surficial geologic masks and labels
-- LiDAR-derived DEMs and geomorphometric terrain features at multiple spatial resolutions  
-- High-resolution aerial RGB+NIR imagery  
-- Hydrography and infrastructure vector overlays  
-- Benchmarks for multilabel classification
-
-- Expert-labeled surficial geologic segmentation masks
-- High-resolution optical imagery (RGB + NIR)
-- LiDAR-derived digital elevation models (DEM)
-- Multi-scale terrain features derived from DEMs
-- Hydrography and infrastructure vector layers
-
-EarthScape is structured to support:
-
-- Multilabel classification and semantic segmentation tasks
-- Analysis of class imbalance and spatial heterogeneity
-- Controlled experiments on geographic domain shift using disjoint regions with a shared label space
-
-
-# UPDATES!!!
-1. **EarthScape dataset v1.1 is now available!**
-    - Same as v1.0, but with several updates...
-      - Profile and planform curvatures are now consistent across all subsets.
-      - Categorical and binary image features are supplied as `uint8` (instead of `float32`).
-        
-2. **EarthScape codebase v1.1.0 (this repository) has been significantly updated!**
-
-3. **Segmentation functionality and benchmarks are now available!**
-
-
 # Table of Contents
-1. [Getting Started](#getting-started)
-2. [Navigating the Repository](#navigating-the-repository)
-3. [Exploring the Dataset](#exploring-the-dataset)
-4. [Baseline Benchmarks](#baseline-benchmarks)
-5. [Roadmap](#roadmap)
-6. [Citations](#cite)
+1. [Introduction](#introduction)
+2. [Updates](#updates)
+3. [Installation](#installation)
+4. [Model Training and Inference](#experiments)
+5. [Navigating the Repository](#navigating-the-repository)
+6. [Exploring the Dataset](#exploring-the-dataset)
+7. [Baseline Benchmarks](#baseline-benchmarks)
+8. [Roadmap](#roadmap)
+9. [Citations](#cite)
+
+# Introduction
+[![Dataset Version](https://img.shields.io/badge/Dataset%20Version-1.1-BB3E00)](#)
+[![Code Version](https://img.shields.io/badge/Code%20Version-1.1.1-FFA55D)](#)
+[![Dataset](https://img.shields.io/badge/Dataset%20Download-10.13023%2Fkgs.data.05.01.2025-FFDF88)](https://doi.org/10.13023/kgs.data.05.01.2025)
+[![Paper](https://img.shields.io/badge/Paper-10.48550%2FarXiv.2503.15625-5E936C)](https://doi.org/10.48550/arXiv.2503.15625)
+[![License: MIT](https://img.shields.io/badge/License-MIT-BBD8A3)](https://opensource.org/licenses/MIT)
+
+EarthScape is an open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis. It is designed to support multimodal learning, multi-scale reasoning, and geographic domain shift evaluation.
+
+The dataset includes masks/labels and 37 predictive input features...
+- Expert-labeled surficial geologic masks and vector labels
+- LiDAR-derived DEMs and geomorphometric terrain features at multiple spatial resolutions  
+- Aerial RGB+NIR imagery  
+- Hydrography and infrastructure vector layers  
+
+We have published benchmarks for...
+- Multilabel classification
+- Semantic segmentation
+- Geographic domain shift using disjoint regions within a shared label space
+- Model and multimodal fusion performance as functions of dataset characteristics
 
 
-# Getting Started
+# Updates
+1. Codebase v1.1.1 has been updated and extended. (November 2026)
+2. Dataset v1.1 is now available! (April 2026)
+    - Same as v1.0, but with several updates...
+      - Profile and planform curvatures are now consistent across all subsets
+      - Categorical and binary image features are supplied as `uint8` instead of `float32`
 
-## Installation
+
+# Installation
 
 1. Clone the repository.
 2. Install [Conda](https://anaconda.org/channels/anaconda/packages/conda/overview) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main).
 3. Create the environment. If using non-GPU machine, delete 'pytorch-gpu' from [`environment.yml`]().
-```Bash
-conda env create -f environment.yml
-```
+    ```Bash
+    conda env create -f environment.yml
+    ```
 4. Activate the environment.
-```Bash
-conda activate earthscape
-```
+    ```Bash
+    conda activate earthscape
+    ```
 5. Install the earthscape package.
-```Bash
-pip install -e .
-```
+    ```Bash
+    pip install -e .
+    ```
 6. You can now use EarthScape to reproduce the dataset, train and evaluate models, and run analyses. While the full data pipeline is available, most users will prefer downloading the precompiled dataset.
     1. [Download the dataset and metadata files.](https://uknowledge.uky.edu/kgs_data/16/)
     2. Extract all archives into the [`data/`](https://github.com/masseygeo/earthscape/tree/v1.1/data) directory.
 
-## Quickstart
+# Model Training and Inference
 
-Once the repository is cloned and the dataset is added, you are ready to run experiments.
+Once the repository is cloned and the dataset is added, you are ready to run experiments. This codebase comes with several models ready to try, but you can also adapt your own.
 
-### Run a single experiment
+## Run a single experiment
 
-1. Modify [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) file for your experiment. Most settings can also be overridden via CLI flags.
+1. Modify [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) file for your experiment.
+    - Most settings can also be overridden via CLI flags.
+    - A copy of the configs file will be saved in your experiment output folder for reproducibility.
 
 2. Run the training script.
+    - Multilabel classification...
 
-```
-# classification...
-train_cls --config_path earthscape/configs_template.yml --mode train-test-cross
+      ```
+      train_cls --config_path configs_template.yml --mode train-test-cross
+      ```
+      
+    - Semantic segmentation...
 
-# segmentation
-train_seg --config_path earthscape/configs_template.yml --mode train-test-cross
-```
-3. Explore training logs, performance metrics, and visualizations saved for each experiment in an intuitively named output directory `{model}_{modality}_{timestamp}`. Experiment configurations are also automatically saved for reproducibility.
+      ```
+      train_seg --config_path earthscape/configs_template.yml --mode train-test-cross
+      ```
 
+3. Explore training logs and performance metrics for the experiment.
+    - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}` by default
 
-### Run multiple experiments
+## Run multiple experiments
 
-1. Define your sweep (inputs, models, hyperparameters) in the classification [`run_cls.py`](https://github.com/masseygeo/earthscape/blob/v1.1/scripts/run_cls.py) or segmentation [`run_seg.py`](https://github.com/masseygeo/earthscape/blob/v1.1/scripts/run_seg.py) scripts.
+1. Define your sweep (inputs, models, hyperparameters) in the classification [`run_cls.py`](https://github.com/masseygeo/earthscape/blob/v1.1/scripts/run_cls.py) or segmentation [`run_seg.py`](https://github.com/masseygeo/earthscape/blob/v1.1/scripts/run_seg.py) script.
 
 2. Run the script from the command line.
+    - Multilabel Classification
+      ```
+      python scripts/run_cls.py
+      ```
+      
+    - Semantic Segmentation
 
-```
-# classification...
-python scripts/run_cls.py
-
-# segmentation...
-python scripts/run_seg.py
-```
-3. Explore training logs, performance metrics, and visualizations saved for each experiment in an intuitively named output directory `{model}_{modality}_{timestamp}`. Experiment configurations are also automatically saved for reproducibility.
+        ```
+        python scripts/run_seg.py
+        ```
+        
+3. Explore training logs and performance metrics for the experiment.
+    - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}` by default
 
 
 # Navigating the Repository
 - :file_folder: [`assets/`](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
-- :file_folder: [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset and associated metadata; frozen for each minor version (e.g., v1.1.x, v2.0.x, etc.)
-- :file_folder: [`earthscape/`](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Core source code.
-- :file_folder: [`experiments/`](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments with configurations for reproducibility.
+- :file_folder: [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset and associated metadata.)
+- :file_folder: [`earthscape/`](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Source code.
+- :file_folder: [`experiments/`](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments.
 - :file_folder: [`notebooks/`](https://github.com/masseygeo/earthscape/tree/main/notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
 - :file_folder: [`scripts/`](https://github.com/masseygeo/earthscape/tree/main/scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
-- :file_folder: [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits; frozen for each major version (e.g., v1.x, v2.x, etc.).
+- :file_folder: [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits.
 - :page_facing_up: [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md) - Version history.
-- :page_facing_up: [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) - Experiment configuration file to be modified by the user (a copy will be saved with the experiment results).
+- :page_facing_up: [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) - Experiment configuration file to be modified by the user (a copy will be saved with each experiment).
 - :page_facing_up: [`environment.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/environment.yml) - Reproducible environment specification.
-- :page_facing_up: [`pyproject.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/pyproject.toml) - Python package configuration.
+- :page_facing_up: [`pyproject.toml`](https://github.com/masseygeo/earthscape/blob/v1.1/pyproject.toml) - Python package configuration.
 
 
 # Exploring the Dataset
-[![Version](https://img.shields.io/badge/Current%20Version-1.1-BB3E00)](#)
-[![Patches](https://img.shields.io/badge/Available%20Patches-31%2c066-FFA55D)](#)
+[![Dataset Version](https://img.shields.io/badge/Dataset%20Version-1.1-BB3E00)](#)
+[![Patches](https://img.shields.io/badge/Available%20Patches-31%2c018-FFA55D)](#)
 [![Size](https://img.shields.io/badge/Patch%20Size-256x256-FFDF88)](#)
-[![Modalities](https://img.shields.io/badge/Channels-38-5E936C)](#)
+[![Modalities](https://img.shields.io/badge/Input%20Features-37-5E936C)](#)
 [![Classes](https://img.shields.io/badge/Classes-7-BBD8A3)](#)
 [![EPSG](https://img.shields.io/badge/CRS-EPSG:3089-F0F1C5)](#)
-
-
-## Where to get it?
-Metadata, segmentation masks, vector labels, and features can be reproduced with this repository or directly [downloaded](https://uknowledge.uky.edu/kgs_data/16/).
-
 
 ## What's included?
 ### Image Patches
@@ -150,7 +147,7 @@ Metadata, segmentation masks, vector labels, and features can be reproduced with
     - Slope
     - Standard Deviation of Slope
 - Small example smokeset
-- Filenames that use a unique patch ID and modality/scale: *{patch_id}_{modality/scale}.tif*
+- Filenames that use a unique patch ID and modality/scale: `*{patch_id}_{modality/scale}.tif*`
 
 ### Metadata Files
 - [areas.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_areas.csv) - Per-patch class area proportions.
