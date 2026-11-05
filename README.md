@@ -19,7 +19,7 @@
 [![Dataset Version](https://img.shields.io/badge/Dataset%20Version-1.1-BB3E00)](#)
 [![Code Version](https://img.shields.io/badge/Code%20Version-1.1.1-FFA55D)](#)
 [![Dataset](https://img.shields.io/badge/Dataset%20Download-10.13023%2Fkgs.data.05.01.2025-FFDF88)](https://doi.org/10.13023/kgs.data.05.01.2025)
-[![Paper](https://img.shields.io/badge/Paper-10.48550%2FarXiv.2503.15625-5E936C)](https://doi.org/10.48550/arXiv.2503.15625)
+[![Paper](https://img.shields.io/badge/Benchmark%20Paper-10.48550%2FarXiv.2503.15625-5E936C)](https://doi.org/10.48550/arXiv.2503.15625)
 [![License: MIT](https://img.shields.io/badge/License-MIT-BBD8A3)](https://opensource.org/licenses/MIT)
 
 EarthScape is an open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis. It is designed to support multimodal learning, multi-scale reasoning, and geographic domain shift evaluation.
@@ -43,6 +43,20 @@ We have published benchmarks for...
     - Same as v1.0, but with several updates...
       - Profile and planform curvatures are now consistent across all subsets
       - Categorical and binary image features are supplied as `uint8` instead of `float32`
+
+
+# Navigating the Repository
+- :file_folder: [`assets/`](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
+- :file_folder: [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset images and metadata.
+- :file_folder: [`earthscape/`](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Source code.
+- :file_folder: [`experiments/`](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments.
+- :file_folder: [`notebooks/`](https://github.com/masseygeo/earthscape/tree/main/notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
+- :file_folder: [`scripts/`](https://github.com/masseygeo/earthscape/tree/main/scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
+- :file_folder: [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits.
+- :page_facing_up: [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md) - Version history.
+- :page_facing_up: [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) - Experiment configuration file to be modified by the user (a copy will be saved with each experiment).
+- :page_facing_up: [`environment.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/environment.yml) - Reproducible environment specification.
+- :page_facing_up: [`pyproject.toml`](https://github.com/masseygeo/earthscape/blob/v1.1/pyproject.toml) - Python package configuration.
 
 
 # Installation
@@ -111,20 +125,6 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
     - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}` by default
 
 
-# Navigating the Repository
-- :file_folder: [`assets/`](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
-- :file_folder: [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset and associated metadata.)
-- :file_folder: [`earthscape/`](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Source code.
-- :file_folder: [`experiments/`](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments.
-- :file_folder: [`notebooks/`](https://github.com/masseygeo/earthscape/tree/main/notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
-- :file_folder: [`scripts/`](https://github.com/masseygeo/earthscape/tree/main/scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
-- :file_folder: [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits.
-- :page_facing_up: [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md) - Version history.
-- :page_facing_up: [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) - Experiment configuration file to be modified by the user (a copy will be saved with each experiment).
-- :page_facing_up: [`environment.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/environment.yml) - Reproducible environment specification.
-- :page_facing_up: [`pyproject.toml`](https://github.com/masseygeo/earthscape/blob/v1.1/pyproject.toml) - Python package configuration.
-
-
 # Exploring the Dataset
 [![Dataset Version](https://img.shields.io/badge/Dataset%20Version-1.1-BB3E00)](#)
 [![Patches](https://img.shields.io/badge/Available%20Patches-31%2c018-FFA55D)](#)
@@ -134,89 +134,92 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
 [![EPSG](https://img.shields.io/badge/CRS-EPSG:3089-F0F1C5)](#)
 
 ## What's included?
-### Image Patches
-- Segmentation masks
-- Aerial optical imagery (RGB+NIR)
-- LiDAR DEM
-- OpenStreetMap road and railway centerlines
-- U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons
-- DEM-derived terrain features calculated at six spatial resolutions:
-    - Elevation Percentile
-    - Planform Curvature
-    - Profile Curvature
-    - Slope
-    - Standard Deviation of Slope
-- Small example smokeset
-- Filenames that use a unique patch ID and modality/scale: `*{patch_id}_{modality/scale}.tif*`
+Each patch location represents a 256x256 area at 5 ft (~1.52 m) ground sampling distance with 38 channels.
+- Segmentation mask (C=1)
+- Aerial RGB+NIR optical imagery (C=4)
+- LiDAR-derived DEM (C=1)
+- OpenStreetMap road and railway centerlines (C=1)
+- U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons (C=1)
+- Terrain features computed directly from the DEM at six spatial resolutions:
+    - Elevation Percentile (C=6)
+    - Planform Curvature (C=6)
+    - Profile Curvature (C=6)
+    - Slope (C=6)
+    - Standard Deviation of Slope (C=6)
+- All images are in GeoTIFF format using the EPSG:3089 coordinate reference system
+- Images use systematic filename conventions consisting of a unique patch ID, modality, and scale (optional): `{patch_id}_{modality}_{scale}.tif`
 
-### Metadata Files
-- [areas.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_areas.csv) - Per-patch class area proportions.
-- [labels.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_labels.csv) - Binary class presence labels (≥1 pixel).
-- [patches.geojson](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_patches.geojson) - Patch geometries.
-- [metadata.json](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_metadata.json) - Dataset-level metadata.
-- [stats.csv](https://github.com/masseygeo/earthscape/blob/v1.1/data/esv1p1_stats.csv) - Per-modality summary statistics.
-- Common keys (*patch_id*, *modality*) enable joins across files and data layers.
+Additional data is included in `*.csv`, `*.geojson`, and `*.json` files found in the [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) and [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) directories.
+- `*areas.csv` - Provides per-patch class area proportions, which can be used to construct vector labels or guide learning objectives.
+- `*labels.csv` - Binary class presence labels are simple one-hot encodings based on per-patch area proportions >0.0.
+- `*patches.geojson` - Spatial geometries of patch locations, which can be visualized with GIS software.
+- `*metadata.json` - Dataset-level metadata collected during dataset construction.
+- `*stats.csv` - Per-modality summary statistics.
+- Metadata attribute keys (`patch_id`, `modality`) enable joins across files and data layers.
 
 
 ## Dataset Governance and Versioning
-### Major releases (vX.0.0)
-- Introduce substantial changes to dataset scope  
-- May include new geographic regions, label space or classes, tasks (e.g., additional prediction objectives), or significant additions to input modalities or features  
-- Train/validation/test splits may be redefined for each major release
+- Major releases (vX.0.0)
+    - Introduce substantial changes to dataset scope  
+    - May include new geographic regions, label space or classes, tasks (e.g., additional prediction objectives), or significant additions to input modalities or features  
+    - Train/validation/test splits may be redefined for each major release
 
-### Minor releases (vX.Y.0)
-- Update dataset content within the existing scope  
-- May include improved or corrected data processing workflows, updated or refined input features, or additional benchmarks or tasks within the same label space  
-- Train/validation/test splits remain fixed
+- Minor releases (vX.Y.0)
+    - Update dataset content within the existing scope  
+    - May include improved or corrected data processing workflows, updated or refined input features, or additional benchmarks or tasks within the same label space  
+    - Train/validation/test splits remain fixed
 
-### Patch releases (vX.Y.Z)
-- Do not modify dataset content  
-- May include code updates or restructuring, documentation improvements, additional analyses or experiment configurations, or bug fixes and usability enhancements  
+- Patch releases (vX.Y.Z)
+    - Does not modify dataset scope or content  
+    - May include code updates or restructuring, documentation improvements, additional analyses or experiment configurations, or bug fixes and usability enhancements  
 
-### Versioning
-- The [downloadable dataset](https://uknowledge.uky.edu/kgs_data/16/) corresponds to the latest major or minor version (e.g., v1.0, v1.1, v2.0)
-- The GitHub repository reflects the corresponding dataset version, along with any subsequent patch-level updates
-- Version changes will be documented in [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md)
+- Versioning
+    - The published dataset download corresponds to the latest major/minor version
+    - The GitHub repository reflects the corresponding dataset version (major/minor), along with any subsequent patch-level updates
+    - All version changes are documented in [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md)
 
 
 ## Dataset Preparation
-EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
-
 <p align="center">
-<img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/pipeline.png" width="600">
+<img src="https://github.com/masseygeo/earthscape/blob/v1.1.1/assets/data_eda/pipeline.png" width="600">
 </p>
 
-Check out these notebooks to see how each map area and the smokeset were compiled and processed...
+EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
+
+Check out these notebooks to see how each map area were compiled and processed...
 - [Hardin County, Howe Valley Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_hardin_howevalley.ipynb)
 - [Hardin County, Sonora Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_hardin_sonora.ipynb)
 - [Warren County quadrangles](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_warren.ipynb)
-- [Smokeset](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_smokeset.ipynb)
 
 
 ## Class Labels
-EarthScape defines seven surficial geologic units that form a mutually exclusive representation of surface cover within each study area. These units correspond to distinct surficial geologic processes that are broadly applicable across many landscapes:
+EarthScape defines seven surficial geologic units that form a mutually exclusive representation of surface cover within each study area. Geologic map unit classes correspond to distinct surficial geologic processes that are broadly applicable across many landscapes:
+
 - Fluvial deposits — Qal (alluvium), Qat (terrace deposits)
 - Debris-flow deposits — Qaf (alluvial fans)
 - Hillslope materials — Qc (colluvium), Qca (colluvial aprons)
 - In-situ weathering — Qr (residuum)
 - Anthropogenic modification — af1 (artificial fill)
 
+It's important to note that the label space remains fixed across EarthScape, which allows isolation of model, fusion, or shift effects. 
+
 
 ## Dataset Characteristics
-- Severe class imbalance and long-tailed distribution.
-- Class frequencies span more than two orders of magnitude, with dominant units (e.g., Qr) present in most patches and rare units (e.g., Qaf, Qat) appearing infrequently.
-- Inter-patch spatial structure and class co-occurrence.
-- Class presence, frequency, and combinations vary systematically across geographic regions, reflecting spatial autocorrelation and non-random class co-occurrence patterns.
-- Intra-patch complexity (multilabel structure) where each patch may contain between 1 and 6 classes, with highly variable spatial footprints and irregular geometries.
-- Geographic domain shift (covariate shift) where disjoint regions share the same label space, but differ in input feature distributions.
-
 <p align="center">
-<img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/class_dist.png" width="800">
+<img src="https://github.com/masseygeo/earthscape/blob/dev_1.1.1/assets/data_eda/dataset_characterization.png" width="800">
 </p>
+
+- Label imbalance and long-tailed distribution.
+    - Class frequencies span more than two orders of magnitude
+- Intra-patch complexity 
+    - Label cardinality varies between 1 and 6 classes, with highly variable spatial supports.
+
+- Inter-patch spatial structure and class co-occurrence.
+    - Class presence and frequency vary systematically across geographic regions, reflecting spatial autocorrelation and non-random class co-occurrence patterns.
+    - Maximum mean discrepancy shows that input feature distributions shift across region, ranging from 0.007 for planform curvature (200 ft GSD) to 0.273 for raw DEM (5 ft GSD)
 
 See the following notebook for more in-depth analysis of the dataset...
 - [EarthScape Exploratory Data Analysis (EDA)](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_eda.ipynb)
-
 
 
 # Baseline Benchmarks
