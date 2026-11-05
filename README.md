@@ -1,12 +1,12 @@
 # EarthScape: A Multimodal Dataset and Benchmark for Surficial Geologic Mapping and Earth Surface Analysis
 
 <p align="center">
-<img src="https://github.com/masseygeo/earthscape/blob/v1.1/assets/data_eda/esv1p1_warren_modalities.png" width="800">
+<img src="https://github.com/masseygeo/earthscape/blob/dev_1.1.1/assets/data_eda/esv1p1_warren_modalities.png" width="800">
 </p>
 
 # Introduction
 [![Paper](https://img.shields.io/badge/Paper-10.48550%2FarXiv.2503.15625-BB3E00)](https://doi.org/10.48550/arXiv.2503.15625)
-[![Dataset](https://img.shields.io/badge/Dataset-10.13023%2Fkgs.data.05.01.2025-FFA55D)](https://uknowledge.uky.edu/kgs_data/16/)
+[![Dataset](https://img.shields.io/badge/Dataset-10.13023%2Fkgs.data.05.01.2025-FFA55D)](https://doi.org/10.13023/kgs.data.05.01.2025)
 [![Python](https://img.shields.io/badge/Python-3.12+-FFDF88)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
