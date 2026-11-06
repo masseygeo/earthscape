@@ -8,10 +8,10 @@
 1. [Introduction](#introduction)
 2. [Updates](#updates)
 3. [Installation](#installation)
-4. [Model Training and Inference](#experiments)
+4. [Model Training and Inference](#model-training-and-inference)
 5. [Navigating the Repository](#navigating-the-repository)
 6. [Exploring the Dataset](#exploring-the-dataset)
-7. [Baseline Benchmarks](#baseline-benchmarks)
+7. [Benchmarks](#benchmarks)
 8. [Roadmap](#roadmap)
 9. [Citations](#cite)
 
@@ -75,9 +75,10 @@ We have published benchmarks for...
     ```Bash
     pip install -e .
     ```
-You can now use EarthScape to reproduce the dataset, train and evaluate models, and run analyses. While the full data pipeline is available, most users will prefer downloading the precompiled dataset.
-    1. [Download the dataset and metadata files.](https://doi.org/10.13023/kgs.data.05.01.2025)
-    2. Extract all archives into the [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) directory.
+While the full data pipeline is available and reproducible, most users will prefer downloading the precompiled dataset...
+1. Download the dataset and metadata files [here](https://doi.org/10.13023/kgs.data.05.01.2025).
+2. Extract all archives into the [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) directory.
+
 
 # Model Training and Inference
 
