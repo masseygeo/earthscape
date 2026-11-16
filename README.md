@@ -1,7 +1,7 @@
 # EarthScape: A Multimodal Dataset and Benchmark for Surficial Geologic Mapping and Earth Surface Analysis
 
 <p align="center">
-<img src="https://github.com/masseygeo/earthscape/blob/dev_1.1.1/assets/data_eda/esv1p1_warren_modalities.png" width="800">
+<img src="assets/data_eda/esv1p1_warren_modalities.png" width="800">
 </p>
 
 # Table of Contents
@@ -17,10 +17,11 @@
 
 # Introduction
 [![Dataset Version](https://img.shields.io/badge/Dataset%20Version-1.1-BB3E00)](#)
-[![Code Version](https://img.shields.io/badge/Code%20Version-1.1.1-FFA55D)](#)
+[![Codebase Version](https://img.shields.io/badge/Codebase%20Version-1.1.1-FFA55D)](#)
+[![License: MIT](https://img.shields.io/badge/License-MIT-BBD8A3)](https://opensource.org/licenses/MIT)
+
 [![Dataset](https://img.shields.io/badge/Dataset%20Download-10.13023%2Fkgs.data.05.01.2025-FFDF88)](https://doi.org/10.13023/kgs.data.05.01.2025)
 [![Paper](https://img.shields.io/badge/Benchmark%20Paper-10.48550%2FarXiv.2503.15625-5E936C)](https://doi.org/10.48550/arXiv.2503.15625)
-[![License: MIT](https://img.shields.io/badge/License-MIT-BBD8A3)](https://opensource.org/licenses/MIT)
 
 EarthScape is an open-source, AI-ready geospatial dataset for surficial geologic mapping and Earth surface analysis. It is designed to support multimodal learning, multi-scale reasoning, and geographic domain shift evaluation.
 
@@ -38,25 +39,26 @@ We have published benchmarks for...
 
 
 # Updates
-1. Codebase v1.1.1 has been updated and extended. (November 2026)
-2. Dataset v1.1 is now available! (April 2026)
-    - Same as v1.0, but with several updates...
-      - Profile and planform curvatures are now consistent across all subsets
-      - Categorical and binary image features are supplied as `uint8` instead of `float32`
+- **November 2026:** Codebase v1.1.1 has been updated and extended.
+    - SGMap-Net model with experiments
+- **April 2026:** Dataset v1.1 and codebase v1.1.0 are now available!
+    - Profile and planform curvatures are now consistent across all subsets
+    - Categorical and binary image features are supplied as `uint8` instead of `float32`
+    - Baseline model experiments
 
 
 # Navigating the Repository
-- :file_folder: [`assets/`](https://github.com/masseygeo/earthscape/tree/main/assets) - Figures and tables from dataset and experiment analyses.
-- :file_folder: [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) - Dataset images and metadata.
-- :file_folder: [`earthscape/`](https://github.com/masseygeo/earthscape/tree/main/earthscape) - Source code.
-- :file_folder: [`experiments/`](https://github.com/masseygeo/earthscape/tree/main/experiments) - Multilabel classification and segmentation experiments.
-- :file_folder: [`notebooks/`](https://github.com/masseygeo/earthscape/tree/main/notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
-- :file_folder: [`scripts/`](https://github.com/masseygeo/earthscape/tree/main/scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
-- :file_folder: [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) - Train, validation, in-domain, and cross-domain test splits.
-- :page_facing_up: [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md) - Version history.
-- :page_facing_up: [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) - Experiment configuration file to be modified by the user (a copy will be saved with each experiment).
-- :page_facing_up: [`environment.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/environment.yml) - Reproducible environment specification.
-- :page_facing_up: [`pyproject.toml`](https://github.com/masseygeo/earthscape/blob/v1.1/pyproject.toml) - Python package configuration.
+- :file_folder: [`assets/`](assets) - Figures and tables from dataset and experiment analyses.
+- :file_folder: [`data/`](data) - Dataset images and metadata.
+- :file_folder: [`earthscape/`](earthscape) - Source code.
+- :file_folder: [`experiments/`](experiments) - Multilabel classification and segmentation experiments.
+- :file_folder: [`notebooks/`](notebooks) - Jupyter notebooks for dataset generation, statistics, splits, and analysis.
+- :file_folder: [`scripts/`](scripts) - Experiment orchestration scripts for bulk hyperparameter sweeps.
+- :file_folder: [`splits/`](splits) - Train, validation, in-domain, and cross-domain test splits.
+- :page_facing_up: [`CHANGELOG.md`](CHANGELOG.md) - Version history.
+- :page_facing_up: [`configs_template.yml`](configs_template.yml) - Experiment configuration file to be modified by the user.
+- :page_facing_up: [`environment.yml`](environment.yml) - Reproducible environment specification.
+- :page_facing_up: [`pyproject.toml`](pyproject.toml) - Python package configuration.
 
 
 # Installation
@@ -71,13 +73,13 @@ We have published benchmarks for...
     ```Bash
     conda activate earthscape
     ```
-5. Install the earthscape package.
+5. Install the EarthScape package.
     ```Bash
     pip install -e .
     ```
 While the full data pipeline is available and reproducible, most users will prefer downloading the precompiled dataset...
 1. Download the dataset and metadata files [here](https://doi.org/10.13023/kgs.data.05.01.2025).
-2. Extract all archives into the [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) directory.
+2. Extract all archives into the [`data/`](data) directory.
 
 
 # Model Training and Inference
@@ -104,7 +106,7 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
       ```
 
 3. Explore training logs and performance metrics for the experiment.
-    - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}` by default
+    - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}`
 
 ## Run multiple experiments
 
@@ -123,7 +125,6 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
         ```
         
 3. Explore training logs and performance metrics for the experiment.
-    - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}` by default
 
 
 # Exploring the Dataset
@@ -135,18 +136,22 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
 [![EPSG](https://img.shields.io/badge/CRS-EPSG:3089-F0F1C5)](#)
 
 ## What's included?
-Each patch location represents a 256x256 area at 5 ft (~1.52 m) ground sampling distance with 38 channels. All images are in GeoTIFF format using the EPSG:3089 coordinate reference system. Images use systematic filename conventions: `{patch_id}_{modality}_{scale}.tif`.
-- Segmentation mask (C=1)
-- Aerial RGB+NIR optical imagery (C=4)
-- LiDAR-derived DEM (C=1)
-- OpenStreetMap road and railway centerlines (C=1)
-- U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons (C=1)
-- Terrain features computed directly from the DEM at six spatial resolutions:
-    - Elevation Percentile (C=6)
+Each patch location represents a 256x256 area at 5 ft (~1.52 m) ground sampling distance with 38 channels. All images are in GeoTIFF format using the EPSG:3089 coordinate reference system. Images are single channel and use systematic filename conventions of `{patch_id)_{modality}_{scale, optional}.tif`
+- Segmentation mask: `*_mask.tif`
+- Aerial RGB+NIR optical imagery: `*_aerialr.tif`, `*_aerialg.tif`, `*_aerialb.tif`, `*_aerialnir.tif`
+- LiDAR-derived DEM: `*_dem.tif`
+- OpenStreetMap road and railway centerlines: `*_osm.tif`
+- U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons: `*_nhd.tif`
+- Terrain features computed directly from the DEM at six spatial resolutions...
+    - Elevation Percentile: `*_ep_5x5.tif`, 
     - Planform Curvature (C=6)
     - Profile Curvature (C=6)
     - Slope (C=6)
     - Standard Deviation of Slope (C=6)
+- Images are single channel and use systematic filename conventions...
+    - DEM: `*_dem.tif`
+    - RGB+NIR: `*_aerialr.tif`, `*_aerialg.tif`, `*_aerialb.tif`, `*_aerialnir.tif`
+    - OSM
 
 Additional data is included in `*.csv`, `*.geojson`, and `*.json` files found in the [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) and [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) directories.
 - `*areas.csv` - Provides per-patch class area proportions, which can be used to construct vector labels or guide learning objectives.
