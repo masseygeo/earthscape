@@ -1,0 +1,121 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    ep-ms:
+      channels:
+      - ep_5x5.tif
+      - ep_11x11.tif
+      - ep_21x21.tif
+      - ep_51x51.tif
+      - ep_101x101.tif
+      - ep_201x201.tif
+      mean:
+      - 47.13096
+      - 48.969097
+      - 49.442913
+      - 49.7404
+      - 49.89192
+      - 49.99699
+      sd:
+      - 9.864855
+      - 11.441515
+      - 13.032106
+      - 16.5102
+      - 19.665495
+      - 22.02067
+  root: data
+dataloader:
+  base:
+    batch_size: 64
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 10
+  warmup_epochs: 20
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.36337241530418396
+  - 0.5864220261573792
+  - 0.12048033624887466
+  - 0.29363924264907837
+  - 0.4116884768009186
+  - 0.40677520632743835
+  - 0.49840277433395386
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\baselines\classification\multiscale\vit_ep-ms_20260322_223551\best_loss_epoch32.pth
+  end_training: 23:11 03/22/2026
+  output_dir: E:\GitHub\earthscape\experiments\baselines\classification\multiscale\vit_ep-ms_20260322_223551
+  root: experiments/baselines/classification/multiscale
+  seed: 111
+  start_training: 22:35 03/22/2026
+  task: classification
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  name: bcefocal
+  params:
+    alpha: null
+    gamma: 0
+    pos_weight: null
+    reduction: mean
+model:
+  encoder_name: null
+  image_size: 256
+  in_channels: 6
+  model_name: vit
+  output_size: 7
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: true
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150
