@@ -8,7 +8,7 @@ from earthscape.constants import SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
 from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls, SGMapNet_Classification
-from earthscape.models.foundation_models import DOFAClassifier, PanopticonClassifier, CopernicusFMClassifier, TerraMindClassifier
+# from earthscape.models.foundation_models import DOFAClassifier, PanopticonClassifier, CopernicusFMClassifier, TerraMindClassifier
 from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
 from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 import argparse
@@ -205,16 +205,35 @@ def main():
             }
         model = SGMapNet_Classification(modality_configs=input_dict, output_dim=output_size, **params).to(device)
 
+    elif model_name in ('dofa', 'panopticon', 'copernicus-fm', 'terramind'):
+        from earthscape.models.foundation_models import (
+            DOFAClassifier,
+            PanopticonClassifier,
+            CopernicusFMClassifier,
+            TerraMindClassifier,
+        )
 
-    elif model_name == 'dofa':
-        model = DOFAClassifier().to(device)
-    elif model_name == 'panopticon':
-        model = PanopticonClassifier().to(device)
-    elif model_name == 'copernicus-fm':
-        model = CopernicusFMClassifier().to(device)
-    elif model_name == "terramind":
-        modalities = [m.upper() for m in input_dict.keys()]
-        model = TerraMindClassifier(modalities=modalities, num_classes=output_size).to(device)
+        if model_name == 'dofa':
+            model = DOFAClassifier().to(device)
+        elif model_name == 'panopticon':
+            model = PanopticonClassifier().to(device)
+        elif model_name == 'copernicus-fm':
+            model = CopernicusFMClassifier().to(device)
+        elif model_name == 'terramind':
+            modalities = [m.upper() for m in input_dict.keys()]
+            model = TerraMindClassifier(
+                modalities=modalities,
+                num_classes=output_size
+            ).to(device)
+    # elif model_name == 'dofa':
+    #     model = DOFAClassifier().to(device)
+    # elif model_name == 'panopticon':
+    #     model = PanopticonClassifier().to(device)
+    # elif model_name == 'copernicus-fm':
+    #     model = CopernicusFMClassifier().to(device)
+    # elif model_name == "terramind":
+    #     modalities = [m.upper() for m in input_dict.keys()]
+    #     model = TerraMindClassifier(modalities=modalities, num_classes=output_size).to(device)
     
 
     ##### loss...
