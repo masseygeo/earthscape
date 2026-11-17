@@ -13,7 +13,8 @@
 6. [Exploring the Dataset](#exploring-the-dataset)
 7. [Benchmarks](#benchmarks)
 8. [Roadmap](#roadmap)
-9. [Citations](#cite)
+9. [Contributions](#contributing_to_earthscape)
+10. [Citations](#cite)
 
 # Introduction
 [![Dataset Version](https://img.shields.io/badge/Dataset%20Version-1.1-BB3E00)](#)
