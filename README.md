@@ -73,7 +73,7 @@ We have published benchmarks for...
     ```Bash
     pip install -e .
     ```
-8. Install the precompiled dataset<sup>2</sup>.
+7. Install the precompiled dataset<sup>2</sup>.
     1. Download the dataset and metadata files [here](https://doi.org/10.13023/kgs.data.05.01.2025).
     2. Extract all archives into the [`data/`](data) directory.
 
