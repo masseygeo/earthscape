@@ -226,7 +226,7 @@ Five geospatial foundation models (Copernicus-FM, DOFA, Galileo, Panopticon, and
 - Class imbalance remains a major challenge. Rare geologic classes exhibit poor cross-domain F1, although relatively high AUC in some configurations indicates retained discriminative ability.
 - Geographic robustness is representation-dependent. Cross-domain performance degradation is associated with differences in input distributions, with the strength of this relationship varying by backbone and fusion strategy.
 
-Check out these notebooks for more information and visualizations...
+Check out these notebooks for more information and visualizations:
 - [Classification](notebooks/analysis_cls.ipynb)
 - [Segmentation](notebooks/analysis_seg.ipynb)
 
