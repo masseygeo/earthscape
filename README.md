@@ -1,20 +1,9 @@
 # EarthScape: A Multimodal Dataset and Benchmark for Surficial Geologic Mapping and Earth Surface Analysis
 
 <p align="center">
-<img src="assets/data_eda/esv1p1_warren_modalities.png" width="800">
+<img src="assets/data_eda/esv1p1_warren_modalities.png" width="600">
 </p>
 
-# Table of Contents
-1. [Introduction](#introduction)
-2. [Updates](#updates)
-3. [Navigating the Repository](#navigating-the-repository)
-4. [Installation](#installation)
-5. [Model Training and Inference](#model-training-and-inference)
-6. [Exploring the Dataset](#exploring-the-dataset)
-7. [Benchmarks](#benchmarks)
-8. [Roadmap](#roadmap)
-9. [Contributions](#contributions)
-10. [Citations](#cite)
 
 # Introduction
 [![Dataset Version](https://img.shields.io/badge/Dataset%20Version-1.1-BB3E00)](#)
@@ -37,6 +26,18 @@ We have published benchmarks for...
 - Semantic segmentation
 - Geographic domain shift using disjoint regions within a shared label space
 - Model and multimodal fusion performance as functions of dataset characteristics
+
+
+# Table of Contents
+1. [Updates](#updates)
+2. [Navigating the Repository](#navigating-the-repository)
+3. [Installation](#installation)
+4. [Model Training and Inference](#model-training-and-inference)
+5. [Exploring the Dataset](#exploring-the-dataset)
+6. [Benchmarks](#benchmarks)
+7. [Roadmap](#roadmap)
+8. [Contributions](#contributions)
+9. [Citations](#cite)
 
 
 # Updates
@@ -78,9 +79,10 @@ We have published benchmarks for...
     ```Bash
     pip install -e .
     ```
-While the full data pipeline is available and reproducible, most users will prefer downloading the precompiled dataset...
-1. Download the dataset and metadata files [here](https://doi.org/10.13023/kgs.data.05.01.2025).
-2. Extract all archives into the [`data/`](data) directory.
+6. Install the precompiled dataset.
+    1. Download the dataset and metadata files [here](https://doi.org/10.13023/kgs.data.05.01.2025).
+    2. Extract all archives into the [`data/`](data) directory.
+    - *Note: The dataset is also reproducible using the full pipeline.*
 
 
 # Model Training and Inference
@@ -143,18 +145,15 @@ Each patch location represents a 256x256 area at 5 ft (~1.52 m) ground sampling 
 - LiDAR-derived DEM: `*_dem.tif`
 - OpenStreetMap road and railway centerlines: `*_osm.tif`
 - U.S. Geological Survey National Hydrography Dataset stream flowlines and water body polygons: `*_nhd.tif`
-- Terrain features computed directly from the DEM at six spatial resolutions...
-    - Elevation Percentile: `*_ep_5x5.tif`, 
-    - Planform Curvature (C=6)
-    - Profile Curvature (C=6)
-    - Slope (C=6)
-    - Standard Deviation of Slope (C=6)
-- Images are single channel and use systematic filename conventions...
-    - DEM: `*_dem.tif`
-    - RGB+NIR: `*_aerialr.tif`, `*_aerialg.tif`, `*_aerialb.tif`, `*_aerialnir.tif`
-    - OSM
+- Five terrain features are computed directly from the DEM at six spatial resolutions. Elevation Profile and Standard Deviation of Slope are calculated using variable windows with the original DEM, with the window size indicated in the filename. Planform Curvature, Profile Curvature, and Slope are computed by downsampling the original DEM to five additional resolutions, with the DEM resolution used indicated in the filename. Window sizes and DEM resolutions were selected so that each terrain feature has the same approximate spatial support.
+    - Elevation Percentile: `*_ep_5x5.tif`, `*_ep_11x11.tif`, `*_ep_21x21.tif`, `*_ep_51x51.tif`, `*_ep_101x101.tif`, `*_ep_201x201.tif`
+    - Standard Deviation of Slope: `*_sds_5x5.tif`, `*_sds_11x11.tif`, `*_sds_21x21.tif`, `*_sds_51x51.tif`, `*_sds_101x101.tif`, `*_sds_201x201.tif`
+    - Planform Curvature: `*_plc.tif`, `*_plc_10.tif`, `*_plc_20.tif`, `*_plc_50.tif`, `*_plc_100.tif`, `*_plc_200.tif`
+    - Profile Curvature: `*_prc.tif`, `*_prc_10.tif`, `*_prc_20.tif`, `*_prc_50.tif`, `*_prc_100.tif`, `*_prc_200.tif`
+    - Slope: `*_s.tif`, `*_s_10.tif`, `*_s_20.tif`, `*_s_50.tif`, `*_s_100.tif`, `*_s_200.tif`
 
-Additional data is included in `*.csv`, `*.geojson`, and `*.json` files found in the [`data/`](https://github.com/masseygeo/earthscape/tree/main/data) and [`splits/`](https://github.com/masseygeo/earthscape/tree/main/splits) directories.
+
+Additional data is included in `*.csv`, `*.geojson`, and `*.json` files found in the [`data/`](data) and [`splits/`](splits) directories.
 - `*areas.csv` - Provides per-patch class area proportions, which can be used to construct vector labels or guide learning objectives.
 - `*labels.csv` - Binary class presence labels are simple one-hot encodings based on per-patch area proportions >0.0.
 - `*patches.geojson` - Spatial geometries of patch locations, which can be visualized with GIS software.
@@ -162,30 +161,18 @@ Additional data is included in `*.csv`, `*.geojson`, and `*.json` files found in
 - `*stats.csv` - Per-modality summary statistics.
 - Metadata attribute keys (`patch_id`, `modality`) enable joins across files and data layers.
 
-
-## Dataset Governance and Versioning
-Major releases (vX.0.0) introduce substantial changes to dataset scope, including new geographic regions, label space or classes, tasks, or significant additions to input modalities or features. Train/validation/test splits may be redefined for each major release.
-
-Minor releases (vX.Y.0) update dataset content within the existing scope. This may include improved or corrected data processing workflows, updated or refined input features, or additional benchmarks or tasks. Train/validation/test splits remain fixed.
-
-Patch releases (vX.Y.Z) do not modify dataset scope or content. These changes may include code updates or restructuring, documentation improvements, additional analyses or experiment configurations, or bug fixes and usability enhancements.
-
-Versioning reflects the current dataset version and the codebase. The published dataset download corresponds to the latest major/minor version. The GitHub repository reflects the corresponding dataset version (major/minor), along with any subsequent patch-level updates. All version changes are documented in [`CHANGELOG.md`](https://github.com/masseygeo/earthscape/blob/v1.1/CHANGELOG.md)
-
-
 ## Dataset Preparation
 <p align="center">
-<img src="https://github.com/masseygeo/earthscape/blob/v1.1.1/assets/data_eda/pipeline.png" width="600">
+<img src="assets/data_eda/pipeline.png" width="600">
 </p>
 
-EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.5 m) GSD. Terrain features are computed across multiple spatial scales. Slope and curvatures are calculated using 5x5 windows on DEMs resampled to 5, 10, 20, 50, 100, and 200 ft resolutions. Elevation percentile and slope standard deviation are computed from only the 5 ft DEM using variable kernel sizes (5x5, 11x11, 21x21, 51x51, 101x101, 201x201) to ensure a consistent effective spatial footprint across features. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
+EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.52 m) GSD. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
 
 Check out these notebooks to see how each map area were compiled and processed...
-- [Hardin County, Howe Valley Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_hardin_howevalley.ipynb)
-- [Hardin County, Sonora Quadrangle](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_hardin_sonora.ipynb)
-- [Warren County quadrangles](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_warren.ipynb)
-- [Training, Validation, and Testing Splits](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/splits.ipynb)
-
+- [Hardin County, Howe Valley Quadrangle](notebooks/data_hardin_howevalley.ipynb)
+- [Hardin County, Sonora Quadrangle](notebooks/data_hardin_sonora.ipynb)
+- [Warren County quadrangles](notebooks/data_warren.ipynb)
+- [Training, Validation, and Testing Splits](notebooks/splits.ipynb)
 
 ## Class Labels
 EarthScape defines seven surficial geologic units that form a mutually exclusive representation of surface cover within each study area. Geologic map unit classes correspond to distinct surficial geologic processes that are broadly applicable across many landscapes:
@@ -198,82 +185,80 @@ EarthScape defines seven surficial geologic units that form a mutually exclusive
 
 It's important to note that the label space remains fixed across EarthScape, which allows isolation of model, fusion, or shift effects. 
 
-
 ## Dataset Characteristics
 <p align="center">
-<img src="https://github.com/masseygeo/earthscape/blob/dev_1.1.1/assets/data_eda/dataset_characterization.png" width="800">
+<img src="assets/data_eda/dataset_characterization.png" width="600">
 </p>
 
 - Label imbalance and long-tailed distribution.
     - Class frequencies span more than two orders of magnitude
 - Intra-patch complexity 
     - Label cardinality varies between 1 and 6 classes, with highly variable spatial supports.
-
 - Inter-patch spatial structure and class co-occurrence.
     - Class presence and frequency vary systematically across geographic regions, reflecting spatial autocorrelation and non-random class co-occurrence patterns.
     - Maximum mean discrepancy shows that input feature distributions shift across region, ranging from 0.007 for planform curvature (200 ft GSD) to 0.273 for raw DEM (5 ft GSD)
 
 See the following notebook for more in-depth analysis of the dataset...
-- [EarthScape Exploratory Data Analysis (EDA)](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/data_eda.ipynb)
+- [EarthScape Exploratory Data Analysis (EDA)](notebooks/data_eda.ipynb)
 
+
+## Dataset Governance and Versioning
+Major releases (vX.0.0) introduce substantial changes to dataset scope, including new geographic regions, label space or classes, tasks, or significant additions to input modalities or features. Train/validation/test splits may be redefined for each major release.
+
+Minor releases (vX.Y.0) update dataset content within the existing scope. This may include improved or corrected data processing workflows, updated or refined input features, or additional benchmarks or tasks. Train/validation/test splits remain fixed.
+
+Patch releases (vX.Y.Z) do not modify dataset scope or content. These changes may include code updates or restructuring, documentation improvements, additional analyses or experiment configurations, or bug fixes and usability enhancements.
+
+Versioning reflects the current dataset version and the codebase. The published dataset download corresponds to the latest major/minor version. The GitHub repository reflects the corresponding dataset version (major/minor), along with any subsequent patch-level updates. All version changes are documented in [`CHANGELOG.md`](CHANGELOG.md)
 
 
 # Benchmarks
 EarthScape includes reproducible baseline experiments designed to evaluate modality contributions, multi-scale representations, and cross-domain generalization.
 
-
 ## Baselines
-- Multilabel Classification
-    - ResNet18, ResNet50, ViT-B/16, Swin-Tiny (no pre-trained weights)
-    - Binary cross entropy, AdamW optimizer, learning rate of 0.0003, linear warmup (5 epochs) + cosine decay, early stopping (patience of 10 epochs)
 
-- Semantic Segmentation
-    - U-Net (ResNet18), DeepLabv3+ (ResNet50), Segformer (MiT-b0) (no pre-trained weights)
-    - Cross entropy, AdamW optimizer, learning rate of 0.0003, linear warmup (5 epochs) + cosine decay, early stopping (patience of 10 epochs)
+Baseline models were evaluated across 45 unimodal, multi-scale, and multimodal input configurations using spatially independent in-domain (Warren County) and cross-domain (Hardin County) test sets. The best-performing configurations were repeated across five independent training runs.
 
-- Input Configurations
-    - All single modalities
-    - Multi-scale combinations of six resolutions of each terrain feature (i.e., slope at six scales)
-    - Select multimodal combinations
-
-**Note: All experiment configuration files ('configs.yml') can be found in the respective experiment output directories.*
-
+- Multilabel classification: ResNet-18, ResNet-50, Swin Transformer (Tiny), and ViT-B/16
+- Semantic segmentation: U-Net (ResNet-18), DeepLabV3+ (ResNet-50), and SegFormer (MiT-B0 & MiT-B2)
+- All models were trained from scratch using binary cross-entropy, AdamW, a learning rate of 3x10<sup>-4</sup>, batch size of 64, and a maximum of 150 epochs, with learning-rate warmup, cosine decay, and early stopping.
+- All experiments can be reproduced using the relevant `config.yml` file found in [`experiments/baselines`](experiments/baselines)
 
 ## SGMap-Net
 
-**Note: All experiment configuration files ('configs.yml') can be found in the respective experiment output directories.*
+SGMap-Net is a modular benchmark model designed to evaluate terrain representations, spatial scale, and multimodal fusion under geographic domain shift. Experiments compared 35 single-input and 15 multi-scale/multimodal configurations using in-domain (Warren County) and cross-domain (Hardin County) test sets, with additional training-seed and data-split sensitivity analyses.
 
+- Multilabel classification: SGMap-Net with ResNeXt-50 and ViT-B/16 encoders.
+- Semantic segmentation: DeepLabV3+ (ResNeXt-50) and SegFormer (MiT-B2).
+- All models were trained using inputs adapted to three channels using 1x1 convolutions, ImageNet-pretrained encoders, AdamW, a learning rate of 3×10<sup>-4</sup>, batch size 16, five-epoch linear warmup, focal loss (classification) or cross-entropy (segmentation), and early stopping.
+- Multi-scale and multimodal performance were compared using early channel stacking, mid-level feature concatenation, and cross-attention fusion methods; self-attention was also considered for single-modality inputs.
 
 ## Foundation Models
-
+Five geospatial foundation models (Copernicus-FM, DOFA, Galileo, Panopticon, and TerraMind) were evaluated using compatible EarthScape modalities and spatially independent in-domain and cross-domain test sets. Models were fully fine-tuned using their native modality handling, with learning-rate sweeps to select the best configuration.
     
 ## Key findings
-- **Multi-scale representations improve robustness.** Stacking terrain features across spatial scales consistently improves stability and cross-domain performance compared to single-scale inputs.
-- **Raw elevation and imagery are brittle under domain shift.** DEM and RGB often perform well in-domain but degrade substantially in cross-domain settings, reflecting sensitivity to regional differences in absolute elevation and appearance.
-- **More modalities do not reliably improve performance.** Adding additional inputs does not consistently yield gains and can introduce redundancy or noise, sometimes degrading performance.
-- **Model architecture influences performance and generalization.** Smaller models (ResNet-18, Swin-Tiny) outperform larger models (ResNet-50, ViT) for multilabel classification, while transformer-based models (SegFormer) outperform CNN-based models for segmentation.
-- **Class imbalance significantly impacts performance.** Rare classes are consistently harder to predict across models and input configurations.
-- **Domain shift remains a central challenge.** All models exhibit performance degradation when evaluated on geographically disjoint regions, highlighting the difficulty of transferring learned representations across landscapes. Modality selection plays a significant role in reducing model transfer failures.
+- Terrain representation and spatial scale influence robustness. Engineered terrain features generally transfer more effectively than raw elevation, while multi-scale and complementary terrain representations provide the strongest overall performance.
+- Raw sensor inputs exhibit substantial geographic degradation. DEM achieves strong in-domain performance but transfers less effectively than engineered terrain representations, while optical imagery provides limited additional benefit.
+- More modalities do not guarantee better performance. Combining inputs does not consistently improve results, emphasizing the importance of complementary information rather than modality count.
+- Fusion effectiveness depends on architecture and domain. Cross-attention provides no systematic advantage over simpler stacking or concatenation, with performance varying across backbones and evaluation domains.
+- Class imbalance remains a major challenge. Rare geologic classes exhibit poor cross-domain F1, although relatively high AUC in some configurations indicates retained discriminative ability.
+- Geographic robustness is representation-dependent. Cross-domain performance degradation is associated with differences in input distributions, with the strength of this relationship varying by backbone and fusion strategy.
 
 Check out these notebooks for more information and visualizations...
-- [Classification](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/analysis_cls.ipynb)
-- [Segmentation](https://github.com/masseygeo/earthscape/blob/v1.1/notebooks/analysis_seg.ipynb)
-
+- [Classification](notebooks/analysis_cls.ipynb)
+- [Segmentation](notebooks/analysis_seg.ipynb)
 
 
 # Roadmap
-### Data Source Expansion
-- Integration of national-scale datasets (USGS 3DEP DEM, NAIP RGB+NIR)
-- Additional terrain features (e.g., topographic position index)
-
-### Geographic Expansion
-- Addition of new mapping within the same label space, which will triple the current size
-
-### Code and Usability
-- Standardized evaluation scripts and reporting tools
-- Improved experiment configuration and orchestration workflows
-- Enhanced dataset indexing and geospatial query capabilities
-
+- Data Source Expansion
+    - Integration of national-scale datasets (USGS 3DEP DEM, NAIP RGB+NIR)
+    - Additional terrain features (e.g., topographic position index)
+- Geographic Expansion
+    - Addition of new mapping within the same label space, which will triple the current size
+- Code and Usability
+    - Standardized evaluation scripts and reporting tools
+    - Improved experiment configuration and orchestration workflows
+    - Enhanced dataset indexing and geospatial query capabilities
 
 
 # Contributions
