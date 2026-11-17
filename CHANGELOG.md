@@ -17,6 +17,7 @@ This codebase release introduces SGMap-Net and its multimodal fusion benchmarks,
 - Updated repository-internal documentation links to use relative paths.
 - Updated experiment analysis notebooks and supporting documentation.
 - Updated package version to 1.1.1.
+- Updated classification CLI imports to prevent optional foundation-model dependencies from being required for baseline and SGMap-Net experiments.
   
 ---
 
