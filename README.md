@@ -97,7 +97,7 @@ Once the repository is cloned, the dataset is added, and earthscape package is i
 2. Run the training script. We will reproduce two previously completed benchmark experiments using the DEM as a single input. The user should note that using [`configs_template.yml`](configs_template.yml) is also perfectly valid in this step, but this example seeks to reproduce existing results.
     - Multilabel classification with SGMap-Net:
       ```
-      train_cls --config_path experiments/sgmap-net/classification/single/sgmap-net_dem_20260802_150104/config.yml --mode train-test-cross --experiment_root experiments/test
+      train_cls --config_path experiments/sgmap-net/classification/single/sgmap-net_dem_20260802_150104/config.yml --mode train-test-cross --task classification --experiment_root experiments/test
       ```
     - Semantic segmentation with Segformer with MiT-B2: 
       ```
