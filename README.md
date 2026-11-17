@@ -32,7 +32,7 @@ We have published benchmarks for...
 1. [Updates](#updates)
 2. [Navigating the Repository](#navigating-the-repository)
 3. [Installation](#installation)
-4. [Model Training and Inference](#model-training-and-inference)
+4. [Quickstart Experiments](#quickstart-experiments)
 5. [Exploring the Dataset](#exploring-the-dataset)
 6. [Benchmarks](#benchmarks)
 7. [Roadmap](#roadmap)
@@ -67,7 +67,7 @@ We have published benchmarks for...
 
 1. Clone the repository.
 2. Install [Conda](https://anaconda.org/channels/anaconda/packages/conda/overview) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main).
-3. Create the environment. If using non-GPU machine, delete 'pytorch-gpu' from [`environment.yml`]().
+3. Create the environment. If using non-GPU machine, delete 'pytorch-gpu' from [`environment.yml`](environment.yml).
     ```Bash
     conda env create -f environment.yml
     ```
@@ -85,7 +85,7 @@ We have published benchmarks for...
     - *Note: The dataset is also reproducible using the full pipeline.*
 
 
-# Model Training and Inference
+# Quickstart Experiments
 
 Once the repository is cloned and the dataset is added, you are ready to run experiments. This codebase comes with several models ready to try, but you can also adapt your own.
 
@@ -105,7 +105,7 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
     - Semantic segmentation...
 
       ```
-      train_seg --config_path earthscape/configs_template.yml --mode train-test-cross
+      train_seg --config_path configs_template.yml --mode train-test-cross
       ```
 
 3. Explore training logs and performance metrics for the experiment.
