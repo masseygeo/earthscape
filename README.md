@@ -110,8 +110,7 @@ Once the repository is cloned, the dataset is added, and earthscape package is i
       
 4. Explore training logs and performance metrics for the experiment.
     - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}`
-    - A copy of the experiment configuration settings (including any CLI flags used) are saved in the output directory in `config.yml`.
-    - In-domain performance results are saved in files denoted with `*id*`; cross-domain results are denoted by files with `*cd*`.
+    - Outputs include the experiment configuration, model architecture, training logs and curves, best-performing model checkpoint, and evaluation results, including in-domain (id) and cross-domain (cd) performance metrics, predictions, and task-specific visualizations
 
 ---
 
