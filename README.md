@@ -7,9 +7,9 @@
 # Table of Contents
 1. [Introduction](#introduction)
 2. [Updates](#updates)
-3. [Installation](#installation)
-4. [Model Training and Inference](#model-training-and-inference)
-5. [Navigating the Repository](#navigating-the-repository)
+3. [Navigating the Repository](#navigating-the-repository)
+4. [Installation](#installation)
+5. [Model Training and Inference](#model-training-and-inference)
 6. [Exploring the Dataset](#exploring-the-dataset)
 7. [Benchmarks](#benchmarks)
 8. [Roadmap](#roadmap)
