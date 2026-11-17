@@ -120,7 +120,7 @@ Once the repository is cloned, the dataset is added, and earthscape package is i
 [![EPSG](https://img.shields.io/badge/CRS-EPSG:3089-F0F1C5)](#)
 
 ## What's included?
-Each patch location represents a 256x256 area at 5 ft (~1.52 m) ground sampling distance with 38 channels. All images are in GeoTIFF format using the EPSG:3089 coordinate reference system. Images are single channel and use systematic filename conventions of `{patch_id)_{modality}_{scale, optional}.tif`.
+Each patch location represents a 256x256 area at 5 ft (~1.52 m) ground sampling distance with 38 channels. All images are in GeoTIFF format using the EPSG:3089 coordinate reference system. Images are single channel and use systematic filename conventions of `{patch_id}_{modality}_{scale, optional}.tif`.
 - Segmentation mask: `*_mask.tif`
 - Aerial RGB+NIR optical imagery: `*_aerialr.tif`, `*_aerialg.tif`, `*_aerialb.tif`, `*_aerialnir.tif`
 - LiDAR-derived DEM: `*_dem.tif`
