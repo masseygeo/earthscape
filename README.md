@@ -91,7 +91,7 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
 
 ## Run a single experiment
 
-1. Modify [`configs_template.yml`](https://github.com/masseygeo/earthscape/blob/v1.1/configs_template.yml) file for your experiment.
+1. Modify [`configs_template.yml`](configs_template.yml) file for your experiment.
     - Most settings can also be overridden via CLI flags.
     - A copy of the configs file will be saved in your experiment output folder for reproducibility.
 
@@ -113,7 +113,7 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
 
 ## Run multiple experiments
 
-1. Define your sweep (inputs, models, hyperparameters) in the classification [`run_cls.py`](https://github.com/masseygeo/earthscape/blob/v1.1/scripts/run_cls.py) or segmentation [`run_seg.py`](https://github.com/masseygeo/earthscape/blob/v1.1/scripts/run_seg.py) script.
+1. Define your sweep (inputs, models, hyperparameters) in the classification [`run_cls.py`](scripts/run_cls.py) or segmentation [`run_seg.py`](scripts/run_seg.py) script.
 
 2. Run the script from the command line.
     - Multilabel Classification
@@ -177,11 +177,11 @@ Check out these notebooks to see how each map area were compiled and processed..
 ## Class Labels
 EarthScape defines seven surficial geologic units that form a mutually exclusive representation of surface cover within each study area. Geologic map unit classes correspond to distinct surficial geologic processes that are broadly applicable across many landscapes:
 
-- Fluvial deposits — Qal (alluvium), Qat (terrace deposits)
-- Debris-flow deposits — Qaf (alluvial fans)
-- Hillslope materials — Qc (colluvium), Qca (colluvial aprons)
-- In-situ weathering — Qr (residuum)
-- Anthropogenic modification — af1 (artificial fill)
+- Fluvial deposits: Qal (alluvium), Qat (terrace deposits)
+- Debris-flow deposits: Qaf (alluvial fans)
+- Hillslope materials: Qc (colluvium), Qca (colluvial aprons)
+- In-situ weathering: Qr (residuum)
+- Anthropogenic modification: af1 (artificial fill)
 
 It's important to note that the label space remains fixed across EarthScape, which allows isolation of model, fusion, or shift effects. 
 
@@ -232,6 +232,7 @@ SGMap-Net is a modular benchmark model designed to evaluate terrain representati
 - Semantic segmentation: DeepLabV3+ (ResNeXt-50) and SegFormer (MiT-B2).
 - All models were trained using inputs adapted to three channels using 1x1 convolutions, ImageNet-pretrained encoders, AdamW, a learning rate of 3×10<sup>-4</sup>, batch size 16, five-epoch linear warmup, focal loss (classification) or cross-entropy (segmentation), and early stopping.
 - Multi-scale and multimodal performance were compared using early channel stacking, mid-level feature concatenation, and cross-attention fusion methods; self-attention was also considered for single-modality inputs.
+- All experiments can be reproduced using the relevant `config.yml` file found in [`experiments/sgmap-net`](experiments/sgmap-net)
 
 ## Foundation Models
 Five geospatial foundation models (Copernicus-FM, DOFA, Galileo, Panopticon, and TerraMind) were evaluated using compatible EarthScape modalities and spatially independent in-domain and cross-domain test sets. Models were fully fine-tuned using their native modality handling, with learning-rate sweeps to select the best configuration.
