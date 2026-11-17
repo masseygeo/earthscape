@@ -115,7 +115,7 @@ Once the repository is cloned, the dataset is added, and earthscape package is i
 
 ---
 
-<sup>3</sup> `--config_path` defines the path to the configuration file to be used; `--mode` defines the training and testing framework, with `train-test-cross` training the model, and testing with in-domain and cross-domain datasets defined in the configuration file. `--experiment_root` defines the output directory. Most other configurations can also be modified using CLI flags.
+<sup>3</sup> *`--config_path` defines the path to the configuration file to be used; `--mode` defines the training and testing framework, with `train-test-cross` training the model, and testing with in-domain and cross-domain datasets defined in the configuration file. `--experiment_root` defines the output directory. Most other configurations can also be modified using CLI flags.*
 
 
 # Exploring the Dataset
