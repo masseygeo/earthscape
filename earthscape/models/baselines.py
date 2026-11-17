@@ -1,5 +1,6 @@
 
 import torch
+import torch.nn as nn
 from torchvision.models import resnet18, resnet50, vit_b_16, swin_t
 import segmentation_models_pytorch as smp
 
@@ -196,7 +197,7 @@ def create_unet_seg(in_channels, num_classes, encoder_name='resnet50'):
 
 
 
-def create_deeplabv3p_seg(in_channels, num_classes, encoder_name='resnet50'):
+def create_deeplabv3p_seg(in_channels, num_classes, encoder_name='resnext50_32x4d'):
     """
     Construct a DeeplabV3+ segmentation model with custom input channels and predicted classes.
     
@@ -215,14 +216,29 @@ def create_deeplabv3p_seg(in_channels, num_classes, encoder_name='resnet50'):
         Customized DeeplabV3+ model.    
     """
 
-    model = smp.DeepLabV3Plus(
-        encoder_name=encoder_name, 
-        encoder_weights=None, 
-        in_channels=in_channels, 
-        classes=num_classes
+    adapter = nn.Sequential(
+        nn.Conv2d(in_channels, 3, kernel_size=1, bias=False),
+        nn.BatchNorm2d(3),
+        nn.ReLU(inplace=True)
         )
 
-    return model
+    model = smp.DeepLabV3Plus(
+            encoder_name=encoder_name, 
+            encoder_weights='imagenet', 
+            in_channels=3, 
+            classes=num_classes
+            )
+
+    # model = smp.DeepLabV3Plus(
+    #     encoder_name=encoder_name, 
+    #     encoder_weights=None, 
+    #     in_channels=in_channels, 
+    #     classes=num_classes
+    #     )
+
+    # return model
+
+    return nn.Sequential(adapter, model)
 
 
 
@@ -246,11 +262,25 @@ def create_segformer_seg(in_channels, num_classes, encoder_name='mit_b0'):
         Customized Segformer model.    
     """
 
+    adapter = nn.Sequential(
+            nn.Conv2d(in_channels, 3, kernel_size=1, bias=False),
+            nn.BatchNorm2d(3),
+            nn.ReLU(inplace=True)
+            )
     model = smp.Segformer(
-        encoder_name=encoder_name, 
-        encoder_weights=None, 
-        in_channels=in_channels, 
-        classes=num_classes
-        )
+            encoder_name=encoder_name, 
+            encoder_weights='imagenet', 
+            in_channels=3, 
+            classes=num_classes
+            )
+
+    # model = smp.Segformer(
+    #     encoder_name=encoder_name, 
+    #     encoder_weights=None, 
+    #     in_channels=in_channels, 
+    #     classes=num_classes
+    #     )
     
-    return model
+    # return model
+
+    return nn.Sequential(adapter, model)

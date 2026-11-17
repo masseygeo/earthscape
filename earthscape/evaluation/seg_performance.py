@@ -41,8 +41,8 @@ def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
 
     tp, fp, fn, tn = smp.metrics.get_stats(preds, masks, mode="multiclass", num_classes=num_classes)       # [N, C]
 
-    y_true = F.one_hot(masks.long(), num_classes=num_classes).permute(0, 3, 1, 2).float()
-    y_pred = F.one_hot(preds.long(), num_classes=num_classes).permute(0, 3, 1, 2).float()
+    # y_true = F.one_hot(masks.long(), num_classes=num_classes).permute(0, 3, 1, 2).float()
+    # y_pred = F.one_hot(preds.long(), num_classes=num_classes).permute(0, 3, 1, 2).float()
 
     support = tp + fn
     predicted_support = tp + fp
@@ -50,8 +50,24 @@ def image_class_metrics_seg(preds, masks, patch_ids, class_cols):
     pred_present = predicted_support > 0
     hd_valid = gt_present & pred_present
 
-    hd = hausdorff_distance.compute_hausdorff_distance(y_pred=y_pred, y=y_true, include_background=True, percentile=None)
-    hd95 = hausdorff_distance.compute_hausdorff_distance(y_pred=y_pred, y=y_true, include_background=True, percentile=95.0)
+    # hd = hausdorff_distance.compute_hausdorff_distance(y_pred=y_pred, y=y_true, include_background=True, percentile=None)
+    # hd95 = hausdorff_distance.compute_hausdorff_distance(y_pred=y_pred, y=y_true, include_background=True, percentile=95.0)
+
+    hd_list = []
+    hd95_list = []
+    for i in range(preds.shape[0]):
+        y_true_i = (F.one_hot(masks[i].long(), num_classes=num_classes).permute(2, 0, 1).unsqueeze(0).float())
+        y_pred_i = (F.one_hot(preds[i].long(), num_classes=num_classes).permute(2, 0, 1).unsqueeze(0).float())
+
+        hd_i = hausdorff_distance.compute_hausdorff_distance(y_pred=y_pred_i,y=y_true_i,include_background=True,percentile=None)
+        hd95_i = hausdorff_distance.compute_hausdorff_distance(y_pred=y_pred_i,y=y_true_i,include_background=True,percentile=95.0)
+
+        hd_list.append(hd_i)
+        hd95_list.append(hd95_i)
+
+    hd = torch.cat(hd_list, dim=0)
+    hd95 = torch.cat(hd95_list, dim=0)
+
 
     hd = hd.masked_fill(~hd_valid, float("nan"))
     hd95 = hd95.masked_fill(~hd_valid, float("nan"))

@@ -6,7 +6,7 @@ from sklearn.metrics import precision_recall_curve
 
 
 
-def get_optimal_thresholds(model, loader, device, default_threshold=0.5):
+def get_optimal_thresholds(model, loader, device, baseline, default_threshold=0.5):
     """
     Compute per-class decision thresholds that maximize F1 score. Thresholds 
     are selected independently for each class by evaluating the precision-recall 
@@ -33,7 +33,7 @@ def get_optimal_thresholds(model, loader, device, default_threshold=0.5):
     """
 
     # model inference with loader dataset
-    probabilities, targets = test_model(model, loader, device)
+    probabilities, targets = test_model(model, loader, device, baseline=baseline)
 
     # make sure model outputs are on CPU and numpy arrays; labels also cast to int
     probabilities = probabilities.detach().cpu().numpy()

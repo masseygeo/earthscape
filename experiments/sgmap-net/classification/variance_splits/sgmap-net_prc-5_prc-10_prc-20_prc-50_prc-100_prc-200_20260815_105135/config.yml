@@ -1,0 +1,157 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    prc-10:
+      channels:
+      - prc_10.tif
+      mean:
+      - 0.10202966
+      sd:
+      - 1.642144
+    prc-100:
+      channels:
+      - prc_100.tif
+      mean:
+      - -0.14849275
+      sd:
+      - 1.9260588
+    prc-20:
+      channels:
+      - prc_20.tif
+      mean:
+      - 0.050823323
+      sd:
+      - 1.4024324
+    prc-200:
+      channels:
+      - prc_200.tif
+      mean:
+      - -0.1313177
+      sd:
+      - 1.3327446
+    prc-5:
+      channels:
+      - prc.tif
+      mean:
+      - 0.036108498
+      sd:
+      - 0.5475075
+    prc-50:
+      channels:
+      - prc_50.tif
+      mean:
+      - -0.018769637
+      sd:
+      - 0.97690165
+  root: data
+dataloader:
+  base:
+    batch_size: 16
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 5
+  warmup_epochs: 5
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.5877793431282043
+  - 0.1304394155740738
+  - 0.04116414114832878
+  - 0.06996453553438187
+  - 0.2544088661670685
+  - 0.5401529669761658
+  - 0.7521994709968567
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\variance_splits\sgmap-net_prc-5_prc-10_prc-20_prc-50_prc-100_prc-200_20260815_105135\best_loss_epoch11.pth
+  end_training: 11:30 08/15/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\variance_splits\sgmap-net_prc-5_prc-10_prc-20_prc-50_prc-100_prc-200_20260815_105135
+  root: experiments/sgmap-net/classification/variance_splits
+  seed: 111
+  start_training: 10:51 08/15/2026
+  task: classification
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  classification:
+    name: bcefocal
+    params:
+      alpha: null
+      gamma: 0.5
+      pos_weight: null
+      reduction: mean
+  segmentation:
+    name: crossentropyloss
+    params:
+      reduction: mean
+      weight: null
+model:
+  encoder_name: resnext50_32x4d
+  image_size: 256
+  in_channels: 6
+  model_name: sgmap-net
+  output_size: 7
+  sgmapnet_params:
+    embedding_dim: 512
+    embedding_fusion: concat
+    encoder_sharing: shared
+    image_size: 224
+    input_adapter: adapt
+    num_heads: 8
+    p_attn: 0.0
+    p_resid: 0.0
+    pretrained: true
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/split_seed_256
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: false
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/split_seed_256
+training:
+  device: cuda
+  num_epochs: 150

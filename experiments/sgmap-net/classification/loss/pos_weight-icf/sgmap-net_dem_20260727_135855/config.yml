@@ -1,0 +1,129 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    dem:
+      channels:
+      - dem.tif
+      mean:
+      - 578.66797
+      sd:
+      - 74.129265
+  root: data
+dataloader:
+  base:
+    batch_size: 64
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 5
+  warmup_epochs: 10
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.022946672514081
+  - 0.35068634152412415
+  - 0.1132860854268074
+  - 0.3412201404571533
+  - 0.8247036337852478
+  - 0.9355962872505188
+  - 0.9498245120048523
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\loss\pos_weight-icf\sgmap-net_dem_20260727_135855\best_loss_epoch7.pth
+  end_training: 14:07 07/27/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\loss\pos_weight-icf\sgmap-net_dem_20260727_135855
+  root: experiments/sgmap-net/classification/loss/pos_weight-icf
+  seed: 111
+  start_training: 13:58 07/27/2026
+  task: classification
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  classification:
+    name: bcefocal
+    params:
+      alpha: null
+      gamma: 0
+      pos_weight:
+      - 0.059684
+      - 0.649718
+      - 1.252905
+      - 1.843601
+      - 3.046178
+      - 20.615331
+      - 113.881481
+      reduction: mean
+  segmentation:
+    name: crossentropyloss
+    params:
+      reduction: mean
+      weight: null
+model:
+  encoder_name: resnext50_32x4d
+  image_size: 256
+  in_channels: 1
+  model_name: sgmap-net
+  output_size: 7
+  sgmapnet_params:
+    embedding_dim: 512
+    embedding_fusion: none
+    encoder_sharing: shared
+    image_size: null
+    input_adapter: adapt
+    num_heads: 8
+    p_attn: 0.0
+    p_resid: 0.0
+    pretrained: true
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: false
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150

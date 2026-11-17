@@ -1,5 +1,7 @@
 
-from earthscape.train import EarlyStopping
+# from earthscape.train import EarlyStopping
+from .earlystopping import EarlyStopping
+
 from earthscape.evaluation import calculate_dice_score
 import os
 import glob

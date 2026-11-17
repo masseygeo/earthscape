@@ -198,14 +198,14 @@ def patches_get_stats(data_dir, modalities, patch_ids=None, cat_chans=['osm', 'n
             # calculate global stats (mean & sample var/sd)...
             mean = pixel_sum / pixel_count
             var = (pixel_sum2 - (pixel_sum**2) / pixel_count) / (pixel_count - 1)
-            sd = np.sqrt(var)
+            sd = np.sqrt(np.float32(max(var, 0.0)))
 
             # save to df...
-            df_stats.loc[c, 'mean'] = mean
-            df_stats.loc[c, 'sd'] = sd
-            df_stats.loc[c, 'min'] = global_min
-            df_stats.loc[c, 'max'] = global_max
-            df_stats.loc[c, 'nodata_count'] = nodata_count
+            df_stats.loc[c, 'mean'] = np.float32(mean)
+            df_stats.loc[c, 'sd'] = np.float32(sd)
+            df_stats.loc[c, 'min'] = np.float32(global_min)
+            df_stats.loc[c, 'max'] = np.float32(global_max)
+            df_stats.loc[c, 'nodata_count'] = np.float32(nodata_count)
 
     return df_stats
 

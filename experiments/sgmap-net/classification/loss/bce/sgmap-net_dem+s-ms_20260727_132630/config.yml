@@ -1,0 +1,140 @@
+data:
+  dirs:
+  - warren/patches
+  - howevalley/patches
+  - sonora/patches
+  input:
+    dem+s-ms:
+      channels:
+      - dem.tif
+      - s.tif
+      - s_10.tif
+      - s_20.tif
+      - s_50.tif
+      - s_100.tif
+      - s_200.tif
+      mean:
+      - 578.66797
+      - 5.486915
+      - 4.8205023
+      - 4.4264684
+      - 3.5336185
+      - 2.687141
+      - 1.8690363
+      sd:
+      - 74.129265
+      - 5.0718284
+      - 4.716982
+      - 4.337691
+      - 3.575751
+      - 2.7809925
+      - 1.8542851
+  root: data
+dataloader:
+  base:
+    batch_size: 64
+    num_workers: 8
+    persistent_workers: true
+    prefetch_factor: 2
+  eval:
+    augment: false
+    drop_last: false
+    shuffle: false
+  train:
+    augment: true
+    drop_last: true
+    shuffle: true
+early_stop:
+  min_delta: 0.0
+  patience: 5
+  warmup_epochs: 10
+eval:
+  labels:
+  - af1
+  - Qal
+  - Qaf
+  - Qat
+  - Qc
+  - Qca
+  - Qr
+  optimize_clf_thresholds: true
+  thresholds:
+  - 0.36423996090888977
+  - 0.36363473534584045
+  - 0.13157342374324799
+  - 0.1740335375070572
+  - 0.38291868567466736
+  - 0.3387852609157562
+  - 0.26895302534103394
+experiment:
+  best_model: E:\GitHub\earthscape\experiments\sgmap-net\classification\loss\bce\sgmap-net_dem+s-ms_20260727_132630\best_loss_epoch3.pth
+  end_training: 13:39 07/27/2026
+  output_dir: E:\GitHub\earthscape\experiments\sgmap-net\classification\loss\bce\sgmap-net_dem+s-ms_20260727_132630
+  root: experiments/sgmap-net/classification/loss/bce
+  seed: 111
+  start_training: 13:26 07/27/2026
+  task: classification
+labels:
+  area_threshold: 0.0
+  glob: '*areas.csv'
+  root: data
+loss:
+  classification:
+    name: bcefocal
+    params:
+      alpha: null
+      gamma: 0
+      pos_weight: null
+      reduction: mean
+  segmentation:
+    name: crossentropyloss
+    params:
+      reduction: mean
+      weight: null
+model:
+  encoder_name: resnext50_32x4d
+  image_size: 256
+  in_channels: 7
+  model_name: sgmap-net
+  output_size: 7
+  sgmapnet_params:
+    embedding_dim: 512
+    embedding_fusion: none
+    encoder_sharing: shared
+    image_size: null
+    input_adapter: adapt
+    num_heads: 8
+    p_attn: 0.0
+    p_resid: 0.0
+    pretrained: true
+norm:
+  glob: '*train_stats.csv'
+  normalize: true
+  root: splits/esv1p1_splits
+optimizer:
+  cd_params:
+    T_max: starts at 5 epochs
+    eta_min: 1.0e-05
+  cosine_decay: false
+  name: AdamW
+  params:
+    betas:
+    - 0.9
+    - 0.999
+    lr: 0.0003
+    weight_decay: 0.01
+  warmup: true
+  warmup_params:
+    end_factor: 1.0
+    start_factor: 0.001
+    total_iters: 5 epochs converted to steps
+splits:
+  glob:
+    cross: '*test_cd.geojson'
+    test: '*test_id.geojson'
+    train: '*train_id.geojson'
+    val: '*val_id.geojson'
+  root: splits/esv1p1_splits
+training:
+  device: cuda
+  num_epochs: 150

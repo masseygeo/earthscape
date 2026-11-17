@@ -1,7 +1,24 @@
 # **EarthScape CHANGELOG**
 
-All notable changes to EarthScape will be documented in this file.
+---
 
+## [v1.1.1] - 2026-11-17
+
+This codebase release introduces SGMap-Net and its multimodal fusion benchmarks, expands reproducible experiment configurations, and updates repository documentation. The EarthScape v1.1 dataset remains unchanged.
+
+### Added
+- SGMap-Net, a modular benchmark model for evaluating terrain representations, spatial scale, and multimodal fusion under geographic domain shift.
+- Multilabel classification and semantic segmentation experiments using pretrained encoders and multiple fusion strategies, including channel stacking, feature concatenation, and cross-attention.
+- Additional analyses of model performance, multimodal fusion, geographic generalization, and experimental sensitivity.
+- Experiment directories and configuration files for completed baseline and SGMap-Net experiments, supporting reproduction through the CLI.
+  
+### Changed
+- Reorganized and expanded the README with updated installation instructions, CLI QuickStart examples, benchmark descriptions, key findings, and development roadmap.
+- Updated repository-internal documentation links to use relative paths.
+- Updated experiment analysis notebooks and supporting documentation.
+- Updated package version to 1.1.1.
+- Updated classification CLI imports to prevent optional foundation-model dependencies from being required for baseline and SGMap-Net experiments.
+  
 ---
 
 ## [v1.1.0] - 2026-03-24
@@ -13,7 +30,7 @@ This release updates the dataset within the existing scope, improves consistency
 - `pyproject.toml` for package installation and project configuration
 - Configuration files for experiments
   - Benchmarks provided can be reproduced with `config.yml` files in `experiments/*`
-  - User can specify experiment hyperparameters using `config_template.yml`
+  - User can specify experiment hyperparameters using `configs_template.yml`
 - Experiment orchestration scripts in `scripts/`
 - Dataset and experiment figures/tables used in documentation and analysis in `assets/`
 - Explicit release tracking in `CHANGELOG.md `

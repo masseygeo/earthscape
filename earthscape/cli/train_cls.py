@@ -7,7 +7,8 @@ matplotlib.use("Agg")
 from earthscape.constants import SG_MAPPING
 from earthscape.utils import set_seed, set_worker_seed, config_load, config_update
 from earthscape.loaders import ESDataset_Classification, get_norm_stats
-from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls
+from earthscape.models import create_resnet_cls, create_vit_cls, create_swin_cls, SGMapNet_Classification
+# from earthscape.models.foundation_models import DOFAClassifier, PanopticonClassifier, CopernicusFMClassifier, TerraMindClassifier
 from earthscape.train import BCEFocalLogits, architecture_to_json, train_model, plot_training_curves
 from earthscape.evaluation import get_optimal_thresholds, test_model, get_global_metrics, get_class_metrics, plot_pr_roc_curves
 import argparse
@@ -27,11 +28,18 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Train and test a multilabel classification model using config.yml file.")
     parser.add_argument("--config_path", type=str, required=True, help="Path to config.yml; copy will be saved to the experiment output directory for reproducibility.")
     parser.add_argument("--mode", type=str, choices=("train", "train-test", "train-test-cross"), required=True, help="Execution mode: train, training with validation set model selection; train-test, training & validation plus in-domain test; train-test-cross, training & validation plus in- and cross-domain tests.")
+    parser.add_argument("--task", type=str, choices=("classification", "segmentation"), required=True, help="Task definition.")
+
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
-    # parser.add_argument("--compile", type=str, choices=('true', 'false'), default=None, help="(Optional) Override config torch.compile(model) setting.")
-    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin'), default=None, help="(Optional) Override config model.")
-    parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
+
+    parser.add_argument("--model_name", type=str, choices=('resnet18', 'resnet50', 'vit', 'swin', 'sgmap-net', 'dofa', 'panopticon', 'copernicus-fm', 'terramind'), default=None, help="(Optional) Override config model.")
+    parser.add_argument("--encoder_name", type=str, default=None, help="(Optional) Override config encoder name.")
+    parser.add_argument("--input_adapter", type=str, default=None, help="(Optional) Override config SGMap-Net input adaptation strategy.")
+    parser.add_argument("--encoder_sharing", type=str, default=None, help="(Optional) Override config SGMap-Net encoder sharing strategy.")
+    parser.add_argument("--embedding_fusion", type=str, choices=('none', 'concat', 'self_attention', 'cross_attention'), default=None, help="(Optional) Override config SGMap-Net mid-level fusion strategy.")
+
+    parser.add_argument("--input", type=str, action="append", default=None, help=("Override input features. Repeat --input to define separate branches. Example: --input dem:dem.tif --input aerial:aerialr.tif,aerialg.tif,aerialb.tif"))
 
     parser.add_argument("--area_threshold", type=float, default=None, help="(Optional) Override config class-area proportion threshold for target labels.")
     parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override config batch size.")
@@ -44,6 +52,9 @@ def parse_args():
     parser.add_argument("--patience", type=int, default=None, help='(Optional) Override config early stopping epoch patience.')
     parser.add_argument("--min_delta", type=float, default=None, help='(Optional) Override config early stopping min_delta.')
     parser.add_argument("--warmup_epochs", type=int, default=None, help='(Optional) Override config early stopping warmup epochs.')
+
+    parser.add_argument("--split_dir", type=str, default=None, help="(Optional) List of patch IDs passed directly.")
+    
     return parser.parse_args()
 
 
@@ -74,7 +85,6 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     cfg['training']['device'] = str(device)
 
-
     ##### setup input feature dict, datasets, & dataloaders...
     
     # build input dict... 
@@ -82,6 +92,7 @@ def main():
     input_dict = cfg['data']['input']
 
     # path to training split statistics for normalization
+    print(cfg['norm']['root'])
     norm_stats_path = os.path.abspath(os.path.join(cfg['norm']['root'], cfg['norm']['glob']))
     norm_stats_path = glob.glob(norm_stats_path)[0]
 
@@ -89,6 +100,9 @@ def main():
     # NOTE: modified input dict -> {'dem': {'channels': ['dem.tif'], 'mean': [float], 'sd': [float]}, ...}
     input_dict = get_norm_stats(norm_stats_path, input_dict)
 
+
+
+    cfg['norm']['normalize'] = False
 
     ##### dataset parameters...
     patch_dirs = [os.path.abspath(os.path.join(cfg['data']['root'], d)) for d in cfg['data']['dirs']]
@@ -184,15 +198,48 @@ def main():
     elif model_name == 'swin':
         model = create_swin_cls(in_channels=in_channels, num_classes=output_size).to(device)
 
-    # # compile model for optimal performance
-    # if cfg['model']['compile']:
-    #     model = torch.compile(model)
+    elif model_name == 'sgmap-net':
+        params = {
+            **cfg['model']['sgmapnet_params'],
+            'encoder': cfg['model']['encoder_name']
+            }
+        model = SGMapNet_Classification(modality_configs=input_dict, output_dim=output_size, **params).to(device)
 
+    elif model_name in ('dofa', 'panopticon', 'copernicus-fm', 'terramind'):
+        from earthscape.models.foundation_models import (
+            DOFAClassifier,
+            PanopticonClassifier,
+            CopernicusFMClassifier,
+            TerraMindClassifier,
+        )
+
+        if model_name == 'dofa':
+            model = DOFAClassifier().to(device)
+        elif model_name == 'panopticon':
+            model = PanopticonClassifier().to(device)
+        elif model_name == 'copernicus-fm':
+            model = CopernicusFMClassifier().to(device)
+        elif model_name == 'terramind':
+            modalities = [m.upper() for m in input_dict.keys()]
+            model = TerraMindClassifier(
+                modalities=modalities,
+                num_classes=output_size
+            ).to(device)
+    # elif model_name == 'dofa':
+    #     model = DOFAClassifier().to(device)
+    # elif model_name == 'panopticon':
+    #     model = PanopticonClassifier().to(device)
+    # elif model_name == 'copernicus-fm':
+    #     model = CopernicusFMClassifier().to(device)
+    # elif model_name == "terramind":
+    #     modalities = [m.upper() for m in input_dict.keys()]
+    #     model = TerraMindClassifier(modalities=modalities, num_classes=output_size).to(device)
+    
 
     ##### loss...
-    loss_name = cfg['loss']['name']
+    loss_name = cfg['loss']['classification']['name']
     if loss_name == 'bcefocal':
-        loss_params = cfg['loss']['params']
+        loss_params = cfg['loss']['classification']['params']
         criterion = BCEFocalLogits(**loss_params).to(device)
 
 
@@ -220,7 +267,9 @@ def main():
     ##### training...
     # define epochs and train/validate model
     epochs = cfg['training']['num_epochs']
-    baseline = len(input_dict.keys()) == 1
+    # baseline = len(input_dict.keys()) == 1
+    # baseline = model_name != "sgmap-net"
+    baseline = model_name not in ("sgmap-net", "terramind")
     early_stop = cfg['early_stop']
     warmup = cfg['optimizer']['warmup']
     cosine_decay = cfg['optimizer']['cosine_decay']
@@ -254,7 +303,7 @@ def main():
 
         ##### optimize thresholds...
         if cfg['eval']['optimize_clf_thresholds']:
-            optimal_thresholds = get_optimal_thresholds(model, val_loader, device)
+            optimal_thresholds = get_optimal_thresholds(model, val_loader, device, baseline=baseline)
         else:
             optimal_thresholds = np.full(shape=cfg['model']['output_size'], fill_value=0.5)
         cfg['eval']['thresholds'] = optimal_thresholds.tolist()
@@ -287,7 +336,7 @@ def main():
 
     ###### testing (cross-domain)...
     if args.mode == "train-test-cross":
-        probabilities, targets = test_model(model, cross_loader, device)
+        probabilities, targets = test_model(model, cross_loader, device, baseline=baseline)
 
         # save individual sample predictions...
         predictions = pd.DataFrame(data=cross_dataset.ids, columns=['patch_id'])
@@ -312,7 +361,7 @@ def main():
 
 
     ##### save experiment metadata files...
-    architecture_to_json(output_dir, model, val_loader)                          # model architecture file
+    architecture_to_json(output_dir, model, val_loader, device, baseline=baseline)                          # model architecture file
     cfg_output_path = os.path.abspath(os.path.join(output_dir, 'config.yml'))    # config file used for experiment
     with open(cfg_output_path, "w") as f:
         yaml.safe_dump(cfg, f)

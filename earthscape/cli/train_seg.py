@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument("--experiment_root", type=str, default=None, help="(Optional) Override config output directory.")
     parser.add_argument("--seed", type=int, default=None, help="(Optional) Override config seed.")
     parser.add_argument("--model_name", type=str, choices=('unet', 'deeplabv3p', 'segformer'), default=None, help="(Optional) Override config model.")
-    parser.add_argument("--encoder_name", type=str, choices=('resnet18', 'resnet34', 'resnet50', 'resnet101', 'mit_b0', 'mit_b2'), default=None, help="(Optional) Override config backbone.")
+    parser.add_argument("--encoder_name", type=str, choices=('resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnext50_32x4d', 'mit_b0', 'mit_b2'), default=None, help="(Optional) Override config backbone.")
     parser.add_argument("--input", type=str, nargs="+", default=None, help="(Optional) Override input features. Example: --input dem:dem.tif  aerial:aerialr.tif,aerialg.tif,aerialb.tif ...")
     parser.add_argument("--batch_size", type=int, default=None, help="(Optional) Override config batch size.")
     parser.add_argument("--lr", type=float, default=None, help="(Optional) Override config learning rate.")
@@ -184,9 +184,9 @@ def main():
 
 
     ##### loss...
-    loss_name = cfg['loss']['name']
+    loss_name = cfg['loss']['segmentation']['name']
     if loss_name == 'crossentropyloss':
-        loss_params = cfg['loss']['params']
+        loss_params = cfg['loss']['segmentation']['params']
         criterion = CrossEntropyLoss(**loss_params).to(device)
 
 
@@ -301,7 +301,7 @@ def main():
 
 
     ##### save experiment metadata files...
-    architecture_to_json(output_dir, model, val_loader)                          # model architecture file
+    architecture_to_json(output_dir, model, val_loader, device)                          # model architecture file
     cfg_output_path = os.path.abspath(os.path.join(output_dir, 'config.yml'))    # config file used for experiment
     with open(cfg_output_path, "w") as f:
         yaml.safe_dump(cfg, f)

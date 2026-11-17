@@ -291,3 +291,4 @@ class ESDataset_Classification(Dataset):
             mask = src.read(1)
         mask = torch.from_numpy(mask).to(torch.long).contiguous()
         return mask
+    
