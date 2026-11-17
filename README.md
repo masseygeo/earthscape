@@ -276,7 +276,7 @@ Check out these notebooks for more information and visualizations...
 
 
 
-# Contributing to EarthScape
+# Contributions
 We encourage your contributions to EarthScape! Detailed instructions to come, or contact us directly!
 
 
