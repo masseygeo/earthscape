@@ -32,7 +32,7 @@ We have published benchmarks for...
 1. [Updates](#updates)
 2. [Navigating the Repository](#navigating-the-repository)
 3. [Installation](#installation)
-4. [Quickstart Experiments](#quickstart-experiments)
+4. [Quickstart](#quickstart)
 5. [Exploring the Dataset](#exploring-the-dataset)
 6. [Benchmarks](#benchmarks)
 7. [Roadmap](#roadmap)
@@ -82,52 +82,33 @@ We have published benchmarks for...
 6. Install the precompiled dataset.
     1. Download the dataset and metadata files [here](https://doi.org/10.13023/kgs.data.05.01.2025).
     2. Extract all archives into the [`data/`](data) directory.
-    - *Note: The dataset is also reproducible using the full pipeline.*
+   
+   *NOTE: The dataset is also reproducible using the full pipeline.*
 
 
-# Quickstart Experiments
+# Quickstart
 
-Once the repository is cloned and the dataset is added, you are ready to run experiments. This codebase comes with several models ready to try, but you can also adapt your own.
+Once the repository is cloned, the dataset is added, and earthscape package is installed, you are ready to run experiments. Experiments are configured using YAML files, which specify the model architecture, input modalities, dataset settings, training parameters, and output locations. EarthScape provides command-line interfaces (CLIs) for training classification and segmentation models. 
 
-## Run a single experiment
+1. Configure your experimental settings.
+    - *Option 1.* Define a new experiment using the [`configs_template.yml`](configs_template.yml) file.
+    - *Option 2.* Reproduce a previous experiment using its associated `config.yml` file in the experiment output directory.
 
-1. Modify [`configs_template.yml`](configs_template.yml) file for your experiment.
-    - Most settings can also be overridden via CLI flags.
-    - A copy of the configs file will be saved in your experiment output folder for reproducibility.
-
-2. Run the training script.
-    - Multilabel classification...
-
+2. Run the training script. We will reproduce two previously completed benchmark experiments.
+    - Multilabel classification
       ```
-      train_cls --config_path configs_template.yml --mode train-test-cross
+      train_cls --config_path XXX --mode train-test-cross
       ```
-      
-    - Semantic segmentation...
-
+    - Semantic segmentation
       ```
-      train_seg --config_path configs_template.yml --mode train-test-cross
+      train_seg --config_path XXX --mode train-test-cross
       ```
+    - NOTE: `--config_path` and `--mode` are required as inputs. `--config_path` defines the path to the configuration file to be used, while `--mode train-test-cross` trains the model, tests with in-domain and cross-domain datasets. Most other configuration options can also be set using CLI flags.
 
 3. Explore training logs and performance metrics for the experiment.
     - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}`
-
-## Run multiple experiments
-
-1. Define your sweep (inputs, models, hyperparameters) in the classification [`run_cls.py`](scripts/run_cls.py) or segmentation [`run_seg.py`](scripts/run_seg.py) script.
-
-2. Run the script from the command line.
-    - Multilabel Classification
-      ```
-      python scripts/run_cls.py
-      ```
-      
-    - Semantic Segmentation
-
-        ```
-        python scripts/run_seg.py
-        ```
-        
-3. Explore training logs and performance metrics for the experiment.
+    - A copy of the experiment configuration settings (including any CLI flags used) are saved in the output directory in `config.yml`.
+    - In-domain performance results are saved in files denoted with `*id*`; cross-domain results are denoted by files with `*cd*`.
 
 
 # Exploring the Dataset
@@ -139,7 +120,7 @@ Once the repository is cloned and the dataset is added, you are ready to run exp
 [![EPSG](https://img.shields.io/badge/CRS-EPSG:3089-F0F1C5)](#)
 
 ## What's included?
-Each patch location represents a 256x256 area at 5 ft (~1.52 m) ground sampling distance with 38 channels. All images are in GeoTIFF format using the EPSG:3089 coordinate reference system. Images are single channel and use systematic filename conventions of `{patch_id)_{modality}_{scale, optional}.tif`
+Each patch location represents a 256x256 area at 5 ft (~1.52 m) ground sampling distance with 38 channels. All images are in GeoTIFF format using the EPSG:3089 coordinate reference system. Images are single channel and use systematic filename conventions of `{patch_id)_{modality}_{scale, optional}.tif`.
 - Segmentation mask: `*_mask.tif`
 - Aerial RGB+NIR optical imagery: `*_aerialr.tif`, `*_aerialg.tif`, `*_aerialb.tif`, `*_aerialnir.tif`
 - LiDAR-derived DEM: `*_dem.tif`
@@ -168,7 +149,7 @@ Additional data is included in `*.csv`, `*.geojson`, and `*.json` files found in
 
 EarthScape is derived from open-access geospatial data sources, compiled into a co-registered stack at a native resolution of 5 ft (~1.52 m) GSD. Patches are generated within mapped surficial geologic extents, ensuring no background or nodata regions. All layers are validated for spatial alignment and co-registration prior to patch extraction. Final patches are clipped to a common extent and verified for consistent resolution and dimensions.
 
-Check out these notebooks to see how each map area were compiled and processed...
+Check out these notebooks to see how each map area were compiled and processed:
 - [Hardin County, Howe Valley Quadrangle](notebooks/data_hardin_howevalley.ipynb)
 - [Hardin County, Sonora Quadrangle](notebooks/data_hardin_sonora.ipynb)
 - [Warren County quadrangles](notebooks/data_warren.ipynb)
@@ -198,7 +179,7 @@ It's important to note that the label space remains fixed across EarthScape, whi
     - Class presence and frequency vary systematically across geographic regions, reflecting spatial autocorrelation and non-random class co-occurrence patterns.
     - Maximum mean discrepancy shows that input feature distributions shift across region, ranging from 0.007 for planform curvature (200 ft GSD) to 0.273 for raw DEM (5 ft GSD)
 
-See the following notebook for more in-depth analysis of the dataset...
+See the following notebook for more in-depth analysis of the dataset:
 - [EarthScape Exploratory Data Analysis (EDA)](notebooks/data_eda.ipynb)
 
 
