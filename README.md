@@ -42,8 +42,8 @@ We have published benchmarks for...
 
 # Updates
 - **November 2026:** Codebase v1.1.1 has been updated and extended.
-    - SGMap-Net model with experiments
-- **April 2026:** Dataset v1.1 and codebase v1.1.0 are now available!
+    - SGMap-Net model with experiments and analyses
+- **March 2026:** Dataset v1.1 and codebase v1.1.0 are now available!
     - Profile and planform curvatures are now consistent across all subsets
     - Categorical and binary image features are supplied as `uint8` instead of `float32`
     - Baseline model experiments
