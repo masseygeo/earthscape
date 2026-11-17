@@ -57,23 +57,31 @@ We have published benchmarks for...
 
 1. Clone the repository.
 2. Install [Conda](https://anaconda.org/channels/anaconda/packages/conda/overview) or [Miniconda](https://www.anaconda.com/docs/getting-started/miniconda/main).
-3. Create the environment. If using non-GPU machine, delete 'pytorch-gpu' from [`environment.yml`](environment.yml).
+3. Navigate to the EarthScape repository root.
+   ```Bash
+   cd /path/to/earthscape
+   ```
+4. Create the environment<sup>1</sup>.
     ```Bash
     conda env create -f environment.yml
     ```
-4. Activate the environment.
+5. Activate the environment.
     ```Bash
     conda activate earthscape
     ```
-5. Install the EarthScape package.
+6. Install the EarthScape package.
     ```Bash
     pip install -e .
     ```
-6. Install the precompiled dataset<sup>1</sup>.
+8. Install the precompiled dataset<sup>2</sup>.
     1. Download the dataset and metadata files [here](https://doi.org/10.13023/kgs.data.05.01.2025).
     2. Extract all archives into the [`data/`](data) directory.
-   
-   *<sup>1</sup>The dataset is also reproducible using the full pipeline.*
+
+---
+
+<sup>1</sup> *If using non-GPU machine, delete *pytorch-gpu* from [`environment.yml`](environment.yml).*
+
+<sup>2</sup> *The dataset is also reproducible using the full pipeline.*
 
 
 # Quickstart
@@ -83,8 +91,14 @@ Once the repository is cloned, the dataset is added, and earthscape package is i
 1. Configure your experimental settings.
     - *Option 1.* Define a new experiment using the [`configs_template.yml`](configs_template.yml) file.
     - *Option 2.* Reproduce a previous experiment using its associated `config.yml` file in the experiment output directory.
+      
+2. Navigate to the EarthScape repository root and activate the environment.
+    ```Bash
+    cd /path/to/earthscape
+    conda activate earthscape
+    ```
 
-2. Run the training script. We will reproduce two previously completed benchmark experiments using the DEM as a single input. The user should note that using [`configs_template.yml`](configs_template.yml) is also perfectly valid in this step, but this example seeks to reproduce existing results.
+3. Run the training script<sup>3</sup>. We will reproduce two previously completed benchmark experiments using the DEM as a single input. The user should note that using [`configs_template.yml`](configs_template.yml) is also perfectly valid in this step, but this example seeks to reproduce existing results.
     - Multilabel classification with SGMap-Net:
       ```
       train_cls --config_path experiments/sgmap-net/classification/single/sgmap-net_dem_20260802_150104/config.yml --mode train-test-cross --task classification --experiment_root experiments/test
@@ -93,12 +107,15 @@ Once the repository is cloned, the dataset is added, and earthscape package is i
       ```
       train_seg --config_path experiments/sgmap-net/segmentation/exploration/segformer-mitb2_dem_20260822_132644/config.yml --mode train-test-cross --experiment_root experiments/test
       ```
-    - NOTE: `--config_path` and `--mode` are required as inputs: `--config_path` defines the path to the configuration file to be used, while `--mode train-test-cross` trains the model, tests with in-domain and cross-domain datasets. Most other configuration options can also be set using CLI flags.
-
-3. Explore training logs and performance metrics for the experiment.
+      
+4. Explore training logs and performance metrics for the experiment.
     - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}`
     - A copy of the experiment configuration settings (including any CLI flags used) are saved in the output directory in `config.yml`.
     - In-domain performance results are saved in files denoted with `*id*`; cross-domain results are denoted by files with `*cd*`.
+
+---
+
+<sup>3</sup> `--config_path` defines the path to the configuration file to be used; `--mode` defines the training and testing framework, with `train-test-cross` training the model, and testing with in-domain and cross-domain datasets defined in the configuration file. `--experiment_root` defines the output directory. Most other configurations can also be modified using CLI flags.
 
 
 # Exploring the Dataset
