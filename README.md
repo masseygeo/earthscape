@@ -13,7 +13,7 @@
 6. [Exploring the Dataset](#exploring-the-dataset)
 7. [Benchmarks](#benchmarks)
 8. [Roadmap](#roadmap)
-9. [Contributions](#contributing_to_earthscape)
+9. [Contributions](#contributions)
 10. [Citations](#cite)
 
 # Introduction
