@@ -79,11 +79,11 @@ We have published benchmarks for...
     ```Bash
     pip install -e .
     ```
-6. Install the precompiled dataset.
+6. Install the precompiled dataset<sup>1</sup>.
     1. Download the dataset and metadata files [here](https://doi.org/10.13023/kgs.data.05.01.2025).
     2. Extract all archives into the [`data/`](data) directory.
    
-   *NOTE: The dataset is also reproducible using the full pipeline.*
+   *<sup>1</sup>The dataset is also reproducible using the full pipeline.*
 
 
 # Quickstart
@@ -94,16 +94,16 @@ Once the repository is cloned, the dataset is added, and earthscape package is i
     - *Option 1.* Define a new experiment using the [`configs_template.yml`](configs_template.yml) file.
     - *Option 2.* Reproduce a previous experiment using its associated `config.yml` file in the experiment output directory.
 
-2. Run the training script. We will reproduce two previously completed benchmark experiments.
-    - Multilabel classification
+2. Run the training script. We will reproduce two previously completed benchmark experiments using the DEM as a single input. The user should note that using [`configs_template.yml`](configs_template.yml) is also perfectly valid in this step, but this example seeks to reproduce existing results.
+    - Multilabel classification with SGMap-Net:
       ```
-      train_cls --config_path XXX --mode train-test-cross
+      train_cls --config_path experiments/sgmap-net/classification/single/sgmap-net_dem_20260802_150104/config.yml --mode train-test-cross --experiment_root experiments/test
       ```
-    - Semantic segmentation
+    - Semantic segmentation with Segformer with MiT-B2: 
       ```
-      train_seg --config_path XXX --mode train-test-cross
+      train_seg --config_path experiments/sgmap-net/segmentation/exploration/segformer-mitb2_dem_20260822_132644/config.yml --mode train-test-cross --experiment_root experiments/test
       ```
-    - NOTE: `--config_path` and `--mode` are required as inputs. `--config_path` defines the path to the configuration file to be used, while `--mode train-test-cross` trains the model, tests with in-domain and cross-domain datasets. Most other configuration options can also be set using CLI flags.
+    - NOTE: `--config_path` and `--mode` are required as inputs: `--config_path` defines the path to the configuration file to be used, while `--mode train-test-cross` trains the model, tests with in-domain and cross-domain datasets. Most other configuration options can also be set using CLI flags.
 
 3. Explore training logs and performance metrics for the experiment.
     - Experiment output folders are named systematically as `{model}_{modality}_{timestamp}`
