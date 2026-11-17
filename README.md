@@ -29,24 +29,14 @@ We have published benchmarks for...
 
 
 # Table of Contents
-1. [Updates](#updates)
-2. [Navigating the Repository](#navigating-the-repository)
-3. [Installation](#installation)
-4. [Quickstart](#quickstart)
-5. [Exploring the Dataset](#exploring-the-dataset)
-6. [Benchmarks](#benchmarks)
-7. [Roadmap](#roadmap)
-8. [Contributions](#contributions)
-9. [Citations](#cite)
-
-
-# Updates
-- **November 2026:** Codebase v1.1.1 has been updated and extended.
-    - SGMap-Net model with experiments and analyses
-- **March 2026:** Dataset v1.1 and codebase v1.1.0 are now available!
-    - Profile and planform curvatures are now consistent across all subsets
-    - Categorical and binary image features are supplied as `uint8` instead of `float32`
-    - Baseline model experiments
+1. [Navigating the Repository](#navigating-the-repository)
+2. [Installation](#installation)
+3. [Quickstart](#quickstart)
+4. [Exploring the Dataset](#exploring-the-dataset)
+5. [Benchmarks](#benchmarks)
+6. [Roadmap](#roadmap)
+7. [Contributions](#contributions)
+8. [Citations](#cite)
 
 
 # Navigating the Repository
@@ -232,15 +222,15 @@ Check out these notebooks for more information and visualizations:
 
 
 # Roadmap
-- Data Source Expansion
-    - Integration of national-scale datasets (USGS 3DEP DEM, NAIP RGB+NIR)
-    - Additional terrain features (e.g., topographic position index)
-- Geographic Expansion
-    - Addition of new mapping within the same label space, which will triple the current size
-- Code and Usability
+- **Codebase v1.1.2**
     - Standardized evaluation scripts and reporting tools
     - Improved experiment configuration and orchestration workflows
     - Enhanced dataset indexing and geospatial query capabilities
+- **Dataset v1.2**
+    - Geographic Expansion
+        - Addition of new mapping within the same label space, which will triple the current size
+    - Data Source Expansion
+        - Integration of common elevation datasets
 
 
 # Contributions
